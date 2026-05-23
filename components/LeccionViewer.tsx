@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useMemo } from "react"
 import TextoLeccionSelectable from "@/components/TextoLeccionSelectable"
 import type { AnotacionLeccion, MarcaFormato } from "@/lib/anotaciones"
+import { PORTADA_SRC } from "@/lib/portada"
 import {
   ETIQUETAS_DIA_LECCION,
   ORDEN_DIAS_LECCION,
@@ -85,7 +86,8 @@ export default function LeccionViewer({
         <div className="flex gap-3 sm:gap-4">
           <div className="relative h-24 w-[4.5rem] shrink-0 overflow-hidden rounded-lg border border-primary/20 shadow-md sm:h-28 sm:w-20">
             <Image
-              src="/portada.png"
+              src={PORTADA_SRC}
+              unoptimized
               alt="Portada del trimestre"
               fill
               sizes="80px"

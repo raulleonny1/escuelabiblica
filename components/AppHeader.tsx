@@ -6,6 +6,7 @@ import { useEstudio } from "@/components/EstudioContext"
 import FontSizeControls from "@/components/FontSizeControls"
 import PwaInstallButton from "@/components/PwaInstallButton"
 import { TRIMESTRE_TEMA } from "@/lib/lecciones"
+import { PORTADA_SRC } from "@/lib/portada"
 
 export default function AppHeader() {
   const { estudio } = useEstudio()
@@ -37,7 +38,8 @@ export default function AppHeader() {
             >
               <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded-md shadow-md ring-1 ring-white/30 sm:h-16 sm:w-12">
                 <Image
-                  src="/portada.png"
+                  src={PORTADA_SRC}
+                  unoptimized
                   alt="Portada del trimestre"
                   fill
                   sizes="(max-width: 640px) 40px, 48px"
