@@ -11,14 +11,15 @@ import {
 } from "@/lib/fontScale"
 
 const btn =
-  "flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center rounded-lg border border-white/35 bg-white/15 text-sm font-semibold text-white backdrop-blur-sm transition active:bg-white/30 disabled:opacity-40 disabled:pointer-events-none"
+  "flex shrink-0 items-center justify-center rounded-md border border-white/35 bg-white/15 font-semibold text-white backdrop-blur-sm transition active:bg-white/30 disabled:opacity-40 disabled:pointer-events-none"
 
 type Props = {
-  variant?: "header" | "default"
+  variant?: "header" | "compact" | "default"
 }
 
 export default function FontSizeControls({ variant = "default" }: Props) {
   const [level, setLevel] = useState<FontScaleLevel>(0)
+  const isCompact = variant === "compact"
   const isHeader = variant === "header"
 
   const sync = useCallback((next: FontScaleLevel) => setLevel(next), [])
@@ -28,6 +29,39 @@ export default function FontSizeControls({ variant = "default" }: Props) {
   }, [])
 
   const statusLabel = level === 0 ? null : fontScaleLabel(level)
+
+  if (isCompact) {
+    return (
+      <div className="flex shrink-0 items-center gap-0.5" role="group" aria-label="Tamaño del texto">
+        <button
+          type="button"
+          className={`${btn} h-7 w-7 text-xs`}
+          onClick={() => sync(decreaseFontScale(level))}
+          disabled={level === 0}
+          aria-label="Texto más pequeño"
+        >
+          A−
+        </button>
+        <button
+          type="button"
+          className={`${btn} h-7 min-w-[2rem] px-1 text-[0.625rem]`}
+          onClick={() => sync(resetFontScale())}
+          aria-label="Texto normal"
+        >
+          A
+        </button>
+        <button
+          type="button"
+          className={`${btn} h-7 w-7 text-xs`}
+          onClick={() => sync(increaseFontScale(level))}
+          disabled={level === 3}
+          aria-label="Texto más grande"
+        >
+          A+
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -39,20 +73,13 @@ export default function FontSizeControls({ variant = "default" }: Props) {
       role="group"
       aria-label="Tamaño del texto"
     >
-      <span
-        className={
-          isHeader
-            ? "shrink-0 text-[0.6875rem] font-semibold uppercase tracking-wide text-white/85"
-            : "mr-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-white/85 sm:text-xs"
-        }
-      >
+      <span className="shrink-0 text-[0.6875rem] font-semibold uppercase tracking-wide text-white/85">
         Texto
       </span>
-
-      <div className="flex flex-1 items-center justify-end gap-1 sm:flex-initial sm:justify-start">
+      <div className="flex items-center gap-1">
         <button
           type="button"
-          className={btn}
+          className={`${btn} h-9 min-w-9 text-sm`}
           onClick={() => sync(decreaseFontScale(level))}
           disabled={level === 0}
           aria-label="Reducir tamaño del texto"
@@ -61,7 +88,7 @@ export default function FontSizeControls({ variant = "default" }: Props) {
         </button>
         <button
           type="button"
-          className={`${btn} min-w-[4.25rem] px-2 text-xs font-medium`}
+          className={`${btn} h-9 min-w-[4.25rem] px-2 text-xs font-medium`}
           onClick={() => sync(resetFontScale())}
           aria-label="Tamaño de texto normal"
         >
@@ -69,7 +96,7 @@ export default function FontSizeControls({ variant = "default" }: Props) {
         </button>
         <button
           type="button"
-          className={btn}
+          className={`${btn} h-9 min-w-9 text-sm`}
           onClick={() => sync(increaseFontScale(level))}
           disabled={level === 3}
           aria-label="Aumentar tamaño del texto"
@@ -77,7 +104,6 @@ export default function FontSizeControls({ variant = "default" }: Props) {
           A+
         </button>
       </div>
-
       {statusLabel && (
         <span
           className="shrink-0 rounded-md bg-white/10 px-2 py-0.5 text-[0.6875rem] text-amber-100"

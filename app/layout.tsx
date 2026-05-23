@@ -69,8 +69,8 @@ export default function RootLayout({
           <div className="flex h-dvh flex-col overflow-hidden">
             <AppHeader />
 
-            <main className="flex min-h-0 flex-1 overflow-hidden bg-surface p-2 md:p-4">
-              <div className="flex h-full min-h-0 w-full max-w-[1800px] mx-auto rounded-2xl border border-border bg-card shadow-xl overflow-hidden">
+            <main className="flex min-h-0 flex-1 overflow-hidden bg-surface p-0 lg:p-4">
+              <div className="flex h-full min-h-0 w-full max-w-[1800px] mx-auto overflow-hidden bg-card lg:rounded-2xl lg:border lg:border-border lg:shadow-xl">
                 {children}
               </div>
             </main>

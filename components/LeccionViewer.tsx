@@ -82,13 +82,13 @@ export default function LeccionViewer({
 
   return (
     <article className="custom-scroll flex h-full flex-col overflow-y-auto bg-card">
-      <header className="shrink-0 border-b border-border px-4 py-4 md:px-8">
-        <div className="flex gap-3 sm:gap-4">
-          <div className="relative h-24 w-[4.5rem] shrink-0 overflow-hidden rounded-lg border border-primary/20 shadow-md sm:h-28 sm:w-20">
+      <header className="shrink-0 border-b border-border bg-card px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4">
+        <div className="hidden gap-4 sm:flex">
+          <div className="relative h-24 w-[4.5rem] shrink-0 overflow-hidden rounded-lg border border-primary/20 shadow-md md:h-28 md:w-20">
             <Image
               src={PORTADA_SRC}
               unoptimized
-              alt="Portada del trimestre"
+              alt=""
               fill
               sizes="80px"
               className="object-cover object-center"
@@ -104,14 +104,23 @@ export default function LeccionViewer({
             </h2>
           </div>
         </div>
-        <p className="mt-3 rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary">
-          <span className="font-semibold">Barra de edición:</span> mantén pulsado y selecciona
-          cualquier frase → resaltar, negrita, subrayar o comentar. Se guarda en el día del
-          calendario.
+
+        <div className="min-w-0 sm:hidden">
+          <h2 className="font-display line-clamp-2 text-base font-semibold leading-snug text-primary">
+            L{leccion.numero}: {leccion.titulo}
+          </h2>
+          <p className="mt-0.5 text-[0.6875rem] text-muted">
+            {ETIQUETAS_DIA_LECCION[diaActivo].split(" —")[0]} · Sem. {semana}
+          </p>
+        </div>
+
+        <p className="mt-2 hidden rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary lg:block">
+          <span className="font-semibold">Barra de edición:</span> selecciona texto para resaltar,
+          negrita, subrayar o comentar.
         </p>
 
         <div
-          className="mt-3 flex gap-1 overflow-x-auto pb-1 custom-scroll"
+          className="mt-2 flex gap-0.5 overflow-x-auto pb-0.5 custom-scroll sm:mt-3 sm:gap-1"
           role="tablist"
           aria-label="Día de la lección"
         >
@@ -128,7 +137,7 @@ export default function LeccionViewer({
                 disabled={futuro}
                 title={futuro ? "Disponible cuando llegue este día" : undefined}
                 onClick={() => onDiaActivoChange(id)}
-                className={`shrink-0 rounded-lg px-2.5 py-2 text-xs font-semibold transition ${
+                className={`shrink-0 rounded-md px-2 py-1.5 text-[0.6875rem] font-semibold transition sm:rounded-lg sm:px-2.5 sm:py-2 sm:text-xs ${
                   activo
                     ? esRepaso && id === "vie"
                       ? "bg-accent text-white shadow-md"
@@ -143,7 +152,7 @@ export default function LeccionViewer({
             )
           })}
         </div>
-        <p className="mt-2 text-sm font-medium text-primary">
+        <p className="mt-1 hidden text-sm font-medium text-primary sm:block">
           {ETIQUETAS_DIA_LECCION[diaActivo]}
           {fechaDiaActivo && (
             <span className="font-normal text-muted">
@@ -156,7 +165,7 @@ export default function LeccionViewer({
         </p>
       </header>
 
-      <div className="flex-1 px-4 py-5 md:px-8 md:py-6">
+      <div className="flex-1 px-3 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6">
         {bloques.map((bloque) => (
           <section
             key={`${diaActivo}-${bloque.titulo}`}

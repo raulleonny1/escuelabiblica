@@ -357,14 +357,14 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:flex-row lg:pb-0">
+    <div className="flex h-full min-h-0 w-full flex-col pb-[calc(3.25rem+env(safe-area-inset-bottom))] lg:flex-row lg:pb-0">
       <div
         className={`layout-pdf-panel flex min-h-0 min-w-0 flex-col bg-slate-50 lg:border-r lg:border-border ${
           mobileTab === "leccion" ? "flex flex-1" : "hidden lg:flex"
         }`}
       >
-        <div className="shrink-0 border-b border-border bg-card p-2 lg:hidden">
-          <LeccionControls semana={semana} setSemana={setSemana} />
+        <div className="shrink-0 border-b border-border bg-card px-2 py-1.5 lg:hidden">
+          <LeccionControls semana={semana} setSemana={setSemana} compact />
         </div>
         {BibliaPasaje && (
           <div className="border-b border-accent/30 bg-accent-soft px-5 py-4">
@@ -456,14 +456,14 @@ export default function Home() {
       )}
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-card shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:hidden"
+        className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-card shadow-[0_-2px_12px_rgba(0,0,0,0.06)] lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Navegación principal"
       >
         <button
           type="button"
           onClick={() => setMobileTab("leccion")}
-          className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-sm font-medium transition active:bg-slate-100 ${
+          className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition active:bg-slate-100 ${
             mobileTab === "leccion" ? "text-primary bg-primary/5" : "text-slate-600"
           }`}
         >
@@ -473,7 +473,7 @@ export default function Home() {
         <button
           type="button"
           onClick={() => setMobileTab("estudio")}
-          className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-sm font-medium transition active:bg-slate-100 ${
+          className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition active:bg-slate-100 ${
             mobileTab === "estudio" ? "text-primary bg-primary/5" : "text-slate-600"
           }`}
         >
@@ -483,7 +483,7 @@ export default function Home() {
         <button
           type="button"
           onClick={() => setMobileTab("chat")}
-          className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-sm font-medium transition active:bg-slate-100 ${
+          className={`relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition active:bg-slate-100 ${
             mobileTab === "chat" ? "text-primary bg-primary/5" : "text-slate-600"
           }`}
         >
