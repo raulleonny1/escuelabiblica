@@ -13,7 +13,10 @@ import {
   Timestamp,
   type Unsubscribe,
 } from "firebase/firestore"
-import { db } from "./firebase"
+import { getDb, isFirebaseConfigured } from "./firebase"
+
+const FIREBASE_NO_CONFIG =
+  "Firebase no configurado. Añade NEXT_PUBLIC_FIREBASE_* en Vercel y haz Redeploy."
 import {
   nuevoIdSesion,
   safeLocalGet,
@@ -125,7 +128,7 @@ function filtrarUsuariosEnChat(docs: PresenciaDoc[]): ChatUsuarioEnLinea[] {
 
 async function limpiarPresenciaObsoleta() {
   const ahora = Date.now()
-  const snap = await getDocs(collection(db, "chatPresence"))
+  const snap = await getDocs(collection(getDb(), "chatPresence"))
   await Promise.all(
     snap.docs.map(async (item) => {
       const data = item.data()
@@ -143,9 +146,10 @@ async function limpiarPresenciaObsoleta() {
 }
 
 export async function enviarMensajeChat(nombre: string, texto: string, sessionId: string) {
+  if (!isFirebaseConfigured()) return
   const limpio = texto.trim().slice(0, 2000)
   if (!limpio) return
-  await addDoc(collection(db, "chatMessages"), {
+  await addDoc(collection(getDb(), "chatMessages"), {
     nombre: nombre.trim().slice(0, 32),
     texto: limpio,
     tipo: "message",
@@ -155,8 +159,9 @@ export async function enviarMensajeChat(nombre: string, texto: string, sessionId
 }
 
 export async function anunciarEntradaChat(nombre: string, sessionId: string) {
+  if (!isFirebaseConfigured()) return
   if (safeSessionGet(JOIN_KEY) === sessionId) return
-  await addDoc(collection(db, "chatMessages"), {
+  await addDoc(collection(getDb(), "chatMessages"), {
     nombre: nombre.trim().slice(0, 32),
     texto: `${nombre.trim()} entró al chat`,
     tipo: "join",
@@ -170,7 +175,12 @@ export function subscribeChatMessages(
   onData: (messages: ChatMessage[]) => void,
   onError: (error: Error) => void
 ): Unsubscribe {
-  const q = query(collection(db, "chatMessages"), orderBy("createdAt", "asc"), limit(200))
+  if (!isFirebaseConfigured()) {
+    onData([])
+    onError(new Error(FIREBASE_NO_CONFIG))
+    return () => {}
+  }
+  const q = query(collection(getDb(), "chatMessages"), orderBy("createdAt", "asc"), limit(200))
   return onSnapshot(
     q,
     (snapshot) => {
@@ -195,12 +205,17 @@ export function subscribePresenciaChat(
   onData: (usuarios: ChatUsuarioEnLinea[]) => void,
   onError: (error: Error) => void
 ): Unsubscribe {
+  if (!isFirebaseConfigured()) {
+    onData([])
+    onError(new Error(FIREBASE_NO_CONFIG))
+    return () => {}
+  }
   let cache: PresenciaDoc[] = []
 
   const emitir = () => onData(filtrarUsuariosConectados(cache))
 
   const unsub = onSnapshot(
-    collection(db, "chatPresence"),
+    collection(getDb(), "chatPresence"),
     (snapshot) => {
       cache = snapshot.docs.map((item) => {
         const data = item.data()
@@ -230,13 +245,18 @@ export function subscribePresenciaCompleta(
   onData: (conectados: ChatUsuarioEnLinea[], enChat: ChatUsuarioEnLinea[]) => void,
   onError: (error: Error) => void
 ): Unsubscribe {
+  if (!isFirebaseConfigured()) {
+    onData([], [])
+    onError(new Error(FIREBASE_NO_CONFIG))
+    return () => {}
+  }
   let cache: PresenciaDoc[] = []
 
   const emitir = () =>
     onData(filtrarUsuariosConectados(cache), filtrarUsuariosEnChat(cache))
 
   const unsub = onSnapshot(
-    collection(db, "chatPresence"),
+    collection(getDb(), "chatPresence"),
     (snapshot) => {
       cache = snapshot.docs.map((item) => {
         const data = item.data()
@@ -263,9 +283,10 @@ export function subscribePresenciaCompleta(
 
 /** Presencia en la app (cualquier pestaña) mientras tenga nombre de chat */
 export function iniciarPresenciaEnApp(nombre: string, sessionId: string): () => void {
+  if (!isFirebaseConfigured()) return () => {}
   const nombreLimpio = nombre.trim().slice(0, 32)
   const presenceId = getPresenceDocId(nombreLimpio)
-  const ref = doc(db, "chatPresence", presenceId)
+  const ref = doc(getDb(), "chatPresence", presenceId)
 
   const actualizar = () => {
     setDoc(
@@ -295,9 +316,10 @@ export function iniciarPresenciaEnApp(nombre: string, sessionId: string): () => 
 
 /** Marca que el usuario está en el panel/pestaña del chat */
 export function iniciarPresenciaEnChat(nombre: string, sessionId: string): () => void {
+  if (!isFirebaseConfigured()) return () => {}
   const nombreLimpio = nombre.trim().slice(0, 32)
   const presenceId = getPresenceDocId(nombreLimpio)
-  const ref = doc(db, "chatPresence", presenceId)
+  const ref = doc(getDb(), "chatPresence", presenceId)
 
   const actualizar = () => {
     setDoc(
@@ -338,8 +360,9 @@ export function iniciarPresenciaEnChat(nombre: string, sessionId: string): () =>
 
 /** Latido al escribir o enviar (sigue contando como interactuando) */
 export function pulsoActividadEnChat(nombre: string) {
+  if (!isFirebaseConfigured()) return
   const nombreLimpio = nombre.trim().slice(0, 32)
-  const ref = doc(db, "chatPresence", getPresenceDocId(nombreLimpio))
+  const ref = doc(getDb(), "chatPresence", getPresenceDocId(nombreLimpio))
   setDoc(
     ref,
     {

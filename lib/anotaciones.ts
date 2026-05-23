@@ -7,7 +7,7 @@ import {
   setDoc,
 } from "firebase/firestore"
 import type { DiaLeccionId } from "@/lib/lecciones"
-import { db } from "./firebase"
+import { getDb, isFirebaseConfigured } from "./firebase"
 import { safeLocalGet, safeLocalSet } from "./storage"
 
 export type MarcaFormato = "resaltado" | "negrita" | "subrayado"
@@ -51,8 +51,17 @@ export function subscribeAnotaciones(
   onData: (items: AnotacionLeccion[]) => void,
   onError: (error: Error) => void
 ) {
+  if (!isFirebaseConfigured()) {
+    onData(leerAnotacionesLocal())
+    onError(
+      new Error(
+        "Firebase no configurado en el servidor. Añade NEXT_PUBLIC_FIREBASE_* en Vercel y redeploy."
+      )
+    )
+    return () => {}
+  }
   return onSnapshot(
-    collection(db, "anotaciones"),
+    collection(getDb(), "anotaciones"),
     (snapshot) => {
       const items: AnotacionLeccion[] = []
       snapshot.forEach((item) => {
@@ -76,14 +85,16 @@ export function subscribeAnotaciones(
 }
 
 export async function guardarAnotacion(anotacion: AnotacionLeccion) {
-  await setDoc(doc(db, "anotaciones", anotacion.id), {
+  if (!isFirebaseConfigured()) return
+  await setDoc(doc(getDb(), "anotaciones", anotacion.id), {
     ...anotacion,
     updatedAt: serverTimestamp(),
   })
 }
 
 export async function eliminarAnotacion(id: string) {
-  await deleteDoc(doc(db, "anotaciones", id))
+  if (!isFirebaseConfigured()) return
+  await deleteDoc(doc(getDb(), "anotaciones", id))
 }
 
 export function anotacionesPorFecha(items: AnotacionLeccion[], fecha: string) {

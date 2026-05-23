@@ -6,7 +6,7 @@ import {
   serverTimestamp,
   setDoc,
 } from "firebase/firestore"
-import { db } from "./firebase"
+import { getDb, isFirebaseConfigured } from "./firebase"
 import { safeLocalGet, safeLocalSet } from "./storage"
 
 const STORAGE_KEY = "comentariosPorFecha"
@@ -29,8 +29,18 @@ export function subscribeComentarios(
   onData: (data: Record<string, string>) => void,
   onError: (error: Error) => void
 ) {
+  if (!isFirebaseConfigured()) {
+    const local = leerComentariosLocal()
+    onData(local)
+    onError(
+      new Error(
+        "Firebase no configurado en el servidor. Añade NEXT_PUBLIC_FIREBASE_* en Vercel y redeploy."
+      )
+    )
+    return () => {}
+  }
   return onSnapshot(
-    collection(db, "comentarios"),
+    collection(getDb(), "comentarios"),
     (snapshot) => {
       const data: Record<string, string> = {}
       snapshot.forEach((item) => {
@@ -50,7 +60,8 @@ export async function migrarComentariosLocales(data: Record<string, string>) {
 }
 
 export async function guardarComentario(fecha: string, texto: string, semana?: number) {
-  await setDoc(doc(db, "comentarios", fecha), {
+  if (!isFirebaseConfigured()) return
+  await setDoc(doc(getDb(), "comentarios", fecha), {
     fecha,
     texto,
     ...(semana != null ? { semana } : {}),
@@ -59,5 +70,6 @@ export async function guardarComentario(fecha: string, texto: string, semana?: n
 }
 
 export async function eliminarComentario(fecha: string) {
-  await deleteDoc(doc(db, "comentarios", fecha))
+  if (!isFirebaseConfigured()) return
+  await deleteDoc(doc(getDb(), "comentarios", fecha))
 }
