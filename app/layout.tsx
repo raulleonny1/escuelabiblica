@@ -2,8 +2,10 @@ import type { Viewport } from "next"
 import { Lora, Source_Sans_3 } from "next/font/google"
 import AppHeader from "@/components/AppHeader"
 import { EstudioProvider } from "@/components/EstudioContext"
+import FirebaseInit from "@/components/FirebaseInit"
 import FontScaleInit from "@/components/FontScaleInit"
 import PwaInstallPrompt from "@/components/PwaInstallPrompt"
+import { readFirebaseConfigFromEnv } from "@/lib/firebaseEnv"
 import "./globals.css"
 
 const lora = Lora({
@@ -40,6 +42,9 @@ export const metadata = {
   },
 }
 
+/** Lee variables de entorno en cada visita (no cachear layout sin Firebase). */
+export const dynamic = "force-dynamic"
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -53,9 +58,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const firebaseConfig = readFirebaseConfigFromEnv()
+
   return (
     <html lang="es" data-font-scale="0" className={`${lora.variable} ${sourceSans.variable}`}>
       <body className="m-0 p-0 antialiased">
+        <FirebaseInit config={firebaseConfig} />
         <FontScaleInit />
         <EstudioProvider>
           <div className="flex h-dvh flex-col overflow-hidden">

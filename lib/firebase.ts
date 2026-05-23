@@ -1,23 +1,23 @@
 import { initializeApp, getApps, type FirebaseApp, type FirebaseOptions } from "firebase/app"
 import { getFirestore, type Firestore } from "firebase/firestore"
 
-function readEnv(name: string): string {
-  return process.env[name]?.trim() ?? ""
+/** Config inyectada desde el layout (servidor → cliente). Evita depender solo del build. */
+let runtimeConfig: FirebaseOptions | null = null
+
+export function setFirebaseRuntimeConfig(config: FirebaseOptions | null) {
+  const prev = JSON.stringify(runtimeConfig)
+  const next = JSON.stringify(config)
+  if (prev === next) return
+  runtimeConfig = config
+  appInstance = undefined
+  dbInstance = undefined
 }
 
 export function getFirebaseConfig(): FirebaseOptions | null {
-  const apiKey = readEnv("NEXT_PUBLIC_FIREBASE_API_KEY")
-  const projectId = readEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID")
-  if (!apiKey || !projectId) return null
-
-  return {
-    apiKey,
-    authDomain: readEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"),
-    projectId,
-    storageBucket: readEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"),
-    messagingSenderId: readEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"),
-    appId: readEnv("NEXT_PUBLIC_FIREBASE_APP_ID"),
+  if (runtimeConfig?.apiKey && runtimeConfig?.projectId) {
+    return runtimeConfig
   }
+  return null
 }
 
 export function isFirebaseConfigured(): boolean {
@@ -28,9 +28,9 @@ export function isFirebaseConfigured(): boolean {
 export function mensajeErrorFirebase(error: Error): string {
   if (error.message === "VERCEL_ENV_MISSING" || error.message.includes("no configurado")) {
     return (
-      "Variables de Firebase no detectadas en este despliegue. " +
-      "En Vercel → Settings → Environment Variables añade las 6 variables NEXT_PUBLIC_FIREBASE_* " +
-      "(Production, Preview y Development) y pulsa Redeploy."
+      "Variables de Firebase no detectadas. En Vercel → Settings → Environment Variables " +
+      "añade las 6 variables NEXT_PUBLIC_FIREBASE_* (las 3 casillas: Production, Preview, Development) " +
+      "y pulsa Redeploy. Si ya las tienes, revisa que el nombre no tenga espacios ni comillas."
     )
   }
   if (error.message.includes("permission-denied") || error.message.includes("Permission")) {
@@ -48,9 +48,7 @@ let dbInstance: Firestore | undefined
 export function getFirebaseApp(): FirebaseApp {
   const config = getFirebaseConfig()
   if (!config) {
-    throw new Error(
-      "Firebase no está configurado. Añade las variables NEXT_PUBLIC_FIREBASE_* en Vercel y vuelve a desplegar."
-    )
+    throw new Error("VERCEL_ENV_MISSING")
   }
   if (!appInstance) {
     appInstance = getApps().length > 0 ? getApps()[0]! : initializeApp(config)
