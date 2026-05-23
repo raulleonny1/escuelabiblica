@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useEffect, useMemo, useRef } from "react"
 import TextoLeccionSelectable from "@/components/TextoLeccionSelectable"
 import VersiculoDelDiaCard from "@/components/VersiculoDelDiaCard"
+import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import type { AnotacionLeccion, MarcaFormato } from "@/lib/anotaciones"
 import { PORTADA_SRC } from "@/lib/portada"
 import {
@@ -111,6 +112,11 @@ export default function LeccionViewer({
               Lección {leccion.numero} — {leccion.titulo}
             </h2>
           </div>
+          <HojaDominicalBoton
+            semana={semana}
+            fecha={fechaDiaActivo}
+            className="hidden self-center md:inline-flex"
+          />
           <VersiculoDelDiaCard semana={semana} dia={diaActivo} />
         </div>
 
@@ -121,7 +127,10 @@ export default function LeccionViewer({
           <p className="mt-0.5 text-[0.6875rem] text-muted">
             {ETIQUETAS_DIA_LECCION[diaActivo].split(" —")[0]} · Sem. {semana}
           </p>
-          <VersiculoDelDiaCard semana={semana} dia={diaActivo} compact className="mt-2 md:hidden" />
+          <div className="mt-2 flex items-stretch gap-2 md:hidden">
+            <HojaDominicalBoton semana={semana} fecha={fechaDiaActivo} className="shrink-0" />
+            <VersiculoDelDiaCard semana={semana} dia={diaActivo} compact className="min-w-0 flex-1" />
+          </div>
         </div>
 
         <p className="mt-2 hidden rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary lg:block">

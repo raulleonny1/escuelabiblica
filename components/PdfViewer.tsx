@@ -9,6 +9,8 @@ interface PdfViewerProps {
   url: string
   irAlDiaLectura?: boolean
   semana?: number
+  /** Si se indica, abre en la página de este día (YYYY-MM-DD) */
+  fechaLectura?: string
 }
 
 function detectarModoTactil(): boolean {
@@ -19,7 +21,7 @@ function detectarModoTactil(): boolean {
   )
 }
 
-export default function PdfViewer({ url, irAlDiaLectura, semana }: PdfViewerProps) {
+export default function PdfViewer({ url, irAlDiaLectura, semana, fechaLectura }: PdfViewerProps) {
   const [touchMode] = useState(detectarModoTactil)
   const [montado, setMontado] = useState(false)
   const [paginaInicial, setPaginaInicial] = useState(0)
@@ -34,7 +36,7 @@ export default function PdfViewer({ url, irAlDiaLectura, semana }: PdfViewerProp
     setPaginaLista(false)
     setPaginaInicial(0)
 
-    if (!irAlDiaLectura || !semana) {
+    if (!irAlDiaLectura || (!semana && !fechaLectura)) {
       setPaginaLista(true)
       return
     }
@@ -44,7 +46,12 @@ export default function PdfViewer({ url, irAlDiaLectura, semana }: PdfViewerProp
         const pdfjs = await import("pdfjs-dist")
         pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js"
         const doc = await pdfjs.getDocument(url).promise
-        const fecha = getFechaLecturaParaSemana(semana!)
+        const fecha =
+          fechaLectura ?? (semana ? getFechaLecturaParaSemana(semana) : undefined)
+        if (!fecha) {
+          if (!cancelado) setPaginaLista(true)
+          return
+        }
         const index = await findPageIndexForDay(doc, fecha)
         if (!cancelado) setPaginaInicial(index)
         await doc.destroy()
@@ -59,7 +66,7 @@ export default function PdfViewer({ url, irAlDiaLectura, semana }: PdfViewerProp
     return () => {
       cancelado = true
     }
-  }, [url, irAlDiaLectura, semana])
+  }, [url, irAlDiaLectura, semana, fechaLectura])
 
   if (!montado || !paginaLista) {
     return (
