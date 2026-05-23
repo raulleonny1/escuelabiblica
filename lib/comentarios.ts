@@ -32,11 +32,7 @@ export function subscribeComentarios(
   if (!isFirebaseConfigured()) {
     const local = leerComentariosLocal()
     onData(local)
-    onError(
-      new Error(
-        "Firebase no configurado en el servidor. Añade NEXT_PUBLIC_FIREBASE_* en Vercel y redeploy."
-      )
-    )
+    onError(new Error("VERCEL_ENV_MISSING"))
     return () => {}
   }
   return onSnapshot(

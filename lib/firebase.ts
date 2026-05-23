@@ -24,6 +24,24 @@ export function isFirebaseConfigured(): boolean {
   return getFirebaseConfig() !== null
 }
 
+/** Mensaje claro para la UI cuando Firebase no responde */
+export function mensajeErrorFirebase(error: Error): string {
+  if (error.message === "VERCEL_ENV_MISSING" || error.message.includes("no configurado")) {
+    return (
+      "Variables de Firebase no detectadas en este despliegue. " +
+      "En Vercel → Settings → Environment Variables añade las 6 variables NEXT_PUBLIC_FIREBASE_* " +
+      "(Production, Preview y Development) y pulsa Redeploy."
+    )
+  }
+  if (error.message.includes("permission-denied") || error.message.includes("Permission")) {
+    return (
+      "Firestore rechazó la conexión (permisos). Publica firestore.rules en Firebase Console " +
+      "y revisa que el proyecto sea escuelabiblica-a1177."
+    )
+  }
+  return `Sin conexión a Firebase: ${error.message}. Usando datos guardados en este dispositivo.`
+}
+
 let appInstance: FirebaseApp | undefined
 let dbInstance: Firestore | undefined
 

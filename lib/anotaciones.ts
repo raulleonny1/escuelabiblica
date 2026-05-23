@@ -53,11 +53,7 @@ export function subscribeAnotaciones(
 ) {
   if (!isFirebaseConfigured()) {
     onData(leerAnotacionesLocal())
-    onError(
-      new Error(
-        "Firebase no configurado en el servidor. Añade NEXT_PUBLIC_FIREBASE_* en Vercel y redeploy."
-      )
-    )
+    onError(new Error("VERCEL_ENV_MISSING"))
     return () => {}
   }
   return onSnapshot(

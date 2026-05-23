@@ -28,6 +28,7 @@ import {
   leerAnotacionesLocal,
   guardarAnotacionesLocal,
 } from "@/lib/anotaciones"
+import { mensajeErrorFirebase } from "@/lib/firebase"
 import {
   ETIQUETAS_DIA_LECCION,
   diaLeccionIdDesdeFecha,
@@ -271,10 +272,10 @@ export default function Home() {
         setSyncError(null)
         setCargandoComentarios(false)
       },
-      () => {
+      (error) => {
         const local = leerComentariosLocal()
         setComentariosPorFecha(local)
-        setSyncError("Sin conexión a Firebase. Usando comentarios locales.")
+        setSyncError(mensajeErrorFirebase(error))
         setCargandoComentarios(false)
       }
     )
@@ -283,9 +284,16 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    return subscribeAnotaciones(setAnotaciones, () => {
-      setAnotaciones(leerAnotacionesLocal())
-    })
+    return subscribeAnotaciones(
+      (items) => {
+        setAnotaciones(items)
+        setSyncError(null)
+      },
+      (error) => {
+        setAnotaciones(leerAnotacionesLocal())
+        setSyncError(mensajeErrorFirebase(error))
+      }
+    )
   }, [])
 
   useEffect(() => {
