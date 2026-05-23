@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Escuela Bíblica
 
-## Getting Started
+App Next.js (PWA) para lecciones del trimestre, notas, biblia RVR1909 y chat en línea. Datos en Firebase Firestore.
 
-First, run the development server:
+## Desarrollo local
 
 ```bash
+npm install
+cp .env.example .env.local   # en Windows: copy .env.example .env.local
+# Completa .env.local con los valores de Firebase Console
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables de entorno (Firebase)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Obtén los valores en [Firebase Console](https://console.firebase.google.com/) → tu proyecto → **Project settings** → **Your apps** → configuración del SDK web.
 
-## Learn More
+| Variable | Descripción |
+|----------|-------------|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | apiKey |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | authDomain |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | projectId |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | storageBucket |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | messagingSenderId |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | appId |
 
-To learn more about Next.js, take a look at the following resources:
+En **Vercel**: Settings → Environment Variables → añade las mismas variables para Production (y Preview si quieres).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Si GitHub alertó por una API key expuesta
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Este repo ya no debe llevar claves en el código** — solo en `.env.local` / Vercel.
+2. **Rota la clave** (la del primer commit sigue en el historial de Git):
+   - [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → **Credentials**
+   - Localiza la API key del proyecto `escuelabiblica-a1177` → **Regenerate key** o crea una nueva y borra la antigua.
+   - Actualiza `NEXT_PUBLIC_FIREBASE_API_KEY` en `.env.local` y en Vercel.
+3. **Restringe la clave**: en la misma pantalla, limita por **HTTP referrers** (`localhost:3000`, `*.vercel.app`, tu dominio).
+4. En Firebase → **Firestore** → publica las reglas de `firestore.rules` si aún no lo hiciste.
 
-## Deploy on Vercel
+> La API key de Firebase en apps web no es un secreto de servidor (va en el navegador), pero no debe estar en Git; la restricción por dominio es lo que protege el abuso.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Despliegue en Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Importa el repo desde GitHub. Framework: **Next.js**. Añade las variables `NEXT_PUBLIC_FIREBASE_*` antes del deploy.
+
+## Estructura breve
+
+- `lib/lecciones/` — contenido de las 13 semanas
+- `lib/anotaciones.ts`, `lib/comentarios.ts` — Firestore
+- `public/portada.png` — portada del trimestre
+- `firestore.rules` — reglas de seguridad
