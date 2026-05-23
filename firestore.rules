@@ -1,0 +1,21 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /comentarios/{fecha} {
+      allow read, write: if true;
+    }
+
+    match /anotaciones/{anotacionId} {
+      allow read, write: if true;
+    }
+
+    match /chatMessages/{messageId} {
+      allow read, write: if true;
+    }
+
+    match /chatPresence/{sessionId} {
+      allow read, write: if true;
+    }
+  }
+}

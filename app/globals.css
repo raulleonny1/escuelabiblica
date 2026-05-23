@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+
+  --color-primary: #0f766e;
+  --color-primary-dark: #0b5a54;
+  --color-primary-light: #14b8a6;
+  --color-accent: #f59e0b;
+  --color-accent-soft: #fef3c7;
+  --color-surface: #f0fdfa;
+  --color-card: #ffffff;
+  --color-muted: #5b6b68;
+  --color-border: #cce8e4;
+}
+
+/* Escala global: Tailwind usa rem → todo el UI crece o vuelve a la normalidad */
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+  font-size: 106.25%;
+}
+
+html[data-font-scale="0"] {
+  font-size: 106.25%;
+}
+
+html[data-font-scale="1"] {
+  font-size: 118.75%;
+}
+
+html[data-font-scale="2"] {
+  font-size: 131.25%;
+}
+
+html[data-font-scale="3"] {
+  font-size: 143.75%;
+}
+
+body {
+  height: 100%;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+}
+
+body {
+  background: var(--color-surface);
+  color: #134e4a;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Reparto 70% / 30% en escritorio (flex-7 no existe en Tailwind) */
+@media (min-width: 1024px) {
+  .layout-pdf-panel {
+    flex: 7 1 0%;
+    min-width: 0;
+  }
+
+  .layout-sidebar-panel {
+    flex: 2 1 0%;
+    min-width: 0;
+  }
+}
+
+/* Visor PDF: altura completa del panel */
+.pdf-viewer-shell {
+  height: 100%;
+  min-height: 0;
+}
+
+.pdf-viewer-shell .rpv-default-layout__container {
+  height: 100%;
+  min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .pdf-viewer-shell,
+  .pdf-viewer-shell .rpv-default-layout__container {
+    min-height: 320px;
+  }
+}
+
+.pdf-viewer-shell .rpv-default-layout__main {
+  flex: 1;
+  min-height: 0;
+}
+
+.pdf-viewer-shell .rpv-core__viewer {
+  height: 100%;
+  min-height: 400px;
+  background: var(--color-surface);
+}
+
+.pdf-viewer-shell .rpv-core__inner-pages {
+  min-height: 100%;
+}
+
+.pdf-viewer-shell .rpv-core__page-layer {
+  box-shadow: 0 4px 24px rgba(15, 118, 110, 0.18);
+}
+
+/* Botones y controles táctiles en móvil */
+@media (max-width: 1023px) {
+  .pdf-viewer-shell .rpv-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .pdf-viewer-shell .rpv-core__inner-pages {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+button,
+select,
+textarea,
+input[type="date"] {
+  touch-action: manipulation;
+}
+
+/* Anotaciones en lección — resaltado solo con esta clase (no usar <mark> sin ella) */
+.anot-resaltado {
+  background-color: #fef08a;
+  border-radius: 2px;
+  padding: 0 1px;
+  color: inherit;
+}
+
+mark.anot-resaltado {
+  color: inherit;
+}
+
+/* Chat: barra de envío siempre visible (no quedar detrás de la nav inferior) */
+@media (max-width: 1023px) {
+  .chat-compose {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+  }
+}
