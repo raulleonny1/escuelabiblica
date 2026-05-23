@@ -7,7 +7,6 @@ import {
   yaInstaladaPwa,
 } from "@/lib/pwa"
 
-/** Botón visible en móvil/tablet para volver a abrir las instrucciones de instalación */
 export default function PwaInstallButton() {
   const [visible, setVisible] = useState(false)
 
@@ -21,11 +20,13 @@ export default function PwaInstallButton() {
     <button
       type="button"
       onClick={solicitarBannerInstalacion}
-      className="mt-1.5 inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-white/30 bg-white/15 px-2.5 py-1 text-[0.6875rem] font-semibold text-white backdrop-blur-sm active:bg-white/25 sm:text-xs"
+      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-white/30 bg-white/15 px-3 text-[0.6875rem] font-semibold text-white backdrop-blur-sm active:bg-white/25 sm:text-xs"
       aria-label="Instalar aplicación en este dispositivo"
     >
-      <span aria-hidden>📲</span>
-      Instalar app
+      <span aria-hidden className="text-sm">
+        📲
+      </span>
+      Instalar
     </button>
   )
 }
