@@ -1,6 +1,6 @@
 "use client"
 
-import { PORTADA_SRC } from "@/lib/portada"
+import { FONDO_SRC } from "@/lib/portada"
 import { getVersiculoDelDia } from "@/lib/versiculosDia"
 import type { DiaLeccionId } from "@/lib/lecciones"
 
@@ -30,12 +30,12 @@ export default function VersiculoDelDiaCard({
       aria-label={`Versículo del día: ${versiculo.cita}`}
     >
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-[0.22]"
-        style={{ backgroundImage: `url(${PORTADA_SRC})` }}
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${FONDO_SRC})` }}
         aria-hidden
       />
       <div
-        className="absolute inset-0 bg-gradient-to-br from-primary/92 via-primary/88 to-primary-dark/95"
+        className="absolute inset-0 bg-gradient-to-br from-primary/75 via-primary/70 to-primary-dark/85"
         aria-hidden
       />
       <div
