@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import TextoLeccionSelectable from "@/components/TextoLeccionSelectable"
 import type { AnotacionLeccion, MarcaFormato } from "@/lib/anotaciones"
 import { PORTADA_SRC } from "@/lib/portada"
@@ -68,6 +68,13 @@ export default function LeccionViewer({
     [leccion, diaActivo]
   )
 
+  const tabsDiaRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const activo = tabsDiaRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')
+    activo?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" })
+  }, [diaActivo, semana])
+
   if (!leccion) {
     return (
       <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted">
@@ -120,6 +127,7 @@ export default function LeccionViewer({
         </p>
 
         <div
+          ref={tabsDiaRef}
           className="mt-2 flex gap-0.5 overflow-x-auto pb-0.5 custom-scroll sm:mt-3 sm:gap-1"
           role="tablist"
           aria-label="Día de la lección"

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Biblia from "@/components/Biblia"
 import LeccionViewer from "@/components/LeccionViewer"
 import {
@@ -31,18 +31,22 @@ import {
 import { mensajeErrorFirebase } from "@/lib/firebase"
 import {
   ETIQUETAS_DIA_LECCION,
-  diaLeccionIdDesdeFecha,
   getBloquesDia,
   getLeccionPorSemana,
 } from "@/lib/lecciones"
 import type { DiaLeccionId } from "@/lib/lecciones"
 import {
+  diaEstudioInicial,
+  mismoDiaEstudio,
+  resolverDiaEstudio,
+  type DiaEstudio,
+} from "@/lib/diaEstudio"
+import {
+  fechaEnSemana,
   getFechaDestacadaEnSemana,
-  getFechasSemana,
-  getSemanaActual,
   fechaLocalHoy,
 } from "@/lib/semana"
-import { fechaDeDiaLeccion, diaLeccionDeFecha } from "@/lib/semanaDia"
+import { fechaDeDiaLeccion } from "@/lib/semanaDia"
 import {
   getChatSessionId,
   guardarNombreChat,
@@ -55,20 +59,19 @@ import { safeLocalRemove, safeSessionRemove } from "@/lib/storage"
 
 type MobileTab = "leccion" | "estudio" | "chat"
 
+const diaEstudioAlInicio = diaEstudioInicial()
+
 export default function Home() {
   const [showModal, setShowModal] = useState(false)
   const [editFecha, setEditFecha] = useState<string | null>(null)
   const [editTexto, setEditTexto] = useState("")
   const [BibliaPasaje, setBibliaPasaje] = useState("")
-  const [semana, setSemana] = useState(() => getSemanaActual())
+  const [semana, setSemana] = useState(diaEstudioAlInicio.semana)
   const [comentariosPorFecha, setComentariosPorFecha] = useState<Record<string, string>>({})
   const [comentario, setComentario] = useState("")
-  const [selectedDate, setSelectedDate] = useState(() =>
-    getFechaDestacadaEnSemana(getSemanaActual())
-  )
-  const [diaLeccion, setDiaLeccion] = useState<DiaLeccionId>(() =>
-    diaLeccionIdDesdeFecha(getFechaDestacadaEnSemana(getSemanaActual()))
-  )
+  const [selectedDate, setSelectedDate] = useState(diaEstudioAlInicio.fecha)
+  const [diaLeccion, setDiaLeccion] = useState<DiaLeccionId>(diaEstudioAlInicio.diaLeccion)
+  const diaEstudioRef = useRef<DiaEstudio>(diaEstudioAlInicio)
   const [anotaciones, setAnotaciones] = useState<AnotacionLeccion[]>([])
   const [cargandoComentarios, setCargandoComentarios] = useState(true)
   const [syncError, setSyncError] = useState<string | null>(null)
@@ -108,25 +111,44 @@ export default function Home() {
     return `${day}/${month}/${year}`
   }
 
+  /**
+   * Único punto de sincronización: semana + fecha del calendario + día Dom–Sáb + nota del día.
+   */
+  function aplicarDiaEstudio(fecha: string, semanaPreferida?: number) {
+    const resuelto = resolverDiaEstudio(fecha, semanaPreferida)
+    if (mismoDiaEstudio(diaEstudioRef.current, resuelto)) return
+
+    diaEstudioRef.current = resuelto
+    setSemana(resuelto.semana)
+    setSelectedDate(resuelto.fecha)
+    setDiaLeccion(resuelto.diaLeccion)
+    setComentario(comentariosPorFecha[resuelto.fecha] ?? "")
+    setEditFecha(null)
+  }
+
+  function cambiarSemana(nuevaSemana: number) {
+    const fecha = fechaEnSemana(selectedDate, nuevaSemana)
+      ? selectedDate
+      : getFechaDestacadaEnSemana(nuevaSemana)
+    aplicarDiaEstudio(fecha, nuevaSemana)
+  }
+
+  function cambiarTab(tab: MobileTab) {
+    aplicarDiaEstudio(selectedDate)
+    setMobileTab(tab)
+  }
+
   function seleccionarPasaje(v: string) {
     setBibliaPasaje(v)
-    setMobileTab("leccion")
+    cambiarTab("leccion")
   }
 
   function seleccionarDiaLeccion(dia: DiaLeccionId) {
-    setDiaLeccion(dia)
-    const fecha = fechaDeDiaLeccion(semana, dia)
-    setSelectedDate(fecha)
-    setComentario(comentariosPorFecha[fecha] ?? "")
-    setEditFecha(null)
+    aplicarDiaEstudio(fechaDeDiaLeccion(semana, dia), semana)
   }
 
   function seleccionarFechaCalendario(fecha: string) {
-    setSelectedDate(fecha)
-    setComentario(comentariosPorFecha[fecha] ?? "")
-    setEditFecha(null)
-    const dia = diaLeccionDeFecha(semana, fecha)
-    if (dia) setDiaLeccion(dia)
+    aplicarDiaEstudio(fecha)
   }
 
   function normalizarCita(cita: string) {
@@ -228,7 +250,7 @@ export default function Home() {
       const det = (e as CustomEvent<{ cantidad: number }>).detail
       setChatNoLeidos(det?.cantidad ?? 0)
     }
-    const onAbrirChat = () => setMobileTab("chat")
+    const onAbrirChat = () => cambiarTab("chat")
 
     window.addEventListener(CHAT_NO_LEIDOS_EVENT, onNoLeidos)
     window.addEventListener(CHAT_ABRIR_EVENT, onAbrirChat)
@@ -296,20 +318,6 @@ export default function Home() {
     )
   }, [])
 
-  useEffect(() => {
-    const dias = getFechasSemana(semana)
-    if (!dias.length) return
-    const enRango = dias.some((d) => d.fecha === selectedDate)
-    if (!enRango) {
-      const fecha = getFechaDestacadaEnSemana(semana)
-      const dia = diaLeccionDeFecha(semana, fecha) ?? "dom"
-      setSelectedDate(fecha)
-      setDiaLeccion(dia)
-      setComentario(comentariosPorFecha[fecha] ?? "")
-      setEditFecha(null)
-    }
-  }, [semana, comentariosPorFecha, selectedDate])
-
   async function handleGuardar(fecha: string, texto: string) {
     setGuardando(true)
     try {
@@ -364,7 +372,7 @@ export default function Home() {
         }`}
       >
         <div className="shrink-0 border-b border-border bg-card px-2 py-1.5 lg:hidden">
-          <LeccionControls semana={semana} setSemana={setSemana} compact />
+          <LeccionControls semana={semana} setSemana={cambiarSemana} compact />
         </div>
         {BibliaPasaje && (
           <div className="border-b border-accent/30 bg-accent-soft px-5 py-4">
@@ -399,7 +407,7 @@ export default function Home() {
         }`}
       >
         <div className="hidden lg:block">
-          <LeccionControls semana={semana} setSemana={setSemana} />
+          <LeccionControls semana={semana} setSemana={cambiarSemana} />
         </div>
 
         <NotasPanel
@@ -462,7 +470,7 @@ export default function Home() {
       >
         <button
           type="button"
-          onClick={() => setMobileTab("leccion")}
+          onClick={() => cambiarTab("leccion")}
           className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition active:bg-slate-100 ${
             mobileTab === "leccion" ? "text-primary bg-primary/5" : "text-slate-600"
           }`}
@@ -472,7 +480,7 @@ export default function Home() {
         </button>
         <button
           type="button"
-          onClick={() => setMobileTab("estudio")}
+          onClick={() => cambiarTab("estudio")}
           className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition active:bg-slate-100 ${
             mobileTab === "estudio" ? "text-primary bg-primary/5" : "text-slate-600"
           }`}
@@ -482,7 +490,7 @@ export default function Home() {
         </button>
         <button
           type="button"
-          onClick={() => setMobileTab("chat")}
+          onClick={() => cambiarTab("chat")}
           className={`relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition active:bg-slate-100 ${
             mobileTab === "chat" ? "text-primary bg-primary/5" : "text-slate-600"
           }`}
