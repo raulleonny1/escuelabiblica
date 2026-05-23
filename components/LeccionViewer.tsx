@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { useEffect, useMemo, useRef } from "react"
 import TextoLeccionSelectable from "@/components/TextoLeccionSelectable"
+import VersiculoDelDiaCard from "@/components/VersiculoDelDiaCard"
 import type { AnotacionLeccion, MarcaFormato } from "@/lib/anotaciones"
 import { PORTADA_SRC } from "@/lib/portada"
 import {
@@ -90,7 +91,7 @@ export default function LeccionViewer({
   return (
     <article className="custom-scroll flex h-full flex-col overflow-y-auto bg-card">
       <header className="shrink-0 border-b border-border bg-card px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4">
-        <div className="hidden gap-4 sm:flex">
+        <div className="hidden gap-3 sm:flex sm:items-stretch md:gap-4">
           <div className="relative h-24 w-[4.5rem] shrink-0 overflow-hidden rounded-lg border border-primary/20 shadow-md md:h-28 md:w-20">
             <Image
               src={PORTADA_SRC}
@@ -110,6 +111,7 @@ export default function LeccionViewer({
               Lección {leccion.numero} — {leccion.titulo}
             </h2>
           </div>
+          <VersiculoDelDiaCard semana={semana} dia={diaActivo} />
         </div>
 
         <div className="min-w-0 sm:hidden">
@@ -119,6 +121,7 @@ export default function LeccionViewer({
           <p className="mt-0.5 text-[0.6875rem] text-muted">
             {ETIQUETAS_DIA_LECCION[diaActivo].split(" —")[0]} · Sem. {semana}
           </p>
+          <VersiculoDelDiaCard semana={semana} dia={diaActivo} compact className="mt-2 md:hidden" />
         </div>
 
         <p className="mt-2 hidden rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary lg:block">
