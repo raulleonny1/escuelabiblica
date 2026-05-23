@@ -20,7 +20,7 @@ export default function PwaInstallButton() {
     <button
       type="button"
       onClick={solicitarBannerInstalacion}
-      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-white/30 bg-white/15 px-3 text-[0.6875rem] font-semibold text-white backdrop-blur-sm active:bg-white/25 sm:text-xs"
+      className="hidden h-8 shrink-0 items-center gap-1 rounded-lg border border-white/30 bg-white/15 px-2 text-[0.625rem] font-semibold text-white active:bg-white/25 lg:inline-flex xl:h-9 xl:px-2.5 xl:text-xs"
       aria-label="Instalar aplicación en este dispositivo"
     >
       <span aria-hidden className="text-sm">

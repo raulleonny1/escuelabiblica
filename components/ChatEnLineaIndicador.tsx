@@ -52,21 +52,20 @@ export default function ChatEnLineaIndicador({ placement }: { placement: Placeme
     cantidad === 0 ? "Sin conexión" : cantidad === 1 ? "Tú en línea" : `${cantidad} en línea`
 
   return (
-    <div className="hidden min-w-0 flex-1 md:block">
-      <div className="mx-auto max-w-md rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-sm">
-        <p className="flex items-center justify-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-amber-50/90">
-          <span
-            className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"
-            aria-hidden
-          />
-          {etiqueta}
-        </p>
-        {nombres.length > 0 && (
-          <p className="mt-0.5 truncate text-center text-xs text-white/95" title={nombres.join(", ")}>
-            {nombres.join(" · ")}
-          </p>
-        )}
-      </div>
+    <div
+      className="hidden max-w-[11rem] shrink-0 rounded-lg border border-white/15 bg-white/10 px-2 py-1 lg:block xl:max-w-[13rem]"
+      title={nombres.length > 0 ? nombres.join(", ") : undefined}
+    >
+      <p className="flex items-center gap-1 text-[0.625rem] font-semibold uppercase tracking-wide text-amber-50/90">
+        <span
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"
+          aria-hidden
+        />
+        {etiqueta}
+      </p>
+      {nombres.length > 0 && (
+        <p className="truncate text-[0.6875rem] leading-tight text-white/90">{nombres.join(" · ")}</p>
+      )}
     </div>
   )
 }
