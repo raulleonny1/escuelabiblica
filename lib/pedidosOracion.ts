@@ -14,7 +14,7 @@ import {
   where,
   type Timestamp,
 } from "firebase/firestore"
-import { getDb, isFirebaseConfigured } from "./firebase"
+import { esErrorIndiceFirestore, getDb, isFirebaseConfigured } from "./firebase"
 
 export type PedidoOracion = {
   id: string
@@ -77,8 +77,7 @@ export function subscribePedidosCompartidos(
       onData(items)
     },
     (err) => {
-      const msg = (err as Error).message ?? ""
-      if (!msg.includes("index") && !msg.includes("FAILED_PRECONDITION")) {
+      if (!esErrorIndiceFirestore(err as Error)) {
         onError(err as Error)
         return
       }
@@ -112,21 +111,40 @@ export function subscribeMisPedidos(
     return () => {}
   }
 
-  const q = query(
-    collection(getDb(), "pedidosOracion"),
-    where("usuarioId", "==", usuarioId),
-    orderBy("createdAt", "desc")
-  )
+  const col = collection(getDb(), "pedidosOracion")
+  const qOrdenado = query(col, where("usuarioId", "==", usuarioId), orderBy("createdAt", "desc"))
 
-  return onSnapshot(
-    q,
+  let unsubFallback: (() => void) | null = null
+
+  const unsub = onSnapshot(
+    qOrdenado,
     (snap) => {
       const items: PedidoOracion[] = []
       snap.forEach((item) => items.push(mapDoc(item.id, item.data())))
       onData(items)
     },
-    (err) => onError(err as Error)
+    (err) => {
+      if (!esErrorIndiceFirestore(err as Error)) {
+        onError(err as Error)
+        return
+      }
+      const qSimple = query(col, where("usuarioId", "==", usuarioId))
+      unsubFallback = onSnapshot(
+        qSimple,
+        (snap) => {
+          const items: PedidoOracion[] = []
+          snap.forEach((item) => items.push(mapDoc(item.id, item.data())))
+          onData(ordenarPorFecha(items))
+        },
+        (err2) => onError(err2 as Error)
+      )
+    }
   )
+
+  return () => {
+    unsub()
+    unsubFallback?.()
+  }
 }
 
 export async function crearPedidoOracion(
@@ -223,8 +241,7 @@ export function subscribeAvisosOracion(
       onData(items)
     },
     (err) => {
-      const msg = (err as Error).message ?? ""
-      if (!msg.includes("index") && !msg.includes("FAILED_PRECONDITION")) {
+      if (!esErrorIndiceFirestore(err as Error)) {
         onError(err as Error)
         return
       }

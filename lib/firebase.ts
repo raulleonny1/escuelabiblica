@@ -39,7 +39,18 @@ export function mensajeErrorFirebase(error: Error): string {
       "y revisa que el proyecto sea escuelabiblica-a1177."
     )
   }
+  if (esErrorIndiceFirestore(error)) {
+    return (
+      "Firestore está creando los índices (suele tardar 1–3 min). La app sigue funcionando; " +
+      "si el aviso continúa, en Firebase Console → Firestore → Índices comprueba que estén en verde."
+    )
+  }
   return `Sin conexión a Firebase: ${error.message}. Usando datos guardados en este dispositivo.`
+}
+
+export function esErrorIndiceFirestore(error: Error): boolean {
+  const msg = error.message ?? ""
+  return msg.includes("requires an index") || msg.includes("FAILED_PRECONDITION")
 }
 
 let appInstance: FirebaseApp | undefined

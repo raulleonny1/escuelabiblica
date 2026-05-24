@@ -51,7 +51,10 @@ export default function PedidoOracionModal({ onCerrar }: PedidoOracionModalProps
 
   useEffect(() => {
     const unsubC = subscribePedidosCompartidos(
-      setComunidad,
+      (items) => {
+        setComunidad(items)
+        setSyncError(null)
+      },
       (e) => setSyncError(mensajeErrorFirebase(e))
     )
     return () => unsubC()
@@ -61,7 +64,10 @@ export default function PedidoOracionModal({ onCerrar }: PedidoOracionModalProps
     if (!usuarioId) return
     const unsubM = subscribeMisPedidos(
       usuarioId,
-      setMios,
+      (items) => {
+        setMios(items)
+        setSyncError(null)
+      },
       (e) => setSyncError(mensajeErrorFirebase(e))
     )
     return () => unsubM()
