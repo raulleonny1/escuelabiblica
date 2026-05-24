@@ -2,6 +2,7 @@ import type { Viewport } from "next"
 import { Lora, Source_Sans_3 } from "next/font/google"
 import AppHeader from "@/components/AppHeader"
 import { EstudioProvider } from "@/components/EstudioContext"
+import { SesionProvider } from "@/components/SesionProvider"
 import FirebaseInit from "@/components/FirebaseInit"
 import FontScaleInit from "@/components/FontScaleInit"
 import PwaInstallPrompt from "@/components/PwaInstallPrompt"
@@ -66,15 +67,17 @@ export default function RootLayout({
         <FirebaseInit config={firebaseConfig} />
         <FontScaleInit />
         <EstudioProvider>
-          <div className="flex h-dvh flex-col overflow-hidden">
-            <AppHeader />
+          <SesionProvider>
+            <div className="flex h-dvh flex-col overflow-hidden">
+              <AppHeader />
 
-            <main className="flex min-h-0 flex-1 overflow-hidden bg-surface p-0 lg:p-4">
-              <div className="flex h-full min-h-0 w-full max-w-[1800px] mx-auto overflow-hidden bg-card lg:rounded-2xl lg:border lg:border-border lg:shadow-xl">
-                {children}
-              </div>
-            </main>
-          </div>
+              <main className="flex min-h-0 flex-1 overflow-hidden bg-surface p-0 lg:p-4">
+                <div className="flex h-full min-h-0 w-full max-w-[1800px] mx-auto overflow-hidden bg-card lg:rounded-2xl lg:border lg:border-border lg:shadow-xl">
+                  {children}
+                </div>
+              </main>
+            </div>
+          </SesionProvider>
         </EstudioProvider>
         <PwaInstallPrompt />
       </body>

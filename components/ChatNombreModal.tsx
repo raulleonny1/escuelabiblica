@@ -36,10 +36,11 @@ export default function ChatNombreModal({ onConfirm }: ChatNombreModalProps) {
         className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl"
       >
         <h2 id="chat-nombre-titulo" className="font-display text-lg font-semibold text-primary">
-          Bienvenido al chat
+          Bienvenido a Escuela Bíblica
         </h2>
         <p className="mt-1 text-sm text-slate-600">
-          Para conversar con quienes estén estudiando ahora, escribe cómo te llamas.
+          Escribe tu nombre para guardar tus notas, resaltados y comentarios. En este mismo
+          dispositivo entrarás automáticamente la próxima vez.
         </p>
         <label className="mt-4 block text-xs font-medium text-slate-500" htmlFor="chat-nombre">
           Tu nombre
@@ -63,7 +64,7 @@ export default function ChatNombreModal({ onConfirm }: ChatNombreModalProps) {
           type="submit"
           className="mt-4 min-h-12 w-full rounded-lg bg-primary py-3 text-base font-medium text-white shadow-md shadow-primary/20 active:opacity-90"
         >
-          Entrar al chat
+          Empezar a estudiar
         </button>
       </form>
     </div>

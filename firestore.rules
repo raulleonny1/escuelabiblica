@@ -2,12 +2,28 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /comentarios/{fecha} {
-      allow read, write: if true;
+    function esDueno() {
+      return request.auth != null
+        && resource.data.usuarioId == request.auth.uid;
+    }
+
+    function crearPropio() {
+      return request.auth != null
+        && request.resource.data.usuarioId == request.auth.uid;
+    }
+
+    match /comentarios/{docId} {
+      allow read: if request.auth != null
+        && resource.data.usuarioId == request.auth.uid;
+      allow create: if crearPropio();
+      allow update, delete: if esDueno();
     }
 
     match /anotaciones/{anotacionId} {
-      allow read, write: if true;
+      allow read: if request.auth != null
+        && resource.data.usuarioId == request.auth.uid;
+      allow create: if crearPropio();
+      allow update, delete: if esDueno();
     }
 
     match /chatMessages/{messageId} {

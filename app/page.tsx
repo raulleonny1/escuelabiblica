@@ -15,8 +15,8 @@ import {
 import { useEstudio } from "@/components/EstudioContext"
 import LeccionControls from "@/components/LeccionControls"
 import NotasPanel from "@/components/NotasPanel"
-import ChatNombreModal from "@/components/ChatNombreModal"
 import ChatPanel from "@/components/ChatPanel"
+import { useSesion } from "@/components/SesionProvider"
 import {
   type AnotacionLeccion,
   type MarcaFormato,
@@ -47,15 +47,9 @@ import {
   fechaLocalHoy,
 } from "@/lib/semana"
 import { fechaDeDiaLeccion } from "@/lib/semanaDia"
-import {
-  getChatSessionId,
-  guardarNombreChat,
-  iniciarPresenciaEnApp,
-  leerNombreChat,
-} from "@/lib/chat"
+import { getChatSessionId, iniciarPresenciaEnApp } from "@/lib/chat"
 import { useMediaLg } from "@/hooks/useMediaLg"
 import { CHAT_ABRIR_EVENT, CHAT_NO_LEIDOS_EVENT } from "@/lib/chatNotificaciones"
-import { safeLocalRemove, safeSessionRemove } from "@/lib/storage"
 
 type MobileTab = "leccion" | "estudio" | "chat"
 
@@ -77,11 +71,10 @@ export default function Home() {
   const [syncError, setSyncError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [mobileTab, setMobileTab] = useState<MobileTab>("leccion")
-  const [chatNombre, setChatNombre] = useState<string | null>(null)
-  const [chatNombreListo, setChatNombreListo] = useState(false)
   const [chatNoLeidos, setChatNoLeidos] = useState(0)
   const isLg = useMediaLg()
   const { setEstudio } = useEstudio()
+  const { usuarioId, nombre: chatNombre, cambiarNombre: handleCambiarNombreChat } = useSesion()
 
   useEffect(() => {
     const leccion = getLeccionPorSemana(semana)
@@ -181,8 +174,11 @@ export default function Home() {
       return
     }
 
+    if (!usuarioId) return
+
     const item: AnotacionLeccion = {
       id: datos.anotacionId ?? prev?.id ?? nuevaIdAnotacion(),
+      usuarioId,
       semana,
       fecha,
       diaLeccion,
@@ -195,7 +191,7 @@ export default function Home() {
     setAnotaciones((prevList) => {
       const sin = prevList.filter((a) => a.id !== item.id)
       const nuevo = [...sin, item]
-      guardarAnotacionesLocal(nuevo)
+      guardarAnotacionesLocal(usuarioId, nuevo)
       return nuevo
     })
   }
@@ -228,16 +224,10 @@ export default function Home() {
     await eliminarAnotacion(id)
     setAnotaciones((prev) => {
       const nuevo = prev.filter((a) => a.id !== id)
-      guardarAnotacionesLocal(nuevo)
+      guardarAnotacionesLocal(usuarioId, nuevo)
       return nuevo
     })
   }
-
-  useEffect(() => {
-    const guardado = leerNombreChat()
-    setChatNombre(guardado || null)
-    setChatNombreListo(true)
-  }, [])
 
   useEffect(() => {
     if (!chatNombre) return
@@ -260,27 +250,19 @@ export default function Home() {
     }
   }, [])
 
-  function handleConfirmarNombreChat(nombre: string) {
-    guardarNombreChat(nombre)
-    setChatNombre(nombre)
-  }
-
-  function handleCambiarNombreChat() {
-    safeLocalRemove("chatNombre")
-    safeSessionRemove("chatJoinAnnounced")
-    setChatNombre(null)
-  }
-
   useEffect(() => {
+    if (!usuarioId) return
+
     let migrado = false
 
     const unsubscribe = subscribeComentarios(
+      usuarioId,
       async (data) => {
         if (!migrado && Object.keys(data).length === 0) {
-          const local = leerComentariosLocal()
+          const local = leerComentariosLocal(usuarioId)
           if (Object.keys(local).length > 0) {
             try {
-              await migrarComentariosLocales(local)
+              await migrarComentariosLocales(usuarioId, local)
             } catch {
               setComentariosPorFecha(local)
               setSyncError("Sin conexión. Mostrando comentarios guardados en este dispositivo.")
@@ -295,7 +277,7 @@ export default function Home() {
         setCargandoComentarios(false)
       },
       (error) => {
-        const local = leerComentariosLocal()
+        const local = leerComentariosLocal(usuarioId)
         setComentariosPorFecha(local)
         setSyncError(mensajeErrorFirebase(error))
         setCargandoComentarios(false)
@@ -303,35 +285,39 @@ export default function Home() {
     )
 
     return () => unsubscribe()
-  }, [])
+  }, [usuarioId])
 
   useEffect(() => {
+    if (!usuarioId) return
+
     return subscribeAnotaciones(
+      usuarioId,
       (items) => {
         setAnotaciones(items)
         setSyncError(null)
       },
       (error) => {
-        setAnotaciones(leerAnotacionesLocal())
+        setAnotaciones(leerAnotacionesLocal(usuarioId))
         setSyncError(mensajeErrorFirebase(error))
       }
     )
-  }, [])
+  }, [usuarioId])
 
   async function handleGuardar(fecha: string, texto: string) {
+    if (!usuarioId) return
     setGuardando(true)
     try {
-      await guardarComentario(fecha, texto, semana)
+      await guardarComentario(usuarioId, fecha, texto, semana)
       setComentariosPorFecha((prev) => {
         const nuevo = { ...prev, [fecha]: texto }
-        guardarComentariosLocal(nuevo)
+        guardarComentariosLocal(usuarioId, nuevo)
         return nuevo
       })
       setSyncError(null)
     } catch {
       setComentariosPorFecha((prev) => {
         const nuevo = { ...prev, [fecha]: texto }
-        guardarComentariosLocal(nuevo)
+        guardarComentariosLocal(usuarioId, nuevo)
         return nuevo
       })
       setSyncError("No se pudo sincronizar. Guardado solo en este dispositivo.")
@@ -341,13 +327,14 @@ export default function Home() {
   }
 
   async function handleEliminar(fecha: string) {
+    if (!usuarioId) return
     setGuardando(true)
     try {
-      await eliminarComentario(fecha)
+      await eliminarComentario(usuarioId, fecha)
       setComentariosPorFecha((prev) => {
         const nuevo = { ...prev }
         delete nuevo[fecha]
-        guardarComentariosLocal(nuevo)
+        guardarComentariosLocal(usuarioId, nuevo)
         return nuevo
       })
       setSyncError(null)
@@ -355,7 +342,7 @@ export default function Home() {
       setComentariosPorFecha((prev) => {
         const nuevo = { ...prev }
         delete nuevo[fecha]
-        guardarComentariosLocal(nuevo)
+        guardarComentariosLocal(usuarioId, nuevo)
         return nuevo
       })
       setSyncError("No se pudo eliminar en la nube. Eliminado solo en este dispositivo.")
@@ -506,10 +493,6 @@ export default function Home() {
           Chat
         </button>
       </nav>
-
-      {chatNombreListo && !chatNombre && (
-        <ChatNombreModal onConfirm={handleConfirmarNombreChat} />
-      )}
 
       {/* Modal */}
       {showModal && (
