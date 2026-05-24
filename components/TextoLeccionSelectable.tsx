@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import BarraEdicion, { calcularPosicionBarra, toggleMarca } from "@/components/BarraEdicion"
 import type { AnotacionLeccion, MarcaFormato } from "@/lib/anotaciones"
-import { renderTextoConMarcas } from "@/lib/renderTextoMarcado"
+import TextoConPasajesBiblicos from "@/components/TextoConPasajesBiblicos"
 
 type Props = {
   texto: string
@@ -171,7 +171,7 @@ export default function TextoLeccionSelectable({
         onMouseUp={() => setTimeout(mostrarBarra, 10)}
         onTouchEnd={() => setTimeout(mostrarBarra, 350)}
       >
-        {renderTextoConMarcas(texto, anotacionesBloque)}
+        <TextoConPasajesBiblicos texto={texto} anotaciones={anotacionesBloque} />
       </div>
 
       {barra && !modalComentario && (
