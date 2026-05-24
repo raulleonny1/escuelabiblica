@@ -5,7 +5,6 @@ import { EstudioProvider } from "@/components/EstudioContext"
 import { SesionProvider } from "@/components/SesionProvider"
 import FirebaseInit from "@/components/FirebaseInit"
 import FontScaleInit from "@/components/FontScaleInit"
-import PwaInstallPrompt from "@/components/PwaInstallPrompt"
 import { readFirebaseConfigFromEnv } from "@/lib/firebaseEnv"
 import "./globals.css"
 
@@ -79,7 +78,6 @@ export default function RootLayout({
             </div>
           </SesionProvider>
         </EstudioProvider>
-        <PwaInstallPrompt />
       </body>
     </html>
   )

@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react"
 import ChatNombreModal from "@/components/ChatNombreModal"
+import PwaInstallPrompt from "@/components/PwaInstallPrompt"
 import { ensureUsuarioAuth } from "@/lib/auth"
 import { guardarNombreChat, leerNombreChat } from "@/lib/chat"
 import { safeLocalRemove, safeSessionRemove } from "@/lib/storage"
@@ -58,6 +59,19 @@ export function SesionProvider({ children }: { children: ReactNode }) {
     setNombre(null)
   }, [])
 
+  useEffect(() => {
+    if (!listo) return
+    const prev = document.body.style.overflow
+    if (!nombre) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = prev
+    }
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [listo, nombre])
+
   const value = useMemo(
     () => ({ usuarioId, nombre, listo, confirmarNombre, cambiarNombre }),
     [usuarioId, nombre, listo, confirmarNombre, cambiarNombre]
@@ -73,8 +87,9 @@ export function SesionProvider({ children }: { children: ReactNode }) {
 
   return (
     <SesionContext.Provider value={value}>
-      {children}
+      {nombre ? children : null}
       {!nombre && <ChatNombreModal onConfirm={confirmarNombre} />}
+      {nombre ? <PwaInstallPrompt /> : null}
     </SesionContext.Provider>
   )
 }

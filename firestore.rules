@@ -33,5 +33,37 @@ service cloud.firestore {
     match /chatPresence/{sessionId} {
       allow read, write: if true;
     }
+
+    function pedidoTextoValido() {
+      return request.resource.data.texto is string
+        && request.resource.data.texto.size() >= 3
+        && request.resource.data.texto.size() <= 500;
+    }
+
+    function pedidoSinCambiarDatosClave() {
+      return request.resource.data.usuarioId == resource.data.usuarioId
+        && request.resource.data.texto == resource.data.texto
+        && request.resource.data.compartir == resource.data.compartir
+        && request.resource.data.nombre == resource.data.nombre;
+    }
+
+    match /pedidosOracion/{pedidoId} {
+      allow read: if request.auth != null
+        && (resource.data.compartir == true
+          || resource.data.usuarioId == request.auth.uid);
+      allow create: if request.auth != null
+        && request.resource.data.usuarioId == request.auth.uid
+        && pedidoTextoValido()
+        && request.resource.data.compartir is bool
+        && request.resource.data.nombre is string
+        && request.resource.data.orandoPor == {};
+      allow update: if request.auth != null
+        && resource.data.usuarioId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.compartir == true
+        && pedidoSinCambiarDatosClave();
+      allow delete: if request.auth != null
+        && resource.data.usuarioId == request.auth.uid;
+    }
   }
 }

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "react"
 import TextoLeccionSelectable from "@/components/TextoLeccionSelectable"
 import VersiculoDelDiaCard from "@/components/VersiculoDelDiaCard"
 import HojaDominicalBoton from "@/components/HojaDominicalBoton"
+import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import type { AnotacionLeccion, MarcaFormato } from "@/lib/anotaciones"
 import { PORTADA_SRC } from "@/lib/portada"
 import {
@@ -112,11 +113,10 @@ export default function LeccionViewer({
               Lección {leccion.numero} — {leccion.titulo}
             </h2>
           </div>
-          <HojaDominicalBoton
-            semana={semana}
-            fecha={fechaDiaActivo}
-            className="hidden self-center md:inline-flex"
-          />
+          <div className="hidden shrink-0 items-center gap-2 self-center md:flex">
+            <HojaDominicalBoton semana={semana} fecha={fechaDiaActivo} />
+            <PedidoOracionBoton />
+          </div>
           <VersiculoDelDiaCard semana={semana} dia={diaActivo} />
         </div>
 
@@ -129,6 +129,7 @@ export default function LeccionViewer({
           </p>
           <div className="mt-2 flex items-stretch gap-2 md:hidden">
             <HojaDominicalBoton semana={semana} fecha={fechaDiaActivo} className="shrink-0" />
+            <PedidoOracionBoton className="shrink-0" />
             <VersiculoDelDiaCard semana={semana} dia={diaActivo} compact className="min-w-0 flex-1" />
           </div>
         </div>

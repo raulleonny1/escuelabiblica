@@ -30,6 +30,9 @@ export default function ChatNombreModal({ onConfirm }: ChatNombreModalProps) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="chat-nombre-titulo"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") e.preventDefault()
+      }}
     >
       <form
         onSubmit={handleSubmit}
