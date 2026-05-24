@@ -221,6 +221,7 @@ export default function Home() {
   }
 
   async function handleEliminarAnotacion(id: string) {
+    if (!usuarioId) return
     await eliminarAnotacion(id)
     setAnotaciones((prev) => {
       const nuevo = prev.filter((a) => a.id !== id)
