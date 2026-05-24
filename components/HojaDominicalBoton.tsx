@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
+import { useSesion } from "@/components/SesionProvider"
+import { registrarVisitaSitio } from "@/lib/analytics"
 import { getHojaDominicalUrl } from "@/lib/hojaDominical"
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
@@ -25,6 +27,7 @@ export default function HojaDominicalBoton({
   className = "",
 }: HojaDominicalBotonProps) {
   const [abierto, setAbierto] = useState(false)
+  const { usuarioId, nombre } = useSesion()
   const pdfUrl = getHojaDominicalUrl(semana)
 
   useEffect(() => {
@@ -45,7 +48,10 @@ export default function HojaDominicalBoton({
     <>
       <button
         type="button"
-        onClick={() => setAbierto(true)}
+        onClick={() => {
+          if (usuarioId && nombre) registrarVisitaSitio(usuarioId, nombre, "hoja_dominical", 0)
+          setAbierto(true)
+        }}
         className={`inline-flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-center transition hover:border-primary/50 hover:bg-primary/10 active:scale-[0.98] ${className}`}
         aria-haspopup="dialog"
       >

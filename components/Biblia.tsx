@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
+import { useSesion } from "@/components/SesionProvider"
+import { registrarVisitaSitio } from "@/lib/analytics"
 import {
   ANTIGUO_TESTAMENTO,
   NUEVO_TESTAMENTO,
@@ -14,6 +16,8 @@ import {
 
 interface BibliaProps {
   onSeleccionarPasaje?: (pasaje: string) => void
+  /** true cuando la pestaña Estudio (o escritorio) muestra este panel */
+  activo?: boolean
 }
 
 const selectClass =
@@ -21,13 +25,35 @@ const selectClass =
 
 const RVR_URL = "/biblia/rvr1909.json"
 
-export default function Biblia({ onSeleccionarPasaje }: BibliaProps) {
+export default function Biblia({ onSeleccionarPasaje, activo = true }: BibliaProps) {
+  const { usuarioId, nombre } = useSesion()
   const [biblia, setBiblia] = useState<BibliaData>({})
   const [libro, setLibro] = useState("")
   const [capitulo, setCapitulo] = useState("")
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [totalVersiculos, setTotalVersiculos] = useState(0)
+  const visitaInicialRef = useRef(false)
+  const ultimoRegistroRef = useRef("")
+
+  function registrarUsoBiblia(detalle: string) {
+    if (!usuarioId || !nombre || !activo) return
+    const clave = detalle.trim()
+    if (!clave || clave === ultimoRegistroRef.current) return
+    ultimoRegistroRef.current = clave
+    registrarVisitaSitio(usuarioId, nombre, "biblia", 0, clave)
+  }
+
+  useEffect(() => {
+    if (!activo || !usuarioId || !nombre || visitaInicialRef.current) return
+    visitaInicialRef.current = true
+    registrarVisitaSitio(usuarioId, nombre, "biblia", 0, "Abrió la Biblia")
+  }, [activo, usuarioId, nombre])
+
+  useEffect(() => {
+    if (!libro) return
+    registrarUsoBiblia(capitulo ? `${libro} cap. ${capitulo}` : libro)
+  }, [libro, capitulo, activo, usuarioId, nombre])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -171,9 +197,10 @@ export default function Biblia({ onSeleccionarPasaje }: BibliaProps) {
                 role="button"
                 tabIndex={0}
                 className="cursor-pointer rounded-lg px-2 py-3 text-base leading-relaxed text-slate-700 transition hover:bg-accent-soft/60 active:bg-accent-soft active:text-primary md:py-1.5 md:text-sm"
-                onClick={() =>
+                onClick={() => {
+                  registrarUsoBiblia(`${libro} ${capitulo}:${v}`)
                   onSeleccionarPasaje?.(`${libro} ${capitulo}:${v} - ${biblia[libro][capitulo][v]}`)
-                }
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault()

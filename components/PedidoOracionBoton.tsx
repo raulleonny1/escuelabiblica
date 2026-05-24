@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import PedidoOracionModal from "@/components/PedidoOracionModal"
 import { useSesion } from "@/components/SesionProvider"
-import { registrarEvento } from "@/lib/analytics"
+import { registrarVisitaSitio } from "@/lib/analytics"
 import { subscribePedidosCompartidos } from "@/lib/pedidosOracion"
 
 type PedidoOracionBotonProps = {
@@ -38,7 +38,7 @@ export default function PedidoOracionBoton({ className = "" }: PedidoOracionBoto
         type="button"
         onClick={() => {
           if (usuarioId && nombre) {
-            registrarEvento(usuarioId, nombre, "modal", "Pedido de oración")
+            registrarVisitaSitio(usuarioId, nombre, "pedido_oracion", 0)
           }
           setAbierto(true)
         }}

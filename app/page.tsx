@@ -355,7 +355,7 @@ export default function Home() {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col pb-[calc(3.25rem+env(safe-area-inset-bottom))] lg:flex-row lg:pb-0">
-      <AnalyticsTracker mobileTab={mobileTab} semana={semana} diaLeccion={diaLeccion} />
+      <AnalyticsTracker mobileTab={mobileTab} />
       <div
         className={`layout-pdf-panel flex min-h-0 min-w-0 flex-col bg-slate-50 lg:border-r lg:border-border ${
           mobileTab === "leccion" ? "flex flex-1" : "hidden lg:flex"
@@ -425,7 +425,10 @@ export default function Home() {
         />
 
         <section className="flex min-h-[min(50vh,360px)] max-h-[min(55vh,480px)] flex-col custom-scroll overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-sm lg:min-h-[320px] lg:max-h-[420px]">
-          <Biblia onSeleccionarPasaje={seleccionarPasaje} />
+          <Biblia
+            onSeleccionarPasaje={seleccionarPasaje}
+            activo={mobileTab === "estudio" || isLg}
+          />
         </section>
 
         {chatNombre && (

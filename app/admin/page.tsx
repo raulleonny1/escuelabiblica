@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react"
 import { estaAdminDesbloqueado, marcarAdminDesbloqueado } from "@/components/AdminAcceso"
 import { ADMIN_PIN_DEFAULT } from "@/lib/adminPin"
 import { cargarAnalyticsDesdeCliente } from "@/lib/analyticsAdminClient"
+import { resumirSitiosVisitados, sitioDesdeEvento } from "@/lib/analyticsSitios"
 
 type ResumenUsuario = {
   usuarioId: string
@@ -161,9 +162,9 @@ export default function AdminPage() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-semibold text-primary">Análisis de uso</h1>
+            <h1 className="font-display text-2xl font-semibold text-primary">Sitios visitados</h1>
             <p className="text-sm text-muted">
-              Estudiantes, ubicación, tiempo en la app y navegación
+              Qué secciones de la app abrió cada estudiante (Lección, Chat, Hoja dominical, etc.)
             </p>
           </div>
           <div className="flex gap-2">
@@ -216,41 +217,70 @@ export default function AdminPage() {
               Generado: {formatearFecha(data.generadoEn)}
             </p>
 
+            <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-slate-700">
+              <p className="font-semibold text-primary">Secciones que se registran</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted">
+                Lección · Estudio y notas · Biblia · Chat · Hoja dominical · Pedido de oración
+              </p>
+            </div>
+
             <div className="mt-6 overflow-x-auto rounded-xl border border-border bg-white shadow-sm">
-              <table className="w-full min-w-[640px] text-left text-sm">
+              <table className="w-full min-w-[720px] text-left text-sm">
                 <thead className="border-b border-border bg-surface text-xs uppercase text-muted">
                   <tr>
                     <th className="px-3 py-2">Nombre</th>
-                    <th className="px-3 py-2">Última visita</th>
-                    <th className="px-3 py-2">Ciudad</th>
-                    <th className="px-3 py-2">IP</th>
-                    <th className="px-3 py-2">Tiempo (aprox.)</th>
-                    <th className="px-3 py-2">Sesiones</th>
+                    <th className="px-3 py-2">Sitios que visitó</th>
+                    <th className="px-3 py-2">Tiempo en app</th>
+                    <th className="px-3 py-2">Última vez</th>
                     <th className="px-3 py-2" />
                   </tr>
                 </thead>
                 <tbody>
-                  {data.resumen.map((u) => (
-                    <tr key={u.usuarioId} className="border-b border-border/80 hover:bg-slate-50">
-                      <td className="px-3 py-2 font-medium text-slate-800">{u.nombre || "—"}</td>
-                      <td className="px-3 py-2 text-muted">{formatearFecha(u.ultimoAcceso)}</td>
-                      <td className="px-3 py-2">{u.ultimaCiudad || "—"}</td>
-                      <td className="px-3 py-2 font-mono text-xs">{u.ultimaIp || "—"}</td>
-                      <td className="px-3 py-2">{formatearDuracion(u.tiempoTotalSeg)}</td>
-                      <td className="px-3 py-2">{u.sesiones}</td>
-                      <td className="px-3 py-2">
-                        <button
-                          type="button"
-                          className="text-xs font-medium text-primary hover:underline"
-                          onClick={() =>
-                            setUsuarioAbierto((id) => (id === u.usuarioId ? null : u.usuarioId))
-                          }
-                        >
-                          {usuarioAbierto === u.usuarioId ? "Ocultar" : "Navegación"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {data.resumen.map((u) => {
+                    const sitios = resumirSitiosVisitados(u.eventos).filter(
+                      (s) => s.sitio !== "Entrada a la app"
+                    )
+                    return (
+                      <tr key={u.usuarioId} className="border-b border-border/80 hover:bg-slate-50">
+                        <td className="px-3 py-2 font-medium text-slate-800">{u.nombre || "—"}</td>
+                        <td className="px-3 py-2">
+                          {sitios.length === 0 ? (
+                            <span className="text-muted">Sin visitas registradas aún</span>
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {sitios.map((s) => (
+                                <span
+                                  key={s.sitio}
+                                  className="inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[0.6875rem] font-medium text-primary"
+                                  title={`${s.visitas} visita(s) · ${formatearDuracion(s.segundos)}`}
+                                >
+                                  {s.sitio}
+                                  {s.visitas > 1 ? ` (${s.visitas})` : ""}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {formatearDuracion(u.tiempoTotalSeg)}
+                        </td>
+                        <td className="px-3 py-2 text-muted whitespace-nowrap">
+                          {formatearFecha(u.ultimoAcceso)}
+                        </td>
+                        <td className="px-3 py-2">
+                          <button
+                            type="button"
+                            className="text-xs font-medium text-primary hover:underline"
+                            onClick={() =>
+                              setUsuarioAbierto((id) => (id === u.usuarioId ? null : u.usuarioId))
+                            }
+                          >
+                            {usuarioAbierto === u.usuarioId ? "Ocultar" : "Detalle"}
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
               {data.resumen.length === 0 && (
@@ -264,26 +294,35 @@ export default function AdminPage() {
             {usuarioDetalle && (
               <section className="mt-6 rounded-xl border border-primary/20 bg-white p-4 shadow-sm">
                 <h2 className="font-display text-lg font-semibold text-primary">
-                  Navegación — {usuarioDetalle.nombre}
+                  Recorrido — {usuarioDetalle.nombre}
                 </h2>
-                <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto custom-scroll">
+                <p className="mt-1 text-xs text-muted">
+                  Orden cronológico: qué parte de la app abrió y cuánto tiempo estuvo
+                </p>
+                <ul className="mt-3 max-h-96 space-y-2 overflow-y-auto custom-scroll">
                   {usuarioDetalle.eventos
+                    .filter((ev) => ["sitio", "tab", "modal", "inicio"].includes(ev.tipo))
                     .slice()
-                    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
-                    .map((ev) => (
-                      <li
-                        key={ev.id}
-                        className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg bg-surface px-3 py-2 text-sm"
-                      >
-                        <span>
-                          <span className="font-semibold text-primary">{ev.tipo}</span>
-                          {" · "}
-                          {ev.destino}
-                        </span>
-                        <span className="text-xs text-muted">{formatearFecha(ev.createdAt)}</span>
-                      </li>
-                    ))}
+                    .sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""))
+                    .map((ev) => {
+                      const sitio = sitioDesdeEvento(ev.tipo, ev.destino)
+                      return (
+                        <li
+                          key={ev.id}
+                          className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg bg-surface px-3 py-2 text-sm"
+                        >
+                          <span className="font-medium text-slate-800">{sitio}</span>
+                          <span className="text-xs text-muted">
+                            {formatearFecha(ev.createdAt)}
+                            {ev.duracionSeg > 0 ? ` · ${formatearDuracion(ev.duracionSeg)}` : ""}
+                          </span>
+                        </li>
+                      )
+                    })}
                 </ul>
+                <p className="mt-3 text-xs text-muted">
+                  Ciudad: {usuarioDetalle.ultimaCiudad || "—"} · IP: {usuarioDetalle.ultimaIp || "—"}
+                </p>
               </section>
             )}
           </>

@@ -6,6 +6,7 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore"
+import { etiquetaSitio, type SitioAppId } from "@/lib/analyticsSitios"
 import { getDb, isFirebaseConfigured } from "@/lib/firebase"
 import { safeSessionGet, safeSessionSet } from "@/lib/storage"
 
@@ -13,6 +14,7 @@ const SESSION_KEY = "analyticsSessionId"
 
 export type AnalyticsEventoTipo =
   | "inicio"
+  | "sitio"
   | "tab"
   | "semana"
   | "dia_leccion"
@@ -78,7 +80,20 @@ export async function iniciarSesionAnalytics(
     { merge: true }
   )
 
-  await registrarEvento(usuarioId, nombre, "inicio", "Entrada a la aplicación")
+}
+
+/** Registra qué sección de la app visitó el estudiante. */
+export async function registrarVisitaSitio(
+  usuarioId: string,
+  nombre: string,
+  sitioId: SitioAppId,
+  duracionSeg = 0,
+  detalle?: string
+) {
+  const destino = detalle
+    ? `${etiquetaSitio(sitioId)} — ${detalle.slice(0, 120)}`
+    : etiquetaSitio(sitioId)
+  await registrarEvento(usuarioId, nombre, "sitio", destino, duracionSeg)
 }
 
 export async function registrarEvento(
