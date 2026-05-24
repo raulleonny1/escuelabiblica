@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import PedidoOracionModal from "@/components/PedidoOracionModal"
+import { useSesion } from "@/components/SesionProvider"
+import { subscribePedidosCompartidos } from "@/lib/pedidosOracion"
 
 type PedidoOracionBotonProps = {
   className?: string
@@ -9,15 +11,43 @@ type PedidoOracionBotonProps = {
 
 export default function PedidoOracionBoton({ className = "" }: PedidoOracionBotonProps) {
   const [abierto, setAbierto] = useState(false)
+  const [totalCompartidos, setTotalCompartidos] = useState(0)
+  const { usuarioId } = useSesion()
+
+  useEffect(() => {
+    return subscribePedidosCompartidos(
+      (items) => {
+        const deOtros = usuarioId
+          ? items.filter((p) => p.usuarioId !== usuarioId)
+          : items
+        setTotalCompartidos(deOtros.length)
+      },
+      () => setTotalCompartidos(0)
+    )
+  }, [usuarioId])
+
+  const etiquetaContador =
+    totalCompartidos > 0
+      ? `, ${totalCompartidos} pedido${totalCompartidos === 1 ? "" : "s"} por orar`
+      : ""
 
   return (
     <>
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className={`inline-flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-center transition hover:border-primary/50 hover:bg-primary/10 active:scale-[0.98] ${className}`}
+        className={`relative inline-flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-center transition hover:border-primary/50 hover:bg-primary/10 active:scale-[0.98] ${className}`}
         aria-haspopup="dialog"
+        aria-label={`Pedido de oración${etiquetaContador}`}
       >
+        {totalCompartidos > 0 && (
+          <span
+            className="absolute -right-1.5 -top-1.5 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-accent px-1 text-[0.625rem] font-bold leading-none text-white shadow-md ring-2 ring-white"
+            aria-hidden
+          >
+            {totalCompartidos > 99 ? "99+" : totalCompartidos}
+          </span>
+        )}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
