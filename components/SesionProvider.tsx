@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react"
 import ChatNombreModal from "@/components/ChatNombreModal"
+import AvisosOracionListener from "@/components/AvisosOracionListener"
 import PwaInstallPrompt from "@/components/PwaInstallPrompt"
 import { ensureUsuarioAuth } from "@/lib/auth"
 import { guardarNombreChat, leerNombreChat } from "@/lib/chat"
@@ -89,7 +90,12 @@ export function SesionProvider({ children }: { children: ReactNode }) {
     <SesionContext.Provider value={value}>
       {nombre ? children : null}
       {!nombre && <ChatNombreModal onConfirm={confirmarNombre} />}
-      {nombre ? <PwaInstallPrompt /> : null}
+      {nombre ? (
+        <>
+          <AvisosOracionListener />
+          <PwaInstallPrompt />
+        </>
+      ) : null}
     </SesionContext.Provider>
   )
 }

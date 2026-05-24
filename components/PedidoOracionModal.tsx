@@ -9,6 +9,7 @@ import {
   eliminarPedidoOracion,
   formatearHace,
   marcarOrandoPor,
+  marcarTodosAvisosLeidos,
   quitarOrandoPor,
   subscribeMisPedidos,
   subscribePedidosCompartidos,
@@ -43,6 +44,10 @@ export default function PedidoOracionModal({ onCerrar }: PedidoOracionModalProps
       window.removeEventListener("keydown", onKey)
     }
   }, [onCerrar])
+
+  useEffect(() => {
+    if (usuarioId) marcarTodosAvisosLeidos(usuarioId).catch(() => {})
+  }, [usuarioId])
 
   useEffect(() => {
     const unsubC = subscribePedidosCompartidos(
@@ -86,12 +91,12 @@ export default function PedidoOracionModal({ onCerrar }: PedidoOracionModalProps
     setOrandoId(pedido.id)
     try {
       if (yaEstoyOrando(pedido, usuarioId)) {
-        await quitarOrandoPor(pedido.id, usuarioId)
+        await quitarOrandoPor(pedido, usuarioId)
       } else {
-        await marcarOrandoPor(pedido.id, usuarioId, nombre)
+        await marcarOrandoPor(pedido, usuarioId, nombre)
       }
     } catch {
-      setError("No se pudo registrar tu oración. Intenta de nuevo.")
+      setError("No se pudo registrar que orarás. Intenta de nuevo.")
     } finally {
       setOrandoId(null)
     }
@@ -171,8 +176,8 @@ export default function PedidoOracionModal({ onCerrar }: PedidoOracionModalProps
                 <strong>Deseo que otros oren por este pedido</strong>
                 <span className="mt-0.5 block text-xs text-muted">
                   {compartir
-                    ? "Aparecerá en la lista para quienes estudian contigo."
-                    : "Solo tú lo verás en «Mis pedidos privados»."}
+                    ? "Todos los que entren podrán leerlo. Si alguien pulsa «Oraré», recibirás un aviso con su nombre."
+                    : "Solo tú lo verás; nadie más tendrá acceso."}
                 </span>
               </span>
             </label>
@@ -188,10 +193,11 @@ export default function PedidoOracionModal({ onCerrar }: PedidoOracionModalProps
 
           <section className="mt-5">
             <h3 className="text-xs font-bold uppercase tracking-wide text-primary">
-              Pedidos de la comunidad
+              Pedidos de todos (compartidos)
             </h3>
             <p className="mt-0.5 text-xs text-muted">
-              Ora con un clic para que la persona sepa que no está sola.
+              Lee el pedido de otro y pulsa <strong>Oraré</strong> para que esa persona reciba tu
+              nombre.
             </p>
             {comunidad.length === 0 ? (
               <p className="mt-3 rounded-lg border border-dashed border-border bg-surface px-3 py-4 text-center text-sm text-muted">
@@ -248,8 +254,6 @@ export default function PedidoOracionModal({ onCerrar }: PedidoOracionModalProps
                       pedido={pedido}
                       esMio
                       usuarioId={usuarioId}
-                      orandoId={orandoId}
-                      onOrar={() => toggleOrando(pedido)}
                       onEliminar={() => handleEliminar(pedido.id)}
                     />
                   ))}
@@ -281,7 +285,7 @@ function PedidoCard({
 }) {
   const orando = usuarioId ? yaEstoyOrando(pedido, usuarioId) : false
   const total = contarOrando(pedido)
-  const nombresOrando = Object.values(pedido.orandoPor)
+  const entradasOrando = Object.entries(pedido.orandoPor)
 
   return (
     <li className="rounded-xl border border-border bg-white p-3 shadow-sm">
@@ -303,6 +307,17 @@ function PedidoCard({
       </div>
       <p className="mt-2 text-sm leading-relaxed text-slate-700">{pedido.texto}</p>
 
+      {esMio && pedido.compartir && entradasOrando.length > 0 && (
+        <div className="mt-3 space-y-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+          <p className="text-xs font-semibold text-emerald-900">Quién orará por ti</p>
+          {entradasOrando.map(([uid, nom]) => (
+            <p key={uid} className="text-sm text-emerald-800">
+              <strong>{nom}</strong> orará por tu pedido
+            </p>
+          ))}
+        </div>
+      )}
+
       {pedido.compartir && !privado && usuarioId && pedido.usuarioId !== usuarioId && onOrar && (
         <button
           type="button"
@@ -314,20 +329,13 @@ function PedidoCard({
               : "bg-primary text-white shadow-sm active:opacity-90"
           } disabled:opacity-60`}
         >
-          {orandoId === pedido.id
-            ? "…"
-            : orando
-              ? "✓ Estaré orando"
-              : "Estaré orando"}
+          {orandoId === pedido.id ? "…" : orando ? "✓ Oraré por ti" : "Oraré"}
         </button>
       )}
 
-      {pedido.compartir && total > 0 && (
+      {pedido.compartir && !esMio && total > 0 && (
         <p className="mt-2 text-xs text-muted">
-          {total === 1 ? "1 persona está orando" : `${total} personas están orando`}
-          {nombresOrando.length > 0 && nombresOrando.length <= 4 && (
-            <span className="text-slate-500"> · {nombresOrando.join(", ")}</span>
-          )}
+          {total === 1 ? "1 persona ha dicho que orará" : `${total} personas han dicho que orarán`}
         </p>
       )}
 

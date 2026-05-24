@@ -48,9 +48,11 @@ service cloud.firestore {
     }
 
     match /pedidosOracion/{pedidoId} {
+      // Pedidos compartidos: los lee cualquiera que entre a la app (si el autor lo deseó)
+      allow read: if resource.data.compartir == true;
+      // Pedidos privados: solo quien los escribió
       allow read: if request.auth != null
-        && (resource.data.compartir == true
-          || resource.data.usuarioId == request.auth.uid);
+        && resource.data.usuarioId == request.auth.uid;
       allow create: if request.auth != null
         && request.resource.data.usuarioId == request.auth.uid
         && pedidoTextoValido()
@@ -64,6 +66,21 @@ service cloud.firestore {
         && pedidoSinCambiarDatosClave();
       allow delete: if request.auth != null
         && resource.data.usuarioId == request.auth.uid;
+    }
+
+    match /avisosOracion/{avisoId} {
+      allow read: if request.auth != null
+        && resource.data.autorUsuarioId == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.oradorUsuarioId == request.auth.uid
+        && request.resource.data.autorUsuarioId != request.auth.uid
+        && request.resource.data.oradorNombre is string
+        && request.resource.data.mensaje is string;
+      allow update: if request.auth != null
+        && resource.data.autorUsuarioId == request.auth.uid;
+      allow delete: if request.auth != null
+        && (resource.data.autorUsuarioId == request.auth.uid
+          || resource.data.oradorUsuarioId == request.auth.uid);
     }
   }
 }
