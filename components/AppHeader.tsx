@@ -18,8 +18,22 @@ export default function AppHeader() {
         aria-hidden
       />
 
+      <div
+        className="pointer-events-none absolute right-2 top-1/2 z-10 h-9 w-12 -translate-y-1/2 lg:right-4 lg:h-11 lg:w-16 xl:h-12 xl:w-20"
+        aria-hidden
+      >
+        <Image
+          src="/loges.jpg"
+          alt=""
+          fill
+          sizes="80px"
+          className="object-contain object-right"
+          priority
+        />
+      </div>
+
       {/* Móvil: franja baja */}
-      <div className="relative flex items-center gap-2 border-b-2 border-accent px-2 py-1.5 lg:hidden">
+      <div className="relative flex items-center gap-2 border-b-2 border-accent px-2 py-1.5 pr-14 lg:hidden">
         <h1 className="font-display min-w-0 flex-1 truncate text-base font-semibold leading-tight">
           Escuela Bíblica
         </h1>
@@ -28,7 +42,7 @@ export default function AppHeader() {
       </div>
 
       {/* Escritorio: una fila compacta */}
-      <div className="relative hidden items-center gap-3 border-b-4 border-accent px-4 py-2 lg:flex xl:gap-4 xl:px-6">
+      <div className="relative hidden items-center gap-3 border-b-4 border-accent px-4 py-2 pr-20 lg:flex xl:gap-4 xl:px-6 xl:pr-24">
         <div className="min-w-[9.5rem] shrink-0 xl:min-w-[11rem]">
           <h1 className="font-display text-lg font-semibold leading-tight xl:text-xl">
             Escuela Bíblica
@@ -74,16 +88,6 @@ export default function AppHeader() {
           <FontSizeControls variant="compact" />
           <ChatEnLineaIndicador placement="desktop" />
           <PwaInstallButton />
-        </div>
-
-        <div className="relative ml-1 hidden h-11 w-16 shrink-0 xl:block xl:h-12 xl:w-20">
-          <Image
-            src="/loges.jpg"
-            alt=""
-            fill
-            sizes="80px"
-            className="object-contain object-right"
-          />
         </div>
       </div>
     </header>
