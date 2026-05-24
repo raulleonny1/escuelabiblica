@@ -50,6 +50,7 @@ import { fechaDeDiaLeccion } from "@/lib/semanaDia"
 import { getChatSessionId, iniciarPresenciaEnApp } from "@/lib/chat"
 import { useMediaLg } from "@/hooks/useMediaLg"
 import { CHAT_ABRIR_EVENT, CHAT_NO_LEIDOS_EVENT } from "@/lib/chatNotificaciones"
+import AnalyticsTracker from "@/components/AnalyticsTracker"
 
 type MobileTab = "leccion" | "estudio" | "chat"
 
@@ -354,6 +355,7 @@ export default function Home() {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col pb-[calc(3.25rem+env(safe-area-inset-bottom))] lg:flex-row lg:pb-0">
+      <AnalyticsTracker mobileTab={mobileTab} semana={semana} diaLeccion={diaLeccion} />
       <div
         className={`layout-pdf-panel flex min-h-0 min-w-0 flex-col bg-slate-50 lg:border-r lg:border-border ${
           mobileTab === "leccion" ? "flex flex-1" : "hidden lg:flex"

@@ -17,6 +17,20 @@
       ]
     },
     {
+      "collectionGroup": "analyticsSesiones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ultimoAcceso", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "analyticsEventos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "avisosOracion",
       "queryScope": "COLLECTION",
       "fields": [

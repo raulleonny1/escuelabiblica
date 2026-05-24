@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import PedidoOracionModal from "@/components/PedidoOracionModal"
 import { useSesion } from "@/components/SesionProvider"
+import { registrarEvento } from "@/lib/analytics"
 import { subscribePedidosCompartidos } from "@/lib/pedidosOracion"
 
 type PedidoOracionBotonProps = {
@@ -12,7 +13,7 @@ type PedidoOracionBotonProps = {
 export default function PedidoOracionBoton({ className = "" }: PedidoOracionBotonProps) {
   const [abierto, setAbierto] = useState(false)
   const [totalCompartidos, setTotalCompartidos] = useState(0)
-  const { usuarioId } = useSesion()
+  const { usuarioId, nombre } = useSesion()
 
   useEffect(() => {
     return subscribePedidosCompartidos(
@@ -35,7 +36,12 @@ export default function PedidoOracionBoton({ className = "" }: PedidoOracionBoto
     <>
       <button
         type="button"
-        onClick={() => setAbierto(true)}
+        onClick={() => {
+          if (usuarioId && nombre) {
+            registrarEvento(usuarioId, nombre, "modal", "Pedido de oración")
+          }
+          setAbierto(true)
+        }}
         className={`relative inline-flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-center transition hover:border-primary/50 hover:bg-primary/10 active:scale-[0.98] ${className}`}
         aria-haspopup="dialog"
         aria-label={`Pedido de oración${etiquetaContador}`}

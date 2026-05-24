@@ -4,6 +4,7 @@ import Image from "next/image"
 import ChatEnLineaIndicador from "@/components/ChatEnLineaIndicador"
 import { useEstudio } from "@/components/EstudioContext"
 import FontSizeControls from "@/components/FontSizeControls"
+import AdminAcceso from "@/components/AdminAcceso"
 import PwaInstallButton from "@/components/PwaInstallButton"
 import { TRIMESTRE_TEMA } from "@/lib/lecciones"
 import { PORTADA_SRC } from "@/lib/portada"
@@ -39,6 +40,7 @@ export default function AppHeader() {
         </h1>
         <FontSizeControls variant="compact" />
         <ChatEnLineaIndicador placement="mobile" />
+        <AdminAcceso />
       </div>
 
       {/* Escritorio: una fila compacta */}
@@ -88,6 +90,7 @@ export default function AppHeader() {
           <FontSizeControls variant="compact" />
           <ChatEnLineaIndicador placement="desktop" />
           <PwaInstallButton />
+          <AdminAcceso />
         </div>
       </div>
     </header>

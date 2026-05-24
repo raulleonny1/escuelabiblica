@@ -68,6 +68,21 @@ service cloud.firestore {
         && resource.data.usuarioId == request.auth.uid;
     }
 
+    match /analyticsSesiones/{sessionId} {
+      allow create: if request.auth != null
+        && request.resource.data.usuarioId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.usuarioId == request.auth.uid
+        && request.resource.data.usuarioId == request.auth.uid;
+      allow read: if request.auth != null;
+    }
+
+    match /analyticsEventos/{eventoId} {
+      allow create: if request.auth != null
+        && request.resource.data.usuarioId == request.auth.uid;
+      allow read: if request.auth != null;
+    }
+
     match /avisosOracion/{avisoId} {
       allow read: if request.auth != null
         && resource.data.autorUsuarioId == request.auth.uid;
