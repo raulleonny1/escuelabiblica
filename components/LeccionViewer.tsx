@@ -147,24 +147,19 @@ export default function LeccionViewer({
           {ORDEN_DIAS_LECCION.map((id, i) => {
             const activo = diaActivo === id
             const esHoyCal = esSemanaActual && hoyEnSemana && diasCalendario[i]?.fecha === hoy
-            const futuro = esSemanaActual && hoyEnSemana && i > indiceHoy
             return (
               <button
                 key={id}
                 type="button"
                 role="tab"
                 aria-selected={activo}
-                disabled={futuro}
-                title={futuro ? "Disponible cuando llegue este día" : undefined}
                 onClick={() => onDiaActivoChange(id)}
                 className={`shrink-0 rounded-md px-2 py-1.5 text-[0.6875rem] font-semibold transition sm:rounded-lg sm:px-2.5 sm:py-2 sm:text-xs ${
                   activo
                     ? esRepaso && id === "vie"
                       ? "bg-accent text-white shadow-md"
                       : "bg-primary text-white shadow-md"
-                    : futuro
-                      ? "cursor-not-allowed border border-border bg-slate-100 text-slate-400"
-                      : "border border-border bg-white text-slate-600 active:bg-surface"
+                    : "border border-border bg-white text-slate-600 hover:border-primary/40 hover:bg-primary/5 active:bg-surface"
                 } ${esHoyCal && !activo ? "ring-2 ring-accent/60" : ""}`}
               >
                 {diasCalendario[i]?.diaCorto ?? id}
