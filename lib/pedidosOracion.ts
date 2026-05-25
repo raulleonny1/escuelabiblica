@@ -15,6 +15,7 @@ import {
   type Timestamp,
 } from "firebase/firestore"
 import { esErrorIndiceFirestore, getDb, isFirebaseConfigured } from "./firebase"
+import { safeLocalGet, safeLocalSet } from "./storage"
 
 export type PedidoOracion = {
   id: string
@@ -315,6 +316,35 @@ export function contarOrando(pedido: PedidoOracion): number {
 
 export function yaEstoyOrando(pedido: PedidoOracion, usuarioId: string): boolean {
   return Boolean(usuarioId && pedido.orandoPor[usuarioId])
+}
+
+function storageVistosKey(usuarioId: string) {
+  return `pedidosOracionVistos:${usuarioId}`
+}
+
+export function leerPedidosOracionVistos(usuarioId: string): Set<string> {
+  if (!usuarioId) return new Set()
+  const raw = safeLocalGet(storageVistosKey(usuarioId))
+  if (!raw) return new Set()
+  try {
+    const arr = JSON.parse(raw) as string[]
+    return new Set(Array.isArray(arr) ? arr : [])
+  } catch {
+    return new Set()
+  }
+}
+
+export function marcarPedidosOracionVistos(usuarioId: string, pedidoIds: string[]) {
+  if (!usuarioId || pedidoIds.length === 0) return
+  const vistos = leerPedidosOracionVistos(usuarioId)
+  for (const id of pedidoIds) vistos.add(id)
+  safeLocalSet(storageVistosKey(usuarioId), JSON.stringify([...vistos]))
+}
+
+export function contarPedidosOracionSinLeer(usuarioId: string, pedidoIdsDeOtros: string[]): number {
+  if (!usuarioId || pedidoIdsDeOtros.length === 0) return 0
+  const vistos = leerPedidosOracionVistos(usuarioId)
+  return pedidoIdsDeOtros.filter((id) => !vistos.has(id)).length
 }
 
 export function formatearHace(fecha: Date | null): string {

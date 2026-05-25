@@ -1,10 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import PedidoOracionModal from "@/components/PedidoOracionModal"
 import { useSesion } from "@/components/SesionProvider"
 import { registrarVisitaSitio } from "@/lib/analytics"
-import { subscribePedidosCompartidos } from "@/lib/pedidosOracion"
+import {
+  contarPedidosOracionSinLeer,
+  marcarPedidosOracionVistos,
+  subscribePedidosCompartidos,
+} from "@/lib/pedidosOracion"
 
 type PedidoOracionBotonProps = {
   className?: string
@@ -12,46 +16,54 @@ type PedidoOracionBotonProps = {
 
 export default function PedidoOracionBoton({ className = "" }: PedidoOracionBotonProps) {
   const [abierto, setAbierto] = useState(false)
-  const [totalCompartidos, setTotalCompartidos] = useState(0)
+  const [sinLeer, setSinLeer] = useState(0)
   const { usuarioId, nombre } = useSesion()
+  const idsDeOtrosRef = useRef<string[]>([])
 
   useEffect(() => {
     return subscribePedidosCompartidos(
       (items) => {
-        const deOtros = usuarioId
-          ? items.filter((p) => p.usuarioId !== usuarioId)
-          : items
-        setTotalCompartidos(deOtros.length)
+        const ids =
+          usuarioId != null
+            ? items.filter((p) => p.usuarioId !== usuarioId).map((p) => p.id)
+            : items.map((p) => p.id)
+        idsDeOtrosRef.current = ids
+        setSinLeer(contarPedidosOracionSinLeer(usuarioId ?? "", ids))
       },
-      () => setTotalCompartidos(0)
+      () => {
+        idsDeOtrosRef.current = []
+        setSinLeer(0)
+      }
     )
   }, [usuarioId])
 
+  function abrirModal() {
+    if (usuarioId && nombre) {
+      registrarVisitaSitio(usuarioId, nombre, "pedido_oracion", 0)
+      marcarPedidosOracionVistos(usuarioId, idsDeOtrosRef.current)
+      setSinLeer(0)
+    }
+    setAbierto(true)
+  }
+
   const etiquetaContador =
-    totalCompartidos > 0
-      ? `, ${totalCompartidos} pedido${totalCompartidos === 1 ? "" : "s"} por orar`
-      : ""
+    sinLeer > 0 ? `, ${sinLeer} pedido${sinLeer === 1 ? "" : "s"} nuevos por orar` : ""
 
   return (
     <>
       <button
         type="button"
-        onClick={() => {
-          if (usuarioId && nombre) {
-            registrarVisitaSitio(usuarioId, nombre, "pedido_oracion", 0)
-          }
-          setAbierto(true)
-        }}
+        onClick={abrirModal}
         className={`relative inline-flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-center transition hover:border-primary/50 hover:bg-primary/10 active:scale-[0.98] ${className}`}
         aria-haspopup="dialog"
         aria-label={`Pedido de oración${etiquetaContador}`}
       >
-        {totalCompartidos > 0 && (
+        {sinLeer > 0 && (
           <span
             className="absolute -right-1.5 -top-1.5 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-accent px-1 text-[0.625rem] font-bold leading-none text-white shadow-md ring-2 ring-white"
             aria-hidden
           >
-            {totalCompartidos > 99 ? "99+" : totalCompartidos}
+            {sinLeer > 99 ? "99+" : sinLeer}
           </span>
         )}
         <svg
@@ -77,7 +89,16 @@ export default function PedidoOracionBoton({ className = "" }: PedidoOracionBoto
         </span>
       </button>
 
-      {abierto && <PedidoOracionModal onCerrar={() => setAbierto(false)} />}
+      {abierto && (
+        <PedidoOracionModal
+          onCerrar={() => {
+            setAbierto(false)
+            if (usuarioId) {
+              setSinLeer(contarPedidosOracionSinLeer(usuarioId, idsDeOtrosRef.current))
+            }
+          }}
+        />
+      )}
     </>
   )
 }
