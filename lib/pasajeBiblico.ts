@@ -75,7 +75,29 @@ for (const [alias, canonico] of Object.entries(ALIAS_LIBRO)) {
   TOKENS_A_LIBRO.set(normalizarTokenLibro(alias), canonico)
 }
 
-const TOKENS_LIBRO = [...TOKENS_A_LIBRO.keys()].sort((a, b) => b.length - a.length)
+function quitarAcentos(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+}
+
+/** Patrones con tildes, sin tildes y abreviaturas (p. ej. Gálatas y Galatas). */
+const PATRONES_LIBRO: string[] = []
+function agregarPatronLibro(token: string) {
+  for (const variante of [token, quitarAcentos(token)]) {
+    const patron = tokenLibroAPatron(variante)
+    if (!PATRONES_LIBRO.includes(patron)) PATRONES_LIBRO.push(patron)
+  }
+}
+for (const libro of LIBROS_RVR_1909) agregarPatronLibro(libro)
+for (const [libro, variantes] of Object.entries(ABREVIATURAS_LIBRO)) {
+  agregarPatronLibro(libro)
+  for (const v of variantes) agregarPatronLibro(v)
+}
+for (const alias of Object.keys(ALIAS_LIBRO)) agregarPatronLibro(alias)
+PATRONES_LIBRO.sort((a, b) => b.length - a.length)
+
+/** Signos de puntuación que pueden ir después de la referencia en el texto de la lección. */
+const RE_PUNTUACION_TRAS_REF = /[.,;:!?»«)\]"']+$/u
+const RE_PUNTUACION_TRAS_EN_TEXTO = /[.,;:!?»«)\]"']/u
 
 export type ReferenciaPasaje = {
   libro: string
@@ -105,9 +127,13 @@ export type SegmentoTextoPasaje =
 const MAX_VERSOS = 45
 
 const RE_PASAJES = new RegExp(
-  `(${TOKENS_LIBRO.map(tokenLibroAPatron).join("|")})\\s+(\\d+)(?::(\\d+)(?:-(\\d+))?|-(\\d+))?`,
+  `(${PATRONES_LIBRO.join("|")})\\s+(\\d+)(?::(\\d+)(?:-(\\d+))?|-(\\d+))?`,
   "gi"
 )
+
+export function limpiarReferenciaPasajeRaw(raw: string): string {
+  return raw.trim().replace(RE_PUNTUACION_TRAS_REF, "").trim()
+}
 
 function normalizarLibro(nombre: string): string {
   const token = normalizarTokenLibro(nombre)
@@ -115,7 +141,7 @@ function normalizarLibro(nombre: string): string {
 }
 
 export function parseReferenciaPasaje(raw: string): ReferenciaPasaje | null {
-  const normalizado = normalizarTokenLibro(raw.trim())
+  const normalizado = normalizarTokenLibro(limpiarReferenciaPasajeRaw(raw))
   const match = normalizado.match(/^(.+?)\s+(\d+)(?::(\d+)(?:-(\d+))?|-(\d+))?$/)
   if (!match) return null
 
@@ -163,16 +189,25 @@ export function segmentarPasajesEnTexto(texto: string): SegmentoTextoPasaje[] {
 
     if (indice > 0 && /[a-záéíóúñ0-9]/i.test(texto[indice - 1] ?? "")) continue
 
-    const despues = indice + bruto.length
-    if (despues < texto.length && /[a-záéíóúñ0-9]/i.test(texto[despues] ?? "")) continue
+    let fin = indice + bruto.length
+    while (fin < texto.length && RE_PUNTUACION_TRAS_EN_TEXTO.test(texto[fin] ?? "")) {
+      fin++
+    }
 
-    if (!parseReferenciaPasaje(bruto)) continue
+    if (fin < texto.length && /[a-záéíóúñ0-9]/i.test(texto[fin] ?? "")) continue
+
+    const referencia = limpiarReferenciaPasajeRaw(bruto)
+    if (!parseReferenciaPasaje(referencia)) continue
 
     if (indice > ultimo) {
       segmentos.push({ tipo: "texto", contenido: texto.slice(ultimo, indice) })
     }
-    segmentos.push({ tipo: "pasaje", contenido: bruto, referencia: bruto })
-    ultimo = despues
+    segmentos.push({
+      tipo: "pasaje",
+      contenido: texto.slice(indice, fin),
+      referencia,
+    })
+    ultimo = fin
   }
 
   if (ultimo < texto.length) {

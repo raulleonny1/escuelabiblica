@@ -79,12 +79,12 @@ export const semana01: LeccionContenido = {
       {
         titulo: "Lecciones de Abraham para hoy",
         texto:
-          "Abraham nos enseña que la fe implica espera activa. No pasó veinticinco años sentado esperando un milagro; caminó, obedeció, adoró y confió en cada paso. Nos enseña que la fe no elimina las pruebas sino que las atraviesa. Nos enseña que Dios cumple sus promessas a su tiempo, no al nuestro. Galatas 3:7 declara: «Sabed, pues, que los que son de fe, estos son hijos de Abraham.» Si confiamos en las promesas de Dios como Abraham, somos herederos de la misma fe que lo llevó a ser padre de una nación.",
+          "Abraham nos enseña que la fe implica espera activa. No pasó veinticinco años sentado esperando un milagro; caminó, obedeció, adoró y confió en cada paso. Nos enseña que la fe no elimina las pruebas sino que las atraviesa. Nos enseña que Dios cumple sus promesas a su tiempo, no al nuestro. Gálatas 3:7 declara: «Sabed, pues, que los que son de fe, estos son hijos de Abraham.» Si confiamos en las promesas de Dios como Abraham, somos herederos de la misma fe que lo llevó a ser padre de una nación.",
       },
       {
         titulo: "Las promesas que Abraham recibió",
         texto:
-          "Dios hizo a Abraham tres promesas fundamentales: tierra, descendencia y bendición para todas las naciones (Génesis 12:1-3). La promesa de descendencia se cumplió en Isaac, Jacob y la nación de Israel. La promesa de bendición universal se cumplió en Cristo, descendiente de Abraham (Gálatas 3:16). La promesa de tierra tiene dimensiones espirituales y futuras que culminarán en la nueva creación. Comprender que las promessas de Dios tienen múltiples capas de cumplimiento fortalece nuestra fe: Dios siempre cumple, aunque a veces de maneras que no anticipamos.",
+          "Dios hizo a Abraham tres promesas fundamentales: tierra, descendencia y bendición para todas las naciones (Génesis 12:1-3). La promesa de descendencia se cumplió en Isaac, Jacob y la nación de Israel. La promesa de bendición universal se cumplió en Cristo, descendiente de Abraham (Gálatas 3:16). La promesa de tierra tiene dimensiones espirituales y futuras que culminarán en la nueva creación. Comprender que las promesas de Dios tienen múltiples capas de cumplimiento fortalece nuestra fe: Dios siempre cumple, aunque a veces de maneras que no anticipamos.",
       },
       {
         titulo: "Aplicación personal",
