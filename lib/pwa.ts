@@ -1,10 +1,14 @@
 /** Utilidades PWA: detección de plataforma e instalación */
 
+import { safeSessionGet, safeSessionSet } from "@/lib/storage"
+
 export type PlataformaPwa = "ios" | "android" | "desktop"
 
 export const PWA_MOSTRAR_EVENT = "pwa-mostrar-instalacion"
 
-/** Claves antiguas: ya no ocultan el banner de forma permanente */
+const PWA_DISMISS_SESSION_KEY = "pwa-install-dismiss-session"
+
+/** Claves antiguas (solo migración, no el rechazo de sesión actual) */
 const LEGACY_DISMISS_KEY = "pwa-install-dismissed"
 const LEGACY_INSTALADO_FLAG_KEY = "pwa-installed-flag"
 
@@ -48,7 +52,15 @@ export function yaInstaladaPwa(): boolean {
   return Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
 }
 
-/** Quita el “no volver a mostrar” de versiones anteriores */
+export function bannerInstalacionRechazadoEnSesion(): boolean {
+  return safeSessionGet(PWA_DISMISS_SESSION_KEY) === "1"
+}
+
+export function marcarBannerInstalacionRechazado(): void {
+  safeSessionSet(PWA_DISMISS_SESSION_KEY, "1")
+}
+
+/** Quita flags viejos que bloqueaban o confundían la instalación */
 export function limpiarRechazoInstalacionAntiguo(): void {
   if (typeof window === "undefined") return
   try {
@@ -73,11 +85,8 @@ export function etiquetaDispositivo(): string {
   return "dispositivo"
 }
 
-export function modoBannerParaPlataforma(
-  tienePromptNativo: boolean
-): "nativo" | "ios" | "android-manual" | "desktop-manual" {
-  if (tienePromptNativo) return "nativo"
-  if (esAppleDispositivo()) return "ios"
-  if (esAndroid()) return "android-manual"
-  return "desktop-manual"
+/** Solo iPhone/iPad muestran instrucciones al entrar sin prompt del navegador */
+export function debeAutoMostrarBannerAlEntrar(): boolean {
+  if (yaInstaladaPwa() || bannerInstalacionRechazadoEnSesion()) return false
+  return getPlataformaPwa() === "ios"
 }

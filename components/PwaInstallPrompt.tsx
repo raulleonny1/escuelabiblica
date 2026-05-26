@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import {
   PWA_MOSTRAR_EVENT,
+  bannerInstalacionRechazadoEnSesion,
+  debeAutoMostrarBannerAlEntrar,
   esTablet,
   etiquetaDispositivo,
   getPlataformaPwa,
   limpiarRechazoInstalacionAntiguo,
-  modoBannerParaPlataforma,
+  marcarBannerInstalacionRechazado,
   yaInstaladaPwa,
 } from "@/lib/pwa"
 
@@ -16,14 +18,32 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
-type ModoBanner = "nativo" | "ios" | "android-manual" | "desktop-manual"
+type ModoBanner = "nativo" | "ios"
 
-const DELAY_BANNER_MS = 900
+const DELAY_IOS_MS = 800
+/** Android/Chrome a veces tarda en disparar beforeinstallprompt */
+const ESPERA_PROMPT_NATIVO_MS = 3500
 
-function modoFallback(plataforma: ReturnType<typeof getPlataformaPwa>): ModoBanner {
-  if (plataforma === "ios") return "ios"
-  if (plataforma === "android") return "android-manual"
-  return "desktop-manual"
+function esperarPromptNativo(
+  ms: number,
+  tienePrompt: () => boolean
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (tienePrompt()) {
+      resolve(true)
+      return
+    }
+    const inicio = Date.now()
+    const id = window.setInterval(() => {
+      if (tienePrompt()) {
+        window.clearInterval(id)
+        resolve(true)
+      } else if (Date.now() - inicio >= ms) {
+        window.clearInterval(id)
+        resolve(false)
+      }
+    }, 150)
+  })
 }
 
 export default function PwaInstallPrompt() {
@@ -32,16 +52,14 @@ export default function PwaInstallPrompt() {
   const [visible, setVisible] = useState(false)
   const [modo, setModo] = useState<ModoBanner>("ios")
   const [instalando, setInstalando] = useState(false)
-  const bipRecibido = useRef(false)
   const [montado, setMontado] = useState(false)
 
-  const mostrarBanner = useCallback((nuevoModo: ModoBanner) => {
-    if (yaInstaladaPwa()) return
-    setModo(nuevoModo)
-    setVisible(true)
+  const puedeMostrar = useCallback(() => {
+    return !yaInstaladaPwa() && !bannerInstalacionRechazadoEnSesion()
   }, [])
 
-  const cerrarTemporal = useCallback(() => {
+  const cerrarBanner = useCallback(() => {
+    marcarBannerInstalacionRechazado()
     setVisible(false)
   }, [])
 
@@ -55,61 +73,69 @@ export default function PwaInstallPrompt() {
   }, [deferredPrompt])
 
   useEffect(() => {
-    if (!montado || yaInstaladaPwa()) return
-
-    const onMostrar = () => {
-      if (yaInstaladaPwa()) return
-      const modoDetectado = modoBannerParaPlataforma(
-        Boolean(deferredPromptRef.current) || bipRecibido.current
-      )
-      mostrarBanner(modoDetectado)
-    }
-
-    window.addEventListener(PWA_MOSTRAR_EVENT, onMostrar)
-    return () => window.removeEventListener(PWA_MOSTRAR_EVENT, onMostrar)
-  }, [montado, mostrarBanner])
-
-  useEffect(() => {
-    if (!montado || yaInstaladaPwa()) return
+    if (!montado || !puedeMostrar()) return
 
     const onBip = (e: Event) => {
       e.preventDefault()
-      bipRecibido.current = true
       const ev = e as BeforeInstallPromptEvent
       deferredPromptRef.current = ev
       setDeferredPrompt(ev)
-      mostrarBanner("nativo")
+      if (!puedeMostrar()) return
+      setModo("nativo")
+      setVisible(true)
     }
 
     window.addEventListener("beforeinstallprompt", onBip)
 
-    const plataforma = getPlataformaPwa()
-    const timerId = window.setTimeout(() => {
-      if (yaInstaladaPwa()) return
-      if (bipRecibido.current && deferredPromptRef.current) {
-        mostrarBanner("nativo")
-        return
-      }
-      mostrarBanner(modoFallback(plataforma))
-    }, DELAY_BANNER_MS)
-
-    const onPageShow = () => {
-      if (yaInstaladaPwa()) return
-      if (bipRecibido.current && deferredPromptRef.current) {
-        mostrarBanner("nativo")
-        return
-      }
-      mostrarBanner(modoFallback(getPlataformaPwa()))
+    let timerIos: number | undefined
+    if (debeAutoMostrarBannerAlEntrar()) {
+      timerIos = window.setTimeout(() => {
+        if (!puedeMostrar() || deferredPromptRef.current) return
+        setModo("ios")
+        setVisible(true)
+      }, DELAY_IOS_MS)
     }
-
-    window.addEventListener("pageshow", onPageShow)
 
     return () => {
       window.removeEventListener("beforeinstallprompt", onBip)
-      window.removeEventListener("pageshow", onPageShow)
-      window.clearTimeout(timerId)
+      if (timerIos !== undefined) window.clearTimeout(timerIos)
     }
-  }, [montado, mostrarBanner])
+  }, [montado, puedeMostrar])
+
+  useEffect(() => {
+    if (!montado) return
+
+    const onMostrar = async () => {
+      if (!puedeMostrar()) return
+
+      if (deferredPromptRef.current) {
+        setModo("nativo")
+        setVisible(true)
+        return
+      }
+
+      const plataforma = getPlataformaPwa()
+
+      if (plataforma === "ios") {
+        setModo("ios")
+        setVisible(true)
+        return
+      }
+
+      const listo = await esperarPromptNativo(ESPERA_PROMPT_NATIVO_MS, () =>
+        Boolean(deferredPromptRef.current)
+      )
+      if (!puedeMostrar()) return
+
+      if (listo && deferredPromptRef.current) {
+        setModo("nativo")
+        setVisible(true)
+      }
+    }
+
+    window.addEventListener(PWA_MOSTRAR_EVENT, onMostrar)
+    return () => window.removeEventListener(PWA_MOSTRAR_EVENT, onMostrar)
+  }, [montado, puedeMostrar])
 
   async function instalar() {
     const prompt = deferredPromptRef.current
@@ -124,7 +150,7 @@ export default function PwaInstallPrompt() {
         setVisible(false)
       }
     } catch {
-      cerrarTemporal()
+      cerrarBanner()
     } finally {
       setInstalando(false)
     }
@@ -132,6 +158,9 @@ export default function PwaInstallPrompt() {
 
   function textoInstrucciones(): ReactNode {
     const esTab = esTablet()
+    if (modo === "nativo") {
+      return <>Accede más rápido desde tu pantalla de inicio, como una aplicación.</>
+    }
     if (modo === "ios") {
       if (esTab) {
         return (
@@ -149,28 +178,13 @@ export default function PwaInstallPrompt() {
         </>
       )
     }
-    if (modo === "android-manual") {
-      return (
-        <>
-          En <strong>Chrome</strong>: menú <strong>⋮</strong> arriba a la derecha y elige{" "}
-          <strong>Instalar aplicación</strong> o <strong>Añadir a pantalla de inicio</strong>.
-        </>
-      )
-    }
-    if (modo === "desktop-manual") {
-      return (
-        <>
-          En <strong>Chrome</strong> o <strong>Edge</strong>: busca el icono de instalar en la
-          barra de direcciones, o menú <strong>⋮</strong> → <strong>Instalar Escuela Bíblica</strong>.
-        </>
-      )
-    }
-    return <>Accede más rápido desde tu pantalla de inicio, como una aplicación.</>
+    return null
   }
 
   if (!montado || !visible || yaInstaladaPwa()) return null
 
-  const puedeInstalarNativo = modo === "nativo" && deferredPrompt
+  const promptNativo = deferredPrompt ?? deferredPromptRef.current
+  const puedeInstalarNativo = modo === "nativo" && Boolean(promptNativo)
 
   return (
     <div
@@ -210,10 +224,10 @@ export default function PwaInstallPrompt() {
               {instalando ? "Instalando…" : "Instalar"}
             </button>
           )}
-          {!puedeInstalarNativo && (
+          {modo === "ios" && (
             <button
               type="button"
-              onClick={cerrarTemporal}
+              onClick={cerrarBanner}
               className="min-h-11 flex-1 rounded-lg bg-primary px-4 text-sm font-medium text-white active:opacity-90"
             >
               Entendido
@@ -221,7 +235,7 @@ export default function PwaInstallPrompt() {
           )}
           <button
             type="button"
-            onClick={cerrarTemporal}
+            onClick={cerrarBanner}
             className="min-h-11 rounded-lg border border-border px-4 text-sm font-medium text-slate-600 active:bg-slate-50"
           >
             Ahora no
