@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { CHAT_EMOJIS } from "@/lib/chatEmojis"
 import {
-  anunciarEntradaChat,
   enviarMensajeChat,
   formatHoraChat,
   getChatSessionId,
@@ -66,10 +65,7 @@ export default function ChatPanel({
   useEffect(() => {
     if (!activo || !sessionId) return
     solicitarPermisoNotificaciones().catch(() => {})
-    if (!entradaAnunciadaRef.current) {
-      entradaAnunciadaRef.current = true
-      anunciarEntradaChat(nombre, sessionId).catch(() => {})
-    }
+    if (!entradaAnunciadaRef.current) entradaAnunciadaRef.current = true
     return iniciarPresenciaEnChat(nombre, sessionId)
   }, [activo, nombre, sessionId])
 
@@ -202,11 +198,6 @@ export default function ChatPanel({
   const nombresParaMencionar = (() => {
     const map = new Map<string, string>()
     for (const u of otrosConectados) map.set(u.nombre.trim().toLowerCase(), u.nombre)
-    for (const m of mensajes) {
-      if (m.tipo !== "message") continue
-      const k = m.nombre.trim().toLowerCase()
-      if (k && k !== miNombreLower) map.set(k, m.nombre.trim())
-    }
     return [...map.values()].sort((a, b) => a.localeCompare(b, "es"))
   })()
 
@@ -277,17 +268,7 @@ export default function ChatPanel({
           </p>
         )}
         {mensajes.map((m) =>
-          m.tipo === "join" ? (
-            <p
-              key={m.id}
-              className="my-2 text-center text-xs text-slate-500 italic"
-            >
-              {m.texto}
-              {m.createdAt && (
-                <span className="ml-1 not-italic text-slate-400">{formatHoraChat(m.createdAt)}</span>
-              )}
-            </p>
-          ) : (
+          m.tipo !== "message" ? null : (
             <article
               key={m.id}
               className={`mb-2 max-w-[95%] rounded-lg px-2.5 py-1.5 ${
