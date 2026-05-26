@@ -1,4 +1,5 @@
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore"
+import { construirDashboardData } from "@/lib/adminAnalyticsSummary"
 import { getDb, isFirebaseConfigured } from "@/lib/firebase"
 
 function tsIso(v: unknown): string | null {
@@ -51,58 +52,5 @@ export async function cargarAnalyticsDesdeCliente() {
     }
   })
 
-  const porUsuario = new Map<
-    string,
-    {
-      usuarioId: string
-      nombre: string
-      sesiones: number
-      tiempoTotalSeg: number
-      ultimaCiudad: string
-      ultimaIp: string
-      ultimoAcceso: string | null
-      eventos: typeof eventos
-    }
-  >()
-
-  for (const s of sesiones) {
-    const prev = porUsuario.get(s.usuarioId) ?? {
-      usuarioId: s.usuarioId,
-      nombre: s.nombre,
-      sesiones: 0,
-      tiempoTotalSeg: 0,
-      ultimaCiudad: s.ciudad,
-      ultimaIp: s.ip,
-      ultimoAcceso: s.ultimoAcceso,
-      eventos: [],
-    }
-    prev.sesiones += 1
-    prev.tiempoTotalSeg += s.tiempoTotalSeg
-    if (s.nombre) prev.nombre = s.nombre
-    if (s.ultimoAcceso && (!prev.ultimoAcceso || s.ultimoAcceso > prev.ultimoAcceso)) {
-      prev.ultimoAcceso = s.ultimoAcceso
-      prev.ultimaCiudad = s.ciudad
-      prev.ultimaIp = s.ip
-    }
-    porUsuario.set(s.usuarioId, prev)
-  }
-
-  for (const e of eventos) {
-    const u = porUsuario.get(e.usuarioId)
-    if (u) u.eventos.push(e)
-  }
-
-  const resumen = [...porUsuario.values()].sort((a, b) =>
-    (b.ultimoAcceso ?? "").localeCompare(a.ultimoAcceso ?? "")
-  )
-
-  return {
-    generadoEn: new Date().toISOString(),
-    totalSesiones: sesiones.length,
-    totalEventos: eventos.length,
-    totalUsuarios: resumen.length,
-    sesiones,
-    eventos,
-    resumen,
-  }
+  return construirDashboardData(sesiones, eventos)
 }

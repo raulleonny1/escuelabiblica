@@ -1,37 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { estaAdminDesbloqueado, marcarAdminDesbloqueado } from "@/components/AdminAcceso"
 import { ADMIN_PIN_DEFAULT } from "@/lib/adminPin"
+import type { DashboardData } from "@/lib/adminAnalyticsSummary"
 import { cargarAnalyticsDesdeCliente } from "@/lib/analyticsAdminClient"
 import { resumirSitiosVisitados, sitioDesdeEvento } from "@/lib/analyticsSitios"
-
-type ResumenUsuario = {
-  usuarioId: string
-  nombre: string
-  sesiones: number
-  tiempoTotalSeg: number
-  ultimaCiudad: string
-  ultimaIp: string
-  ultimoAcceso: string | null
-  eventos: {
-    id: string
-    tipo: string
-    destino: string
-    duracionSeg: number
-    createdAt: string | null
-  }[]
-}
-
-type DashboardData = {
-  generadoEn: string
-  totalSesiones: number
-  totalEventos: number
-  totalUsuarios: number
-  resumen: ResumenUsuario[]
-}
 
 function formatearDuracion(seg: number): string {
   if (seg < 60) return `${seg} s`
@@ -55,13 +30,13 @@ function formatearFecha(iso: string | null): string {
 }
 
 export default function AdminPage() {
-  const router = useRouter()
   const [pin, setPin] = useState("")
   const [autorizado, setAutorizado] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<DashboardData | null>(null)
   const [usuarioAbierto, setUsuarioAbierto] = useState<string | null>(null)
+  const [diaSeleccionado, setDiaSeleccionado] = useState<string>("general")
 
   useEffect(() => {
     if (estaAdminDesbloqueado()) setAutorizado(true)
@@ -79,11 +54,13 @@ export default function AdminPage() {
       const json = await res.json()
       if (res.ok) {
         setData(json as DashboardData)
+        setDiaSeleccionado("general")
         return
       }
       if (res.status === 503 && json.usarCliente) {
         const local = await cargarAnalyticsDesdeCliente()
         setData(local as DashboardData)
+        setDiaSeleccionado("general")
         setError(
           "Modo respaldo (sin cuenta de servicio en el servidor). Los datos pueden estar incompletos si faltan permisos en Firestore."
         )
@@ -94,6 +71,7 @@ export default function AdminPage() {
       try {
         const local = await cargarAnalyticsDesdeCliente()
         setData(local as DashboardData)
+        setDiaSeleccionado("general")
         setError(
           e instanceof Error
             ? `${e.message} — mostrando datos vía cliente.`
@@ -155,7 +133,32 @@ export default function AdminPage() {
     )
   }
 
-  const usuarioDetalle = data?.resumen.find((u) => u.usuarioId === usuarioAbierto)
+  const resumenDia = data?.porDia.find((d) => d.fecha === diaSeleccionado)
+  const vistaActiva =
+    diaSeleccionado === "general" || !resumenDia
+      ? {
+          etiqueta: "General",
+          totalUsuarios: data?.totalUsuarios ?? 0,
+          totalSesiones: data?.totalSesiones ?? 0,
+          totalEventos: data?.totalEventos ?? 0,
+          tiempoTotalSeg: data?.resumen.reduce((acc, u) => acc + (u.tiempoTotalSeg || 0), 0) ?? 0,
+          ingresosConNombre: data?.sesiones.filter((s) => Boolean(s.nombre.trim())).length ?? 0,
+          ipsUnicas: new Set(data?.sesiones.map((s) => s.ip).filter(Boolean) ?? []).size,
+          ciudadesUnicas: new Set(data?.sesiones.map((s) => s.ciudad).filter(Boolean) ?? []).size,
+          resumen: data?.resumen ?? [],
+        }
+      : {
+          etiqueta: resumenDia.fecha,
+          totalUsuarios: resumenDia.totalUsuarios,
+          totalSesiones: resumenDia.totalSesiones,
+          totalEventos: resumenDia.totalEventos,
+          tiempoTotalSeg: resumenDia.tiempoTotalSeg,
+          ingresosConNombre: resumenDia.ingresosConNombre,
+          ipsUnicas: resumenDia.ipsUnicas,
+          ciudadesUnicas: resumenDia.ciudadesUnicas,
+          resumen: resumenDia.resumen,
+        }
+  const usuarioDetalleVista = vistaActiva.resumen.find((u) => u.usuarioId === usuarioAbierto) ?? null
 
   return (
     <div className="custom-scroll h-full min-h-0 overflow-y-auto bg-slate-50 p-3 md:p-6">
@@ -164,7 +167,7 @@ export default function AdminPage() {
           <div>
             <h1 className="font-display text-2xl font-semibold text-primary">Sitios visitados</h1>
             <p className="text-sm text-muted">
-              Qué secciones de la app abrió cada estudiante (Lección, Chat, Hoja dominical, etc.)
+              Estadísticas generales y por día: ingresos, IP/ciudad, navegación y tiempo en app
             </p>
           </div>
           <div className="flex gap-2">
@@ -202,20 +205,67 @@ export default function AdminPage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase text-muted">Usuarios</p>
-                <p className="font-display text-3xl font-semibold text-primary">{data.totalUsuarios}</p>
+                <p className="font-display text-3xl font-semibold text-primary">{vistaActiva.totalUsuarios}</p>
               </div>
               <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase text-muted">Sesiones</p>
-                <p className="font-display text-3xl font-semibold text-primary">{data.totalSesiones}</p>
+                <p className="font-display text-3xl font-semibold text-primary">{vistaActiva.totalSesiones}</p>
               </div>
               <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase text-muted">Eventos de navegación</p>
-                <p className="font-display text-3xl font-semibold text-primary">{data.totalEventos}</p>
+                <p className="font-display text-3xl font-semibold text-primary">{vistaActiva.totalEventos}</p>
+              </div>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase text-muted">Tiempo total</p>
+                <p className="font-display text-xl font-semibold text-primary">
+                  {formatearDuracion(vistaActiva.tiempoTotalSeg)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase text-muted">Ingresos con nombre</p>
+                <p className="font-display text-xl font-semibold text-primary">{vistaActiva.ingresosConNombre}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase text-muted">IPs únicas</p>
+                <p className="font-display text-xl font-semibold text-primary">{vistaActiva.ipsUnicas}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase text-muted">Ciudades únicas</p>
+                <p className="font-display text-xl font-semibold text-primary">{vistaActiva.ciudadesUnicas}</p>
               </div>
             </div>
             <p className="mt-2 text-xs text-muted">
               Generado: {formatearFecha(data.generadoEn)}
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setDiaSeleccionado("general")}
+                className={`rounded-full px-3 py-1 text-xs font-medium ${
+                  diaSeleccionado === "general"
+                    ? "bg-primary text-white"
+                    : "border border-border bg-white text-slate-700"
+                }`}
+              >
+                General
+              </button>
+              {data.porDia.map((d) => (
+                <button
+                  key={d.fecha}
+                  type="button"
+                  onClick={() => setDiaSeleccionado(d.fecha)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    diaSeleccionado === d.fecha
+                      ? "bg-primary text-white"
+                      : "border border-border bg-white text-slate-700"
+                  }`}
+                >
+                  {formatearFecha(`${d.fecha}T00:00:00.000Z`)}
+                </button>
+              ))}
+            </div>
 
             <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-slate-700">
               <p className="font-semibold text-primary">Secciones que se registran</p>
@@ -236,7 +286,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.resumen.map((u) => {
+                  {vistaActiva.resumen.map((u) => {
                     const sitios = resumirSitiosVisitados(u.eventos).filter(
                       (s) => s.sitio !== "Entrada a la app"
                     )
@@ -283,24 +333,23 @@ export default function AdminPage() {
                   })}
                 </tbody>
               </table>
-              {data.resumen.length === 0 && (
+              {vistaActiva.resumen.length === 0 && (
                 <p className="p-6 text-center text-sm text-muted">
-                  Aún no hay datos. Los estudiantes deben entrar con su nombre para registrar
-                  actividad.
+                  No hay datos para esta vista todavía.
                 </p>
               )}
             </div>
 
-            {usuarioDetalle && (
+            {usuarioDetalleVista && (
               <section className="mt-6 rounded-xl border border-primary/20 bg-white p-4 shadow-sm">
                 <h2 className="font-display text-lg font-semibold text-primary">
-                  Recorrido — {usuarioDetalle.nombre}
+                  Recorrido — {usuarioDetalleVista.nombre}
                 </h2>
                 <p className="mt-1 text-xs text-muted">
                   Orden cronológico: qué parte de la app abrió y cuánto tiempo estuvo
                 </p>
                 <ul className="mt-3 max-h-96 space-y-2 overflow-y-auto custom-scroll">
-                  {usuarioDetalle.eventos
+                  {usuarioDetalleVista.eventos
                     .filter((ev) => ["sitio", "tab", "modal", "inicio"].includes(ev.tipo))
                     .slice()
                     .sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""))
@@ -321,7 +370,7 @@ export default function AdminPage() {
                     })}
                 </ul>
                 <p className="mt-3 text-xs text-muted">
-                  Ciudad: {usuarioDetalle.ultimaCiudad || "—"} · IP: {usuarioDetalle.ultimaIp || "—"}
+                  Ciudad: {usuarioDetalleVista.ultimaCiudad || "—"} · IP: {usuarioDetalleVista.ultimaIp || "—"}
                 </p>
               </section>
             )}
