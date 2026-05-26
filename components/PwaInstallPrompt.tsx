@@ -16,12 +16,12 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
-type ModoBanner = "nativo" | "ios" | "android-manual" | "desktop-manual"
+type ModoBanner = "nativo" | "ios"
 
 export default function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [visible, setVisible] = useState(false)
-  const [modo, setModo] = useState<ModoBanner>("desktop-manual")
+  const [modo, setModo] = useState<ModoBanner>("ios")
   const [instalando, setInstalando] = useState(false)
   const bipRecibido = useRef(false)
   const timerRef = useRef<number | null>(null)
@@ -51,7 +51,9 @@ export default function PwaInstallPrompt() {
     }
 
     const plataforma = getPlataformaPwa()
-    const delay = plataforma === "ios" ? 800 : plataforma === "android" ? 2000 : 3500
+    // Android/Desktop: solo mostrar cuando exista prompt nativo.
+    if (plataforma !== "ios") return
+    const delay = 800
 
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null
@@ -61,8 +63,6 @@ export default function PwaInstallPrompt() {
         return
       }
       if (plataforma === "ios") mostrarBanner("ios")
-      else if (plataforma === "android") mostrarBanner("android-manual")
-      else mostrarBanner("desktop-manual")
     }, delay)
   }, [deferredPrompt, limpiarTimer, mostrarBanner])
 
@@ -80,7 +80,10 @@ export default function PwaInstallPrompt() {
 
     const onMostrar = () => {
       if (yaInstaladaPwa()) return
-      mostrarBanner(modoBannerParaPlataforma(Boolean(deferredPrompt)))
+      const modoDetectado = modoBannerParaPlataforma(Boolean(deferredPrompt))
+      if (modoDetectado === "nativo" || modoDetectado === "ios") {
+        mostrarBanner(modoDetectado)
+      }
     }
 
     window.addEventListener(PWA_MOSTRAR_EVENT, onMostrar)
@@ -151,22 +154,6 @@ export default function PwaInstallPrompt() {
         </>
       )
     }
-    if (modo === "android-manual") {
-      return (
-        <>
-          En <strong>Chrome</strong>: menú <strong>⋮</strong> →{" "}
-          <strong>Instalar aplicación</strong> o <strong>Añadir a pantalla de inicio</strong>.
-        </>
-      )
-    }
-    if (modo === "desktop-manual") {
-      return (
-        <>
-          En Chrome o Edge: icono <strong>Instalar</strong> en la barra de direcciones, o menú{" "}
-          <strong>⋮</strong> → <strong>Instalar Escuela Bíblica</strong>.
-        </>
-      )
-    }
     return <>Accede más rápido desde tu pantalla de inicio, como una aplicación.</>
   }
 
@@ -209,7 +196,7 @@ export default function PwaInstallPrompt() {
               disabled={instalando}
               className="min-h-11 flex-1 rounded-lg bg-primary px-4 text-sm font-medium text-white active:opacity-90 disabled:opacity-60"
             >
-              {instalando ? "Instalando…" : "Sí, instalar"}
+              {instalando ? "Instalando…" : "Instalar"}
             </button>
           )}
           {!puedeInstalarNativo && (
