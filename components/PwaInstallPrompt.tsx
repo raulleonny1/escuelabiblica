@@ -10,6 +10,7 @@ import {
   modoBannerParaPlataforma,
   yaInstaladaPwa,
 } from "@/lib/pwa"
+import { safeLocalGet, safeLocalSet } from "@/lib/storage"
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -17,6 +18,8 @@ type BeforeInstallPromptEvent = Event & {
 }
 
 type ModoBanner = "nativo" | "ios"
+
+const INSTALADO_FLAG_KEY = "pwa-installed-flag"
 
 export default function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
@@ -27,6 +30,11 @@ export default function PwaInstallPrompt() {
   const timerRef = useRef<number | null>(null)
   const [montado, setMontado] = useState(false)
 
+  function yaInstaladoEnEsteDispositivo(): boolean {
+    if (yaInstaladaPwa()) return true
+    return safeLocalGet(INSTALADO_FLAG_KEY) === "1"
+  }
+
   const limpiarTimer = useCallback(() => {
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current)
@@ -35,13 +43,13 @@ export default function PwaInstallPrompt() {
   }, [])
 
   const mostrarBanner = useCallback((nuevoModo: ModoBanner) => {
-    if (yaInstaladaPwa()) return
+    if (yaInstaladoEnEsteDispositivo()) return
     setModo(nuevoModo)
     setVisible(true)
   }, [])
 
   const programarBanner = useCallback(() => {
-    if (yaInstaladaPwa()) return
+    if (yaInstaladoEnEsteDispositivo()) return
 
     limpiarTimer()
 
@@ -57,7 +65,7 @@ export default function PwaInstallPrompt() {
 
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null
-      if (yaInstaladaPwa()) return
+      if (yaInstaladoEnEsteDispositivo()) return
       if (bipRecibido.current && deferredPrompt) {
         mostrarBanner("nativo")
         return
@@ -79,7 +87,7 @@ export default function PwaInstallPrompt() {
     if (!montado) return
 
     const onMostrar = () => {
-      if (yaInstaladaPwa()) return
+      if (yaInstaladoEnEsteDispositivo()) return
       const modoDetectado = modoBannerParaPlataforma(Boolean(deferredPrompt))
       if (modoDetectado === "nativo" || modoDetectado === "ios") {
         mostrarBanner(modoDetectado)
@@ -91,7 +99,7 @@ export default function PwaInstallPrompt() {
   }, [montado, deferredPrompt, mostrarBanner])
 
   useEffect(() => {
-    if (!montado || yaInstaladaPwa()) return
+    if (!montado || yaInstaladoEnEsteDispositivo()) return
 
     const onBip = (e: Event) => {
       e.preventDefault()
@@ -105,7 +113,7 @@ export default function PwaInstallPrompt() {
     programarBanner()
 
     const onPageShow = () => {
-      if (yaInstaladaPwa()) return
+      if (yaInstaladoEnEsteDispositivo()) return
       programarBanner()
     }
 
@@ -126,6 +134,7 @@ export default function PwaInstallPrompt() {
       const { outcome } = await deferredPrompt.userChoice
       setDeferredPrompt(null)
       if (outcome === "accepted" || yaInstaladaPwa()) {
+        safeLocalSet(INSTALADO_FLAG_KEY, "1")
         setVisible(false)
       }
     } catch {
@@ -157,7 +166,7 @@ export default function PwaInstallPrompt() {
     return <>Accede más rápido desde tu pantalla de inicio, como una aplicación.</>
   }
 
-  if (!montado || !visible || yaInstaladaPwa()) return null
+  if (!montado || !visible || yaInstaladoEnEsteDispositivo()) return null
 
   const puedeInstalarNativo = modo === "nativo" && deferredPrompt
 
