@@ -4,8 +4,9 @@ export type PlataformaPwa = "ios" | "android" | "desktop"
 
 export const PWA_MOSTRAR_EVENT = "pwa-mostrar-instalacion"
 
-/** Clave antigua: ya no se usa para ocultar el banner de forma permanente */
+/** Claves antiguas: ya no ocultan el banner de forma permanente */
 const LEGACY_DISMISS_KEY = "pwa-install-dismissed"
+const LEGACY_INSTALADO_FLAG_KEY = "pwa-installed-flag"
 
 /** iPhone, iPad (incl. iPadOS que reporta "Macintosh") */
 export function esAppleDispositivo(): boolean {
@@ -52,6 +53,7 @@ export function limpiarRechazoInstalacionAntiguo(): void {
   if (typeof window === "undefined") return
   try {
     window.localStorage.removeItem(LEGACY_DISMISS_KEY)
+    window.localStorage.removeItem(LEGACY_INSTALADO_FLAG_KEY)
   } catch {
     // ignorar
   }

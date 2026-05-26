@@ -1,17 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import {
-  esDispositivoInstalable,
-  solicitarBannerInstalacion,
-  yaInstaladaPwa,
-} from "@/lib/pwa"
+import { solicitarBannerInstalacion, yaInstaladaPwa } from "@/lib/pwa"
 
 export default function PwaInstallButton() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    setVisible(!yaInstaladaPwa() && esDispositivoInstalable())
+    setVisible(!yaInstaladaPwa())
   }, [])
 
   if (!visible) return null
