@@ -436,14 +436,14 @@ export default function Home() {
             nombre={chatNombre}
             activo={isLg}
             onCambiarNombre={handleCambiarNombreChat}
-            className="hidden lg:flex lg:min-h-[280px] lg:max-h-[340px]"
+            className="hidden lg:flex lg:min-h-[min(70vh,560px)]"
           />
         )}
       </aside>
 
       {chatNombre && (
         <div
-          className={`flex min-h-0 flex-1 flex-col bg-surface p-3 md:p-4 lg:hidden ${
+          className={`flex h-full min-h-0 flex-1 flex-col bg-surface p-2 md:p-3 lg:hidden ${
             mobileTab === "chat" ? "flex" : "hidden"
           }`}
         >
@@ -451,7 +451,7 @@ export default function Home() {
             nombre={chatNombre}
             activo={!isLg && mobileTab === "chat"}
             onCambiarNombre={handleCambiarNombreChat}
-            className="min-h-0 flex-1"
+            className="h-full min-h-0 flex-1"
           />
         </div>
       )}

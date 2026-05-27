@@ -11,6 +11,8 @@ import {
   serverTimestamp,
   setDoc,
   Timestamp,
+  where,
+  type QueryDocumentSnapshot,
   type Unsubscribe,
 } from "firebase/firestore"
 import { getDb, isFirebaseConfigured } from "./firebase"
@@ -36,6 +38,10 @@ const PRESENCIA_CHAT_MS = 45_000
 const HEARTBEAT_APP_MS = 15_000
 const HEARTBEAT_CHAT_MS = 10_000
 const TICK_UI_MS = 2_000
+
+/** Los mensajes del chat solo se conservan 1 hora (pantalla y base de datos). */
+export const CHAT_RETENCION_MS = 60 * 60 * 1000
+const CHAT_LIMITE_MENSAJES = 250
 
 export type ChatMessage = {
   id: string
@@ -158,17 +164,54 @@ export async function enviarMensajeChat(nombre: string, texto: string, sessionId
   })
 }
 
-export async function anunciarEntradaChat(nombre: string, sessionId: string) {
+function parseChatMessageDoc(item: QueryDocumentSnapshot): ChatMessage {
+  const data = item.data()
+  const ts = data.createdAt as Timestamp | undefined
+  return {
+    id: item.id,
+    nombre: (data.nombre as string) ?? "",
+    texto: (data.texto as string) ?? "",
+    tipo: data.tipo === "join" ? "join" : "message",
+    createdAt: ts?.toDate?.() ?? null,
+  }
+}
+
+function esMensajeConversacion(m: ChatMessage): boolean {
+  if (m.tipo === "join") return false
+  const t = m.texto.trim()
+  if (!t) return false
+  return !/ entró al chat\.?$/i.test(t)
+}
+
+function mensajeDentroDeRetencion(m: ChatMessage, ahora = Date.now()): boolean {
+  if (!m.createdAt) return true
+  return m.createdAt.getTime() >= ahora - CHAT_RETENCION_MS
+}
+
+function mensajesDesdeSnapshot(docs: QueryDocumentSnapshot[]): ChatMessage[] {
+  const ahora = Date.now()
+  return docs
+    .map(parseChatMessageDoc)
+    .filter(esMensajeConversacion)
+    .filter((m) => mensajeDentroDeRetencion(m, ahora))
+    .slice(-CHAT_LIMITE_MENSAJES)
+}
+
+/** Borra de Firestore mensajes con más de 1 hora (varios lotes). */
+export async function limpiarMensajesChatExpirados(): Promise<void> {
   if (!isFirebaseConfigured()) return
-  if (safeSessionGet(JOIN_KEY) === sessionId) return
-  await addDoc(collection(getDb(), "chatMessages"), {
-    nombre: nombre.trim().slice(0, 32),
-    texto: `${nombre.trim()} entró al chat`,
-    tipo: "join",
-    sessionId,
-    createdAt: serverTimestamp(),
-  })
-  safeSessionSet(JOIN_KEY, sessionId)
+  const corte = Timestamp.fromMillis(Date.now() - CHAT_RETENCION_MS)
+
+  for (let lote = 0; lote < 15; lote++) {
+    const q = query(
+      collection(getDb(), "chatMessages"),
+      where("createdAt", "<", corte),
+      limit(100)
+    )
+    const snap = await getDocs(q)
+    if (snap.empty) break
+    await Promise.all(snap.docs.map((item) => deleteDoc(item.ref).catch(() => {})))
+  }
 }
 
 export function subscribeChatMessages(
@@ -180,25 +223,39 @@ export function subscribeChatMessages(
     onError(new Error(FIREBASE_NO_CONFIG))
     return () => {}
   }
-  const q = query(collection(getDb(), "chatMessages"), orderBy("createdAt", "asc"), limit(200))
-  return onSnapshot(
-    q,
-    (snapshot) => {
-      const messages: ChatMessage[] = snapshot.docs.map((item) => {
-        const data = item.data()
-        const ts = data.createdAt as Timestamp | undefined
-        return {
-          id: item.id,
-          nombre: (data.nombre as string) ?? "",
-          texto: (data.texto as string) ?? "",
-          tipo: data.tipo === "join" ? "join" : "message",
-          createdAt: ts?.toDate?.() ?? null,
-        }
-      })
-      onData(messages)
-    },
-    (error) => onError(error as Error)
+
+  void limpiarMensajesChatExpirados().catch(() => {})
+
+  const corteMin = Timestamp.fromMillis(Date.now() - CHAT_RETENCION_MS)
+  const col = collection(getDb(), "chatMessages")
+  const qReciente = query(
+    col,
+    where("createdAt", ">=", corteMin),
+    orderBy("createdAt", "asc"),
+    limit(CHAT_LIMITE_MENSAJES)
   )
+  const qRespaldo = query(col, orderBy("createdAt", "desc"), limit(400))
+
+  let unsub: Unsubscribe = () => {}
+
+  const emitir = (docs: QueryDocumentSnapshot[]) => {
+    onData(mensajesDesdeSnapshot(docs))
+  }
+
+  unsub = onSnapshot(
+    qReciente,
+    (snapshot) => emitir(snapshot.docs),
+    () => {
+      unsub()
+      unsub = onSnapshot(
+        qRespaldo,
+        (snapshot) => emitir(snapshot.docs),
+        (error) => onError(error as Error)
+      )
+    }
+  )
+
+  return () => unsub()
 }
 
 export function subscribePresenciaChat(

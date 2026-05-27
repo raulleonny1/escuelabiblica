@@ -8,6 +8,7 @@ import {
   getChatSessionId,
   getPresenceDocId,
   iniciarPresenciaEnChat,
+  limpiarMensajesChatExpirados,
   pulsoActividadEnChat,
   subscribeChatMessages,
   subscribePresenciaCompleta,
@@ -22,7 +23,6 @@ import {
   reproducirSonidoMensajeDirecto,
   solicitarPermisoNotificaciones,
   actualizarTituloNoLeidos,
-  variantesMencion,
 } from "@/lib/chatNotificaciones"
 
 interface ChatPanelProps {
@@ -129,6 +129,11 @@ export default function ChatPanel({
 
     setListo(true)
 
+    void limpiarMensajesChatExpirados().catch(() => {})
+    const limpiezaId = window.setInterval(() => {
+      void limpiarMensajesChatExpirados().catch(() => {})
+    }, 5 * 60 * 1000)
+
     const unsubMsg = subscribeChatMessages(
       (data) => {
         procesarMensajesNuevos(data)
@@ -144,6 +149,7 @@ export default function ChatPanel({
     }, () => {})
 
     return () => {
+      window.clearInterval(limpiezaId)
       unsubMsg()
       unsubPres()
     }
@@ -201,6 +207,8 @@ export default function ChatPanel({
     return [...map.values()].sort((a, b) => a.localeCompare(b, "es"))
   })()
 
+  const esMiMensaje = (autor: string) => autor.trim().toLowerCase() === miNombreLower
+
   function insertarMencion(destinatario: string) {
     prepararSonidoChat()
     const primera = destinatario.split(/\s+/)[0] ?? destinatario
@@ -217,48 +225,40 @@ export default function ChatPanel({
 
   return (
     <section
-      className={`flex min-h-0 flex-col rounded-xl border border-border bg-card shadow-sm ${className}`}
+      className={`flex h-full min-h-0 flex-col rounded-xl border border-border bg-card shadow-sm ${className}`}
     >
-      <div className="shrink-0 border-b border-border bg-primary/5 px-3 py-2.5">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Chat grupal</p>
-            <p className="text-sm font-medium text-primary">
-              Hola, {nombre}
-              {onCambiarNombre && (
-                <button
-                  type="button"
-                  onClick={onCambiarNombre}
-                  className="ml-2 text-xs font-normal text-slate-500 underline"
-                >
-                  cambiar nombre
-                </button>
-              )}
-            </p>
-          </div>
+      <div className="shrink-0 border-b border-border bg-primary/5 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate text-sm font-medium text-primary">
+            Chat · {nombre}
+            {onCambiarNombre && (
+              <button
+                type="button"
+                onClick={onCambiarNombre}
+                className="ml-1.5 text-xs font-normal text-slate-500 underline"
+              >
+                cambiar nombre
+              </button>
+            )}
+          </p>
           <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[0.625rem] font-semibold text-emerald-800">
             {conectados.length} en línea
           </span>
         </div>
-        {otrosConectados.length > 0 ? (
-          <p className="mt-1 text-[0.6875rem] leading-snug text-slate-500">
+        {otrosConectados.length > 0 && (
+          <p className="mt-0.5 truncate text-[0.6875rem] text-slate-500">
             Conectados: {otrosConectados.map((u) => u.nombre).join(", ")}
-            {otrosEnChat.length > 0 && (
-              <span className="text-slate-400">
-                {" "}
-                · En el chat: {otrosEnChat.map((u) => u.nombre).join(", ")}
-              </span>
-            )}
           </p>
-        ) : (
-          <p className="mt-1 text-[0.6875rem] text-slate-400">Solo tú conectado por ahora</p>
         )}
-        <p className="mt-1 text-[0.625rem] text-slate-400">
-          Toca un nombre abajo o escribe @{variantesMencion(nombre)[0] ?? "nombre"} para avisar con sonido
+        <p className="mt-0.5 text-[0.625rem] text-slate-400">
+          Los mensajes se eliminan después de 1 hora.
         </p>
       </div>
 
-      <div ref={listaRef} className="custom-scroll min-h-0 flex-1 overflow-y-auto px-3 py-2">
+      <div
+        ref={listaRef}
+        className="custom-scroll min-h-[min(50dvh,420px)] flex-1 basis-0 grow overflow-y-auto px-3 py-2 lg:min-h-[280px]"
+      >
         {!listo && (
           <p className="py-4 text-center text-sm text-muted">Conectando al chat…</p>
         )}
@@ -267,32 +267,30 @@ export default function ChatPanel({
             Nadie ha escrito aún. ¡Comparte una idea!
           </p>
         )}
-        {mensajes.map((m) =>
-          m.tipo !== "message" ? null : (
-            <article
-              key={m.id}
-              className={`mb-2 max-w-[95%] rounded-lg px-2.5 py-1.5 ${
-                m.nombre === nombre
-                  ? "ml-auto bg-primary text-white"
-                  : "mr-auto bg-surface border border-border"
-              }`}
-            >
-              {m.nombre !== nombre && (
-                <p className="text-[0.625rem] font-semibold text-primary mb-0.5">{m.nombre}</p>
-              )}
-              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.texto}</p>
-              {m.createdAt && (
-                <p
-                  className={`mt-0.5 text-[0.625rem] ${
-                    m.nombre === nombre ? "text-white/80" : "text-slate-400"
-                  }`}
-                >
-                  {formatHoraChat(m.createdAt)}
-                </p>
-              )}
-            </article>
-          )
-        )}
+        {mensajes.map((m) => (
+          <article
+            key={m.id}
+            className={`mb-2 max-w-[95%] rounded-lg px-2.5 py-1.5 ${
+              esMiMensaje(m.nombre)
+                ? "ml-auto bg-primary text-white"
+                : "mr-auto bg-surface border border-border"
+            }`}
+          >
+            {!esMiMensaje(m.nombre) && (
+              <p className="text-[0.625rem] font-semibold text-primary mb-0.5">{m.nombre}</p>
+            )}
+            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.texto}</p>
+            {m.createdAt && (
+              <p
+                className={`mt-0.5 text-[0.625rem] ${
+                  esMiMensaje(m.nombre) ? "text-white/80" : "text-slate-400"
+                }`}
+              >
+                {formatHoraChat(m.createdAt)}
+              </p>
+            )}
+          </article>
+        ))}
       </div>
 
       {error && (
