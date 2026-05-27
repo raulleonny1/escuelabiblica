@@ -116,7 +116,7 @@ export const semana01: LeccionContenido = {
       {
         titulo: "Reflexión sobre la perseverancia",
         texto:
-          "Noé esperó dentro del arca siete días adicionales después de que todos los animales entraran, antes de que comenzara la lluvia (Génesis 7:10). Luego permaneció en el arca más de un año. Su fe requirió paciencia extraordinaria. ¿Qué «arca» estás construyendo con fe que aún no muestra resultados visibles? ¿Qué promesa de Dios estás esperando que parece tardar demasiado? La historia de Noé nos anima: la obediencia fea hoy produce salvación mañana. No abandones lo que Dios te ha pedido hacer.",
+          "Noé esperó dentro del arca siete días adicionales después de que todos los animales entraran, antes de que comenzara la lluvia (Génesis 7:10). Luego permaneció en el arca más de un año. Su fe requirió paciencia extraordinaria. ¿Qué «arca» estás construyendo con fe que aún no muestra resultados visibles? ¿Qué promesa de Dios estás esperando que parece tardar demasiado? La historia de Noé nos anima: la obediencia fiel hoy produce salvación mañana. No abandones lo que Dios te ha pedido hacer.",
       },
     ],
     jue: [
@@ -188,7 +188,7 @@ export const semana01: LeccionContenido = {
       {
         titulo: "Versículo de cierre",
         texto:
-          "«Y sin fe es imposible agradar a Dios; porque es necesario que el que se acerca a Dios crea que le hay, y que es galardonador de los que le buscan.» — Hebreos 11:6. Al cerrar esta semana fundacional, recuerda: Dios no pide fe perfecta, pide fe genuina. Acércate a Él con confianza, sabiendo que Él recompensa a quienes le buscan de corázon. Tu jornada de fe acaba de comenzar.",
+          "«Y sin fe es imposible agradar a Dios; porque es necesario que el que se acerca a Dios crea que le hay, y que es galardonador de los que le buscan.» — Hebreos 11:6. Al cerrar esta semana fundacional, recuerda: Dios no pide fe perfecta, pide fe genuina. Acércate a Él con confianza, sabiendo que Él recompensa a quienes le buscan de corazón. Tu jornada de fe acaba de comenzar.",
       },
     ],
   },
