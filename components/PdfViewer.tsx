@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Viewer, Worker, SpecialZoomLevel } from "@react-pdf-viewer/core"
 import { findPageIndexForDay, getFechaLecturaParaSemana } from "@/lib/leccionPdf"
+import { getPdfWorkerUrl } from "@/lib/pdfWorker"
 import "@react-pdf-viewer/core/lib/styles/index.css"
 
 interface PdfViewerProps {
@@ -44,7 +45,7 @@ export default function PdfViewer({ url, irAlDiaLectura, semana, fechaLectura }:
     async function resolverPagina() {
       try {
         const pdfjs = await import("pdfjs-dist")
-        pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js"
+        pdfjs.GlobalWorkerOptions.workerSrc = getPdfWorkerUrl()
         const doc = await pdfjs.getDocument(url).promise
         const fecha =
           fechaLectura ?? (semana ? getFechaLecturaParaSemana(semana) : undefined)
@@ -78,7 +79,7 @@ export default function PdfViewer({ url, irAlDiaLectura, semana, fechaLectura }:
 
   return (
     <div className="pdf-viewer-shell h-full w-full min-h-[200px] lg:min-h-[480px]">
-      <Worker workerUrl="/pdf.worker.min.js">
+      <Worker workerUrl={getPdfWorkerUrl()}>
         <Viewer
           key={`${url}-${paginaInicial}`}
           fileUrl={url}
