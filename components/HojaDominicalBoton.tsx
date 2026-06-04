@@ -23,7 +23,6 @@ type HojaDominicalBotonProps = {
 
 export default function HojaDominicalBoton({
   semana,
-  fecha,
   className = "",
 }: HojaDominicalBotonProps) {
   const [abierto, setAbierto] = useState(false)
@@ -108,12 +107,7 @@ export default function HojaDominicalBoton({
               </button>
             </div>
             <div className="min-h-0 flex-1 bg-slate-100">
-              <PdfViewer
-                url={pdfUrl}
-                irAlDiaLectura
-                semana={semana}
-                fechaLectura={fecha}
-              />
+              <PdfViewer url={pdfUrl} />
             </div>
           </div>
         </div>
