@@ -1,9 +1,7 @@
-import { getFechasSemana } from "@/lib/semana"
+/** PDF de la hoja dominical en public/pdf/ */
+export const HOJA_DOMINICAL_PDF_PATH = "/pdf/hoja-dominical.pdf"
 
-/** Nombre de archivo: domingo de la semana → `24-05-2026.pdf` */
-export function getHojaDominicalUrl(semana: number): string {
-  const domingo = getFechasSemana(semana)[0]?.fecha
-  if (!domingo) return "/pdf/24-05-2026.pdf"
-  const [y, m, d] = domingo.split("-")
-  return `/pdf/${d}-${m}-${y}.pdf`
+/** URL del PDF que abre el botón «Hoja dominical». */
+export function getHojaDominicalUrl(_semana?: number): string {
+  return HOJA_DOMINICAL_PDF_PATH
 }
