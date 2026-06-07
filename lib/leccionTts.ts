@@ -107,10 +107,15 @@ export class LectorLeccionVoz {
   }
 
   async iniciar(bloques: BloqueLeccion[]) {
+    getLectorPasajeVoz().detener()
+    const texto = textoLeccionParaAudio(bloques)
+    await this.iniciarTexto(texto)
+  }
+
+  async iniciarTexto(texto: string) {
     if (!sintesisVozDisponible()) return
 
     this.detener()
-    const texto = textoLeccionParaAudio(bloques)
     this.fragmentos = partirEnFragmentos(texto)
     if (this.fragmentos.length === 0) return
 
@@ -223,8 +228,33 @@ export class LectorLeccionVoz {
 }
 
 let lectorSingleton: LectorLeccionVoz | null = null
+let lectorPasajeSingleton: LectorLeccionVoz | null = null
+let reanudarLeccionTrasPasaje = false
 
 export function getLectorLeccionVoz(): LectorLeccionVoz {
   if (!lectorSingleton) lectorSingleton = new LectorLeccionVoz()
   return lectorSingleton
+}
+
+export function getLectorPasajeVoz(): LectorLeccionVoz {
+  if (!lectorPasajeSingleton) lectorPasajeSingleton = new LectorLeccionVoz()
+  return lectorPasajeSingleton
+}
+
+/** Pausa el estudio si estaba sonando al abrir un pasaje bíblico flotante. */
+export function alAbrirPasajeBiblico() {
+  const lector = getLectorLeccionVoz()
+  if (lector.getEstado() === "playing") {
+    lector.pausar()
+    reanudarLeccionTrasPasaje = true
+  }
+}
+
+/** Detiene el audio del pasaje y reanuda el estudio si se había pausado al abrir. */
+export function alCerrarPasajeBiblico() {
+  getLectorPasajeVoz().detener()
+  if (reanudarLeccionTrasPasaje) {
+    reanudarLeccionTrasPasaje = false
+    getLectorLeccionVoz().reanudar()
+  }
 }

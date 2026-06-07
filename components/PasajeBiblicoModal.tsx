@@ -1,10 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import PasajeAudioPlayer from "@/components/PasajeAudioPlayer"
 import { cargarBiblia } from "@/lib/bibliaLoader"
+import { alAbrirPasajeBiblico, alCerrarPasajeBiblico } from "@/lib/leccionTts"
 import {
   extraerTextoPasaje,
   parseReferenciaPasaje,
+  textoPasajeParaAudio,
   type TextoPasajeResultado,
 } from "@/lib/pasajeBiblico"
 
@@ -16,6 +19,11 @@ type PasajeBiblicoModalProps = {
 export default function PasajeBiblicoModal({ referencia, onCerrar }: PasajeBiblicoModalProps) {
   const [cargando, setCargando] = useState(true)
   const [resultado, setResultado] = useState<TextoPasajeResultado | null>(null)
+
+  useEffect(() => {
+    alAbrirPasajeBiblico()
+    return () => alCerrarPasajeBiblico()
+  }, [])
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -98,6 +106,10 @@ export default function PasajeBiblicoModal({ referencia, onCerrar }: PasajeBibli
             ×
           </button>
         </div>
+
+        {!cargando && resultado && resultado.versos.length > 0 && (
+          <PasajeAudioPlayer texto={textoPasajeParaAudio(resultado)} />
+        )}
 
         <div className="custom-scroll min-h-0 flex-1 overflow-y-auto p-4">
           {cargando && (

@@ -268,3 +268,20 @@ export function extraerTextoPasaje(
 
   return { titulo, versos, aviso }
 }
+
+/** Texto continuo para leer el pasaje con voz del navegador. */
+export function textoPasajeParaAudio(resultado: TextoPasajeResultado): string {
+  if (resultado.versos.length === 0) return ""
+
+  let capActual: number | null = null
+  const partes = resultado.versos.map((v) => {
+    let prefijo = ""
+    if (v.capitulo !== capActual) {
+      capActual = v.capitulo
+      prefijo = `Capítulo ${v.capitulo}. `
+    }
+    return `${prefijo}Versículo ${v.numero}. ${v.texto}`
+  })
+
+  return `${resultado.titulo}. ${partes.join(" ")}`.replace(/\s+/g, " ").trim()
+}

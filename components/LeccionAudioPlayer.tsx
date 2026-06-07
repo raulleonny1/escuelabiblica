@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import type { BloqueLeccion } from "@/lib/lecciones"
 import {
   getLectorLeccionVoz,
+  getLectorPasajeVoz,
   sintesisVozDisponible,
   textoLeccionParaAudio,
 } from "@/lib/leccionTts"
@@ -51,6 +52,7 @@ export default function LeccionAudioPlayer({ bloques, etiquetaDia }: LeccionAudi
   if (!soportado || !hayTexto) return null
 
   async function reproducir() {
+    getLectorPasajeVoz().detener()
     await getLectorLeccionVoz().iniciar(bloques)
   }
 
