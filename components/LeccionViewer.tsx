@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { useEffect, useMemo, useRef } from "react"
 import TextoLeccionSelectable from "@/components/TextoLeccionSelectable"
+import LeccionAudioPlayer from "@/components/LeccionAudioPlayer"
 import VersiculoDelDiaCard from "@/components/VersiculoDelDiaCard"
 import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
@@ -182,6 +183,10 @@ export default function LeccionViewer({
       </header>
 
       <div className="flex-1 px-3 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6">
+        <LeccionAudioPlayer
+          bloques={bloques}
+          etiquetaDia={ETIQUETAS_DIA_LECCION[diaActivo]}
+        />
         {bloques.map((bloque) => (
           <section
             key={`${diaActivo}-${bloque.titulo}`}
