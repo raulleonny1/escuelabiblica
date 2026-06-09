@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import {
   getLectorLeccionVoz,
   getLectorPasajeVoz,
+  prepararSintesisEnGesto,
   sintesisVozDisponible,
 } from "@/lib/leccionTts"
 
@@ -43,17 +44,21 @@ export default function PasajeAudioPlayer({ texto }: PasajeAudioPlayerProps) {
 
   if (!soportado || !hayTexto) return null
 
-  async function reproducir() {
+  function reproducir() {
+    prepararSintesisEnGesto()
     const leccion = getLectorLeccionVoz()
     if (leccion.getEstado() === "playing") leccion.pausar()
-    await getLectorPasajeVoz().iniciarTexto(texto)
+    getLectorPasajeVoz().iniciarTexto(texto, "Pasaje bíblico")
   }
 
   function alternarPausa() {
     const lector = getLectorPasajeVoz()
     const actual = lector.getEstado()
     if (actual === "playing") lector.pausar()
-    else if (actual === "paused") lector.reanudar()
+    else if (actual === "paused") {
+      prepararSintesisEnGesto()
+      lector.reanudar()
+    }
   }
 
   const enReproduccion = estado === "playing" || estado === "paused"
@@ -65,7 +70,7 @@ export default function PasajeAudioPlayer({ texto }: PasajeAudioPlayerProps) {
         {estado === "idle" && (
           <button
             type="button"
-            onClick={() => void reproducir()}
+            onClick={reproducir}
             className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-white active:opacity-90"
             aria-label="Reproducir pasaje bíblico"
           >

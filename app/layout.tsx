@@ -5,6 +5,7 @@ import { EstudioProvider } from "@/components/EstudioContext"
 import { SesionProvider } from "@/components/SesionProvider"
 import FirebaseInit from "@/components/FirebaseInit"
 import FontScaleInit from "@/components/FontScaleInit"
+import SintesisVozInit from "@/components/SintesisVozInit"
 import { readFirebaseConfigFromEnv } from "@/lib/firebaseEnv"
 import "./globals.css"
 
@@ -65,6 +66,7 @@ export default function RootLayout({
       <body className="m-0 p-0 antialiased">
         <FirebaseInit config={firebaseConfig} />
         <FontScaleInit />
+        <SintesisVozInit />
         <EstudioProvider>
           <SesionProvider>
             <div className="flex h-dvh flex-col overflow-hidden">

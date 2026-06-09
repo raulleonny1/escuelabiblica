@@ -5,6 +5,7 @@ import type { BloqueLeccion } from "@/lib/lecciones"
 import {
   getLectorLeccionVoz,
   getLectorPasajeVoz,
+  prepararSintesisEnGesto,
   sintesisVozDisponible,
   textoLeccionParaAudio,
 } from "@/lib/leccionTts"
@@ -51,16 +52,20 @@ export default function LeccionAudioPlayer({ bloques, etiquetaDia }: LeccionAudi
 
   if (!soportado || !hayTexto) return null
 
-  async function reproducir() {
+  function reproducir() {
+    prepararSintesisEnGesto()
     getLectorPasajeVoz().detener()
-    await getLectorLeccionVoz().iniciar(bloques)
+    getLectorLeccionVoz().iniciar(bloques)
   }
 
   function alternarPausa() {
     const lector = getLectorLeccionVoz()
     const actual = lector.getEstado()
     if (actual === "playing") lector.pausar()
-    else if (actual === "paused") lector.reanudar()
+    else if (actual === "paused") {
+      prepararSintesisEnGesto()
+      lector.reanudar()
+    }
   }
 
   function adelantar() {
@@ -96,7 +101,7 @@ export default function LeccionAudioPlayer({ bloques, etiquetaDia }: LeccionAudi
           {estado === "idle" && (
             <button
               type="button"
-              onClick={() => void reproducir()}
+              onClick={reproducir}
               className="inline-flex min-h-10 min-w-[5.5rem] items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-white active:opacity-90"
               aria-label="Reproducir estudio del día"
             >

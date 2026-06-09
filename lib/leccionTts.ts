@@ -1,4 +1,18 @@
 import type { BloqueLeccion } from "@/lib/lecciones"
+import {
+  activarAudioSilencioso,
+  actualizarSesionMedia,
+  configurarSesionMedia,
+  desactivarAudioSilencioso,
+  esDispositivoIOS,
+  hablarUtterance,
+  iniciarMantenimientoIos,
+  limpiarSesionMedia,
+  obtenerVocesCacheadas,
+  prepararSintesisEnGesto,
+} from "@/lib/sintesisVozIos"
+
+export { prepararSintesisEnGesto, precargarVocesSintesis } from "@/lib/sintesisVozIos"
 
 export function sintesisVozDisponible(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window
@@ -59,30 +73,9 @@ export function elegirVozEspanol(voices: SpeechSynthesisVoice[]): SpeechSynthesi
   return es.find((v) => v.localService) ?? es[0] ?? null
 }
 
+/** @deprecated Usar obtenerVocesCacheadas() dentro del gesto del usuario. */
 export function cargarVocesSintesis(): Promise<SpeechSynthesisVoice[]> {
-  return new Promise((resolve) => {
-    if (!sintesisVozDisponible()) {
-      resolve([])
-      return
-    }
-
-    const actuales = window.speechSynthesis.getVoices()
-    if (actuales.length > 0) {
-      resolve(actuales)
-      return
-    }
-
-    const fin = () => {
-      window.speechSynthesis.removeEventListener("voiceschanged", fin)
-      resolve(window.speechSynthesis.getVoices())
-    }
-
-    window.speechSynthesis.addEventListener("voiceschanged", fin)
-    window.setTimeout(() => {
-      window.speechSynthesis.removeEventListener("voiceschanged", fin)
-      resolve(window.speechSynthesis.getVoices())
-    }, 800)
-  })
+  return Promise.resolve(obtenerVocesCacheadas())
 }
 
 type EstadoLector = "idle" | "playing" | "paused"
@@ -101,47 +94,52 @@ export class LectorLeccionVoz {
   private estado: EstadoLector = "idle"
   private callbacks: CallbacksLector = {}
   private generacion = 0
+  private tituloMedia = "Estudio bíblico"
+  private audioFondoActivo = false
 
   setCallbacks(callbacks: CallbacksLector) {
     this.callbacks = callbacks
   }
 
-  async iniciar(bloques: BloqueLeccion[]) {
+  iniciar(bloques: BloqueLeccion[]) {
     getLectorPasajeVoz().detener()
-    const texto = textoLeccionParaAudio(bloques)
-    await this.iniciarTexto(texto)
+    this.iniciarTexto(textoLeccionParaAudio(bloques), bloques[0]?.titulo ?? "Estudio bíblico")
   }
 
-  async iniciarTexto(texto: string) {
+  /** Debe llamarse en el mismo click/touch que prepararSintesisEnGesto(). */
+  iniciarTexto(texto: string, tituloMedia = "Estudio bíblico") {
     if (!sintesisVozDisponible()) return
 
     this.detener()
+    this.tituloMedia = tituloMedia
     this.fragmentos = partirEnFragmentos(texto)
     if (this.fragmentos.length === 0) return
 
-    const voces = await cargarVocesSintesis()
-    this.voz = elegirVozEspanol(voces)
+    this.voz = elegirVozEspanol(obtenerVocesCacheadas())
     this.indice = 0
+    this.activarReproduccionFondo()
     this.cambiarEstado("playing")
     this.hablarSiguiente()
   }
 
   pausar() {
     if (!sintesisVozDisponible() || this.estado !== "playing") return
-    // cancel() es más fiable que speechSynthesis.pause() (Chrome/Android suele ignorarlo).
     this.generacion += 1
     window.speechSynthesis.cancel()
     this.cambiarEstado("paused")
+    actualizarSesionMedia("paused")
   }
 
   reanudar() {
     if (!sintesisVozDisponible() || this.estado !== "paused") return
     if (this.fragmentos.length === 0 || this.indice >= this.fragmentos.length) return
+    prepararSintesisEnGesto()
+    this.activarReproduccionFondo()
     this.cambiarEstado("playing")
+    actualizarSesionMedia("playing")
     this.hablarSiguiente()
   }
 
-  /** Salta fragmentos (≈ frases) hacia adelante y sigue leyendo. */
   adelantar(saltos = 2) {
     if (!sintesisVozDisponible()) return
     if (this.estado === "idle" || this.fragmentos.length === 0) return
@@ -153,9 +151,7 @@ export class LectorLeccionVoz {
     this.notificarProgreso()
 
     if (this.indice >= this.fragmentos.length) {
-      this.fragmentos = []
-      this.indice = 0
-      this.cambiarEstado("idle")
+      this.finalizarReproduccion()
       this.callbacks.onFin?.()
       return
     }
@@ -177,11 +173,42 @@ export class LectorLeccionVoz {
     window.speechSynthesis.cancel()
     this.fragmentos = []
     this.indice = 0
+    this.desactivarReproduccionFondo()
     if (this.estado !== "idle") this.cambiarEstado("idle")
   }
 
   getEstado(): EstadoLector {
     return this.estado
+  }
+
+  private activarReproduccionFondo() {
+    if (this.audioFondoActivo) return
+    this.audioFondoActivo = true
+    void activarAudioSilencioso()
+    iniciarMantenimientoIos()
+    configurarSesionMedia(this.tituloMedia, {
+      onPausa: () => {
+        if (this.estado === "playing") this.pausar()
+      },
+      onPlay: () => {
+        if (this.estado === "paused") this.reanudar()
+      },
+      onStop: () => this.detener(),
+    })
+  }
+
+  private desactivarReproduccionFondo() {
+    if (!this.audioFondoActivo) return
+    this.audioFondoActivo = false
+    desactivarAudioSilencioso()
+    limpiarSesionMedia()
+  }
+
+  private finalizarReproduccion() {
+    this.fragmentos = []
+    this.indice = 0
+    this.desactivarReproduccionFondo()
+    this.cambiarEstado("idle")
   }
 
   private cambiarEstado(estado: EstadoLector) {
@@ -194,36 +221,66 @@ export class LectorLeccionVoz {
     this.callbacks.onProgreso?.(this.indice + 1, this.fragmentos.length)
   }
 
-  private hablarSiguiente() {
+  private crearUtterance(texto: string): SpeechSynthesisUtterance {
+    const utterance = new SpeechSynthesisUtterance(texto)
+    utterance.lang = this.voz?.lang ?? "es-ES"
+    if (this.voz) utterance.voice = this.voz
+    utterance.rate = 1
+    utterance.pitch = 1
+    return utterance
+  }
+
+  private hablarSiguiente(reintento = 0) {
     if (!sintesisVozDisponible() || this.estado !== "playing") return
 
     if (this.indice >= this.fragmentos.length) {
-      this.detener()
+      this.finalizarReproduccion()
       this.callbacks.onFin?.()
       return
     }
 
     const gen = (this.generacion += 1)
+    const texto = this.fragmentos[this.indice]!
     this.notificarProgreso()
 
-    const utterance = new SpeechSynthesisUtterance(this.fragmentos[this.indice])
-    utterance.lang = this.voz?.lang ?? "es-ES"
-    if (this.voz) utterance.voice = this.voz
-    utterance.rate = 1
-    utterance.pitch = 1
+    const utterance = this.crearUtterance(texto)
+    const inicio = { ok: false }
+
+    utterance.onstart = () => {
+      if (gen !== this.generacion) return
+      inicio.ok = true
+    }
 
     utterance.onend = () => {
       if (gen !== this.generacion || this.estado !== "playing") return
       this.indice += 1
       this.hablarSiguiente()
     }
+
     utterance.onerror = () => {
       if (gen !== this.generacion || this.estado !== "playing") return
+      if (esDispositivoIOS() && reintento === 0) {
+        window.setTimeout(() => {
+          if (gen === this.generacion && this.estado === "playing") {
+            this.hablarSiguiente(1)
+          }
+        }, 200)
+        return
+      }
       this.indice += 1
       this.hablarSiguiente()
     }
 
-    window.speechSynthesis.speak(utterance)
+    hablarUtterance(utterance)
+
+    if (esDispositivoIOS() && reintento === 0) {
+      window.setTimeout(() => {
+        if (inicio.ok || gen !== this.generacion || this.estado !== "playing") return
+        this.generacion += 1
+        window.speechSynthesis.cancel()
+        this.hablarSiguiente(1)
+      }, 450)
+    }
   }
 }
 
@@ -241,7 +298,6 @@ export function getLectorPasajeVoz(): LectorLeccionVoz {
   return lectorPasajeSingleton
 }
 
-/** Pausa el estudio si estaba sonando al abrir un pasaje bíblico flotante. */
 export function alAbrirPasajeBiblico() {
   const lector = getLectorLeccionVoz()
   if (lector.getEstado() === "playing") {
@@ -250,11 +306,11 @@ export function alAbrirPasajeBiblico() {
   }
 }
 
-/** Detiene el audio del pasaje y reanuda el estudio si se había pausado al abrir. */
 export function alCerrarPasajeBiblico() {
   getLectorPasajeVoz().detener()
   if (reanudarLeccionTrasPasaje) {
     reanudarLeccionTrasPasaje = false
+    prepararSintesisEnGesto()
     getLectorLeccionVoz().reanudar()
   }
 }

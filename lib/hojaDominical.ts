@@ -1,4 +1,4 @@
-/** PDF de la hoja dominical en public/pdf/ */
+/** PDF de la hoja dominical: public/pdf/Hoja-dominical.pdf */
 export const HOJA_DOMINICAL_PDF_PATH = "/pdf/Hoja-dominical.pdf"
 
 /** URL del PDF que abre el botón «Hoja dominical». */
