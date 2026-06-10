@@ -5,17 +5,21 @@ import {
   configurarSesionMedia,
   desactivarAudioSilencioso,
   esDispositivoIOS,
+  esDispositivoMovil,
   hablarUtterance,
   limpiarSesionMedia,
   obtenerVocesCacheadas,
   prepararSintesisEnGesto,
   registrarReanudarVoz,
 } from "@/lib/sintesisVozIos"
+import { actualizarPosicionMedia, urlAudioTts, usarAudioServidorEnDispositivo } from "@/lib/ttsServidor"
 
 export { prepararSintesisEnGesto, precargarVocesSintesis } from "@/lib/sintesisVozIos"
 
 export function sintesisVozDisponible(): boolean {
-  return typeof window !== "undefined" && "speechSynthesis" in window
+  if (typeof window === "undefined") return false
+  if (esDispositivoMovil()) return true
+  return "speechSynthesis" in window
 }
 
 /** Texto continuo para leer el estudio del día. */
@@ -73,7 +77,6 @@ export function elegirVozEspanol(voices: SpeechSynthesisVoice[]): SpeechSynthesi
   return es.find((v) => v.localService) ?? es[0] ?? null
 }
 
-/** @deprecated Usar obtenerVocesCacheadas() dentro del gesto del usuario. */
 export function cargarVocesSintesis(): Promise<SpeechSynthesisVoice[]> {
   return Promise.resolve(obtenerVocesCacheadas())
 }
@@ -86,7 +89,7 @@ type CallbacksLector = {
   onProgreso?: (actual: number, total: number) => void
 }
 
-/** Lector secuencial con la voz del navegador. */
+/** Lector secuencial: voz del navegador en PC; audio MP3 en móvil (segundo plano). */
 export class LectorLeccionVoz {
   private fragmentos: string[] = []
   private indice = 0
@@ -96,6 +99,8 @@ export class LectorLeccionVoz {
   private generacion = 0
   private tituloMedia = "Estudio bíblico"
   private audioFondoActivo = false
+  private usaAudioServidor = false
+  private audioActual: HTMLAudioElement | null = null
 
   setCallbacks(callbacks: CallbacksLector) {
     this.callbacks = callbacks
@@ -106,13 +111,13 @@ export class LectorLeccionVoz {
     this.iniciarTexto(textoLeccionParaAudio(bloques), bloques[0]?.titulo ?? "Estudio bíblico")
   }
 
-  /** Debe llamarse en el mismo click/touch que prepararSintesisEnGesto(). */
   iniciarTexto(texto: string, tituloMedia = "Estudio bíblico") {
     if (!sintesisVozDisponible()) return
 
     this.detener()
     this.tituloMedia = tituloMedia
-    this.fragmentos = partirEnFragmentos(texto)
+    this.usaAudioServidor = usarAudioServidorEnDispositivo()
+    this.fragmentos = partirEnFragmentos(texto, this.usaAudioServidor ? 200 : 260)
     if (this.fragmentos.length === 0) return
 
     this.voz = elegirVozEspanol(obtenerVocesCacheadas())
@@ -123,16 +128,31 @@ export class LectorLeccionVoz {
   }
 
   pausar() {
-    if (!sintesisVozDisponible() || this.estado !== "playing") return
+    if (this.estado !== "playing") return
+    if (this.usaAudioServidor && this.audioActual) {
+      this.audioActual.pause()
+      this.cambiarEstado("paused")
+      actualizarSesionMedia("paused")
+      return
+    }
     this.generacion += 1
-    window.speechSynthesis.cancel()
+    this.pararAudioActual()
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel()
+    }
     this.cambiarEstado("paused")
     actualizarSesionMedia("paused")
   }
 
   reanudar() {
-    if (!sintesisVozDisponible() || this.estado !== "paused") return
+    if (this.estado !== "paused") return
     if (this.fragmentos.length === 0 || this.indice >= this.fragmentos.length) return
+    if (this.usaAudioServidor && this.audioActual) {
+      this.cambiarEstado("playing")
+      actualizarSesionMedia("playing")
+      void this.audioActual.play().catch(() => this.hablarSiguiente())
+      return
+    }
     prepararSintesisEnGesto()
     this.activarReproduccionFondo()
     this.cambiarEstado("playing")
@@ -141,11 +161,11 @@ export class LectorLeccionVoz {
   }
 
   adelantar(saltos = 2) {
-    if (!sintesisVozDisponible()) return
     if (this.estado === "idle" || this.fragmentos.length === 0) return
 
     this.generacion += 1
-    window.speechSynthesis.cancel()
+    this.pararAudioActual()
+    if (!this.usaAudioServidor) window.speechSynthesis.cancel()
 
     this.indice = Math.min(this.indice + Math.max(1, saltos), this.fragmentos.length)
     this.notificarProgreso()
@@ -168,9 +188,11 @@ export class LectorLeccionVoz {
   }
 
   detener() {
-    if (!sintesisVozDisponible()) return
     this.generacion += 1
-    window.speechSynthesis.cancel()
+    this.pararAudioActual()
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel()
+    }
     this.fragmentos = []
     this.indice = 0
     this.desactivarReproduccionFondo()
@@ -181,18 +203,28 @@ export class LectorLeccionVoz {
     return this.estado
   }
 
-  /** Reanuda si el SO cortó la voz pero el lector sigue en «playing». */
   reanudarSiCallo() {
-    if (!sintesisVozDisponible() || this.estado !== "playing") return
-    if (window.speechSynthesis.speaking) return
+    if (this.estado !== "playing") return
     if (this.fragmentos.length === 0 || this.indice >= this.fragmentos.length) return
+
+    if (this.usaAudioServidor) {
+      if (this.audioActual && this.audioActual.paused) {
+        void this.audioActual.play().catch(() => this.hablarSiguiente())
+        return
+      }
+      if (!this.audioActual) this.hablarSiguiente()
+      return
+    }
+
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return
+    if (window.speechSynthesis.speaking) return
     this.hablarSiguiente()
   }
 
   private activarReproduccionFondo() {
     if (this.audioFondoActivo) return
     this.audioFondoActivo = true
-    activarAudioSilencioso()
+    if (!this.usaAudioServidor) activarAudioSilencioso()
     configurarSesionMedia(this.tituloMedia, {
       onPausa: () => {
         if (this.estado === "playing") this.pausar()
@@ -207,13 +239,14 @@ export class LectorLeccionVoz {
   private desactivarReproduccionFondo() {
     if (!this.audioFondoActivo) return
     this.audioFondoActivo = false
-    desactivarAudioSilencioso()
+    if (!this.usaAudioServidor) desactivarAudioSilencioso()
     limpiarSesionMedia()
   }
 
   private finalizarReproduccion() {
     this.fragmentos = []
     this.indice = 0
+    this.pararAudioActual()
     this.desactivarReproduccionFondo()
     this.cambiarEstado("idle")
   }
@@ -228,6 +261,18 @@ export class LectorLeccionVoz {
     this.callbacks.onProgreso?.(this.indice + 1, this.fragmentos.length)
   }
 
+  private pararAudioActual() {
+    if (!this.audioActual) return
+    this.audioActual.onended = null
+    this.audioActual.onerror = null
+    this.audioActual.ontimeupdate = null
+    this.audioActual.onloadedmetadata = null
+    this.audioActual.pause()
+    this.audioActual.removeAttribute("src")
+    this.audioActual.load()
+    this.audioActual = null
+  }
+
   private crearUtterance(texto: string): SpeechSynthesisUtterance {
     const utterance = new SpeechSynthesisUtterance(texto)
     utterance.lang = this.voz?.lang ?? "es-ES"
@@ -238,7 +283,75 @@ export class LectorLeccionVoz {
   }
 
   private hablarSiguiente(reintento = 0) {
-    if (!sintesisVozDisponible() || this.estado !== "playing") return
+    if (this.estado !== "playing") return
+
+    if (this.indice >= this.fragmentos.length) {
+      this.finalizarReproduccion()
+      this.callbacks.onFin?.()
+      return
+    }
+
+    if (this.usaAudioServidor) {
+      void this.hablarSiguienteAudio()
+      return
+    }
+
+    this.hablarSiguienteVoz(reintento)
+  }
+
+  private async hablarSiguienteAudio() {
+    if (this.estado !== "playing") return
+    if (this.indice >= this.fragmentos.length) return
+
+    const gen = (this.generacion += 1)
+    const texto = this.fragmentos[this.indice]!
+    this.notificarProgreso()
+
+    this.pararAudioActual()
+
+    const audio = new Audio(urlAudioTts(texto))
+    audio.setAttribute("playsinline", "true")
+    audio.preload = "auto"
+    this.audioActual = audio
+
+    audio.onloadedmetadata = () => {
+      if (gen !== this.generacion) return
+      actualizarPosicionMedia(audio)
+    }
+
+    audio.ontimeupdate = () => {
+      if (gen !== this.generacion) return
+      actualizarPosicionMedia(audio)
+    }
+
+    audio.onended = () => {
+      if (gen !== this.generacion || this.estado !== "playing") return
+      this.pararAudioActual()
+      this.indice += 1
+      this.hablarSiguiente()
+    }
+
+    audio.onerror = () => {
+      if (gen !== this.generacion || this.estado !== "playing") return
+      this.pararAudioActual()
+      this.usaAudioServidor = false
+      this.hablarSiguienteVoz(0)
+    }
+
+    try {
+      await audio.play()
+      actualizarSesionMedia("playing")
+    } catch {
+      if (gen !== this.generacion) return
+      this.pararAudioActual()
+      this.usaAudioServidor = false
+      this.hablarSiguienteVoz(0)
+    }
+  }
+
+  private hablarSiguienteVoz(reintento = 0) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return
+    if (this.estado !== "playing") return
 
     if (this.indice >= this.fragmentos.length) {
       this.finalizarReproduccion()
@@ -277,7 +390,7 @@ export class LectorLeccionVoz {
         if (inicio.ok || gen !== this.generacion || this.estado !== "playing") return
         this.generacion += 1
         window.speechSynthesis.cancel()
-        this.hablarSiguiente(1)
+        this.hablarSiguienteVoz(1)
       }, 450)
     }
   }

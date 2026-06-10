@@ -31,9 +31,9 @@ function actualizarEstadoReproduccionTts(): void {
   reproduccionTtsActiva = usuariosAudioSilencioso > 0
 }
 
-/** Al ir a segundo plano el SO suele mandar «pausa» — no detener la lectura. */
+/** Al ir a segundo plano el SO a veces manda «pausa» automática al cambiar de app. */
 export function debeIgnorarPausaMedia(): boolean {
-  return Date.now() < ignorarPausaMediaHasta || document.hidden
+  return Date.now() < ignorarPausaMediaHasta
 }
 
 export function registrarReanudarVoz(fn: (() => void) | null): void {
@@ -118,12 +118,13 @@ function mantenerSesionActiva(): void {
 
 /** Llamar en el mismo gesto del usuario (click/touch) antes de speak(). */
 export function prepararSintesisEnGesto(): void {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return
+  if (typeof window === "undefined") return
+  if (esDispositivoMovil()) return
+  if (!("speechSynthesis" in window)) return
   precargarVocesSintesis()
   const syn = window.speechSynthesis
   syn.cancel()
   syn.resume()
-  if (esDispositivoMovil()) iniciarElementoAudioSilencioso()
 }
 
 export function activarAudioSilencioso(): void {
