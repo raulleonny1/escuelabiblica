@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/copy-pdf-worker.mjs",
+    "predev": "node scripts/copy-pdf-worker.mjs && node scripts/create-silence-audio.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/copy-pdf-worker.mjs",
+    "prebuild": "node scripts/copy-pdf-worker.mjs && node scripts/create-silence-audio.mjs",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
-    "postinstall": "node scripts/copy-pdf-worker.mjs && node scripts/generate-pwa-icons.mjs"
+    "postinstall": "node scripts/copy-pdf-worker.mjs && node scripts/create-silence-audio.mjs && node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
     "@react-pdf-viewer/core": "^3.12.0",

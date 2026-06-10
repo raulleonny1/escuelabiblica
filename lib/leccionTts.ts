@@ -4,9 +4,9 @@ import {
   actualizarSesionMedia,
   configurarSesionMedia,
   desactivarAudioSilencioso,
-  esDispositivoIOS,
+  esDispositivoMovil,
   hablarUtterance,
-  iniciarMantenimientoIos,
+  iniciarMantenimientoTts,
   limpiarSesionMedia,
   obtenerVocesCacheadas,
   prepararSintesisEnGesto,
@@ -184,8 +184,8 @@ export class LectorLeccionVoz {
   private activarReproduccionFondo() {
     if (this.audioFondoActivo) return
     this.audioFondoActivo = true
-    void activarAudioSilencioso()
-    iniciarMantenimientoIos()
+    activarAudioSilencioso()
+    iniciarMantenimientoTts()
     configurarSesionMedia(this.tituloMedia, {
       onPausa: () => {
         if (this.estado === "playing") this.pausar()
@@ -259,7 +259,7 @@ export class LectorLeccionVoz {
 
     utterance.onerror = () => {
       if (gen !== this.generacion || this.estado !== "playing") return
-      if (esDispositivoIOS() && reintento === 0) {
+      if (esDispositivoMovil() && reintento === 0) {
         window.setTimeout(() => {
           if (gen === this.generacion && this.estado === "playing") {
             this.hablarSiguiente(1)
@@ -273,7 +273,7 @@ export class LectorLeccionVoz {
 
     hablarUtterance(utterance)
 
-    if (esDispositivoIOS() && reintento === 0) {
+    if (esDispositivoMovil() && reintento === 0) {
       window.setTimeout(() => {
         if (inicio.ok || gen !== this.generacion || this.estado !== "playing") return
         this.generacion += 1
