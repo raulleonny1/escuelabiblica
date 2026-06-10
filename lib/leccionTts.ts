@@ -9,6 +9,7 @@ import {
   limpiarSesionMedia,
   obtenerVocesCacheadas,
   prepararSintesisEnGesto,
+  registrarReanudarVoz,
 } from "@/lib/sintesisVozIos"
 
 export { prepararSintesisEnGesto, precargarVocesSintesis } from "@/lib/sintesisVozIos"
@@ -180,6 +181,14 @@ export class LectorLeccionVoz {
     return this.estado
   }
 
+  /** Reanuda si el SO cortó la voz pero el lector sigue en «playing». */
+  reanudarSiCallo() {
+    if (!sintesisVozDisponible() || this.estado !== "playing") return
+    if (window.speechSynthesis.speaking) return
+    if (this.fragmentos.length === 0 || this.indice >= this.fragmentos.length) return
+    this.hablarSiguiente()
+  }
+
   private activarReproduccionFondo() {
     if (this.audioFondoActivo) return
     this.audioFondoActivo = true
@@ -303,4 +312,11 @@ export function alCerrarPasajeBiblico() {
     prepararSintesisEnGesto()
     getLectorLeccionVoz().reanudar()
   }
+}
+
+export function registrarReanudarLectoresEnSegundoPlano(): void {
+  registrarReanudarVoz(() => {
+    getLectorLeccionVoz().reanudarSiCallo()
+    getLectorPasajeVoz().reanudarSiCallo()
+  })
 }

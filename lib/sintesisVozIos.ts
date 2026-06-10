@@ -24,9 +24,20 @@ let usuariosAudioSilencioso = 0
 let intervaloMantenimiento: ReturnType<typeof setInterval> | null = null
 let listenersRegistrados = false
 let reproduccionTtsActiva = false
+let ignorarPausaMediaHasta = 0
+let reanudarVozCallback: (() => void) | null = null
 
 function actualizarEstadoReproduccionTts(): void {
   reproduccionTtsActiva = usuariosAudioSilencioso > 0
+}
+
+/** Al ir a segundo plano el SO suele mandar «pausa» — no detener la lectura. */
+export function debeIgnorarPausaMedia(): boolean {
+  return Date.now() < ignorarPausaMediaHasta || document.hidden
+}
+
+export function registrarReanudarVoz(fn: (() => void) | null): void {
+  reanudarVozCallback = fn
 }
 
 export function precargarVocesSintesis(): void {
@@ -59,7 +70,7 @@ function obtenerAudioSilencioso(): HTMLAudioElement {
   audioSilencioso.id = AUDIO_KEEPALIVE_ID
   audioSilencioso.src = SILENCE_URL
   audioSilencioso.loop = true
-  audioSilencioso.volume = 0.02
+  audioSilencioso.volume = 0.03
   audioSilencioso.preload = "auto"
   audioSilencioso.setAttribute("playsinline", "true")
   audioSilencioso.setAttribute("webkit-playsinline", "true")
@@ -75,18 +86,34 @@ function iniciarElementoAudioSilencioso(): void {
   if (promesa) promesa.catch(() => {})
 }
 
-/** Solo cuando la pantalla está bloqueada u oculta — no tocar la voz si la app está visible. */
-function reforzarAudioEnSegundoPlano(): void {
+/** Fuerza play() aunque el elemento crea que sigue sonando (iOS al cambiar de app). */
+function reforzarAudioSilencioso(): void {
+  if (!esDispositivoMovil()) return
+  const el = obtenerAudioSilencioso()
+  const promesa = el.play()
+  if (promesa) promesa.catch(() => {})
+}
+
+function marcarTransicionASegundoPlano(): void {
+  ignorarPausaMediaHasta = Date.now() + 4000
+}
+
+function mantenerSesionActiva(): void {
   if (!reproduccionTtsActiva || !esDispositivoMovil()) return
-  if (!document.hidden) return
 
-  iniciarElementoAudioSilencioso()
-
-  const syn = window.speechSynthesis
-  if (syn.speaking && !syn.paused) {
-    syn.pause()
-    syn.resume()
+  if (document.hidden) {
+    reforzarAudioSilencioso()
+    const syn = window.speechSynthesis
+    if (!syn.speaking) {
+      reanudarVozCallback?.()
+    } else if (!syn.paused) {
+      syn.pause()
+      syn.resume()
+    }
+    return
   }
+
+  if (audioSilencioso?.paused) iniciarElementoAudioSilencioso()
 }
 
 /** Llamar en el mismo gesto del usuario (click/touch) antes de speak(). */
@@ -129,7 +156,7 @@ export function hablarUtterance(utterance: SpeechSynthesisUtterance): void {
 export function iniciarMantenimientoTts(): void {
   if (!esDispositivoMovil()) return
   detenerMantenimientoTts()
-  intervaloMantenimiento = setInterval(reforzarAudioEnSegundoPlano, 10000)
+  intervaloMantenimiento = setInterval(mantenerSesionActiva, 4000)
 }
 
 export function detenerMantenimientoTts(): void {
@@ -137,16 +164,6 @@ export function detenerMantenimientoTts(): void {
     clearInterval(intervaloMantenimiento)
     intervaloMantenimiento = null
   }
-}
-
-/** @deprecated */
-export function iniciarMantenimientoIos(): void {
-  iniciarMantenimientoTts()
-}
-
-/** @deprecated */
-export function detenerMantenimientoIos(): void {
-  detenerMantenimientoTts()
 }
 
 type AccionesMedia = {
@@ -165,7 +182,10 @@ export function configurarSesionMedia(titulo: string, acciones: AccionesMedia): 
       album: "Estudio bíblico",
     })
     navigator.mediaSession.playbackState = "playing"
-    navigator.mediaSession.setActionHandler("pause", acciones.onPausa)
+    navigator.mediaSession.setActionHandler("pause", () => {
+      if (debeIgnorarPausaMedia()) return
+      acciones.onPausa()
+    })
     navigator.mediaSession.setActionHandler("play", acciones.onPlay)
     navigator.mediaSession.setActionHandler("stop", acciones.onStop)
   } catch {
@@ -195,13 +215,31 @@ export function limpiarSesionMedia(): void {
   }
 }
 
+function alIrASegundoPlano(): void {
+  if (!reproduccionTtsActiva) return
+  marcarTransicionASegundoPlano()
+  mantenerSesionActiva()
+}
+
+function alVolverAlFrente(): void {
+  if (!reproduccionTtsActiva) return
+  mantenerSesionActiva()
+  reanudarVozCallback?.()
+}
+
 function registrarListenersGlobales(): void {
   if (listenersRegistrados || typeof document === "undefined") return
   listenersRegistrados = true
 
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) reforzarAudioEnSegundoPlano()
+    if (document.hidden) alIrASegundoPlano()
+    else alVolverAlFrente()
   })
+
+  window.addEventListener("pagehide", alIrASegundoPlano)
+  window.addEventListener("blur", alIrASegundoPlano)
+  window.addEventListener("pageshow", alVolverAlFrente)
+  window.addEventListener("focus", alVolverAlFrente)
 }
 
 export function registrarPrecargaVocesEnApp(): () => void {
