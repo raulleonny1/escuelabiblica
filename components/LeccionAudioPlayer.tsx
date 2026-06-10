@@ -153,8 +153,6 @@ export default function LeccionAudioPlayer({ bloques, etiquetaDia }: LeccionAudi
       <p className="mt-1.5 text-[0.625rem] leading-snug text-muted">
         Voz del navegador (puede sonar distinta en cada dispositivo).
         {estado === "paused" && " Al reanudar, repite el tramo actual desde el inicio."}
-        {estado === "playing" &&
-          " Puedes bloquear la pantalla; en iPhone/Android instala la app en inicio para mejor resultado."}
       </p>
     </div>
   )

@@ -20,23 +20,13 @@ let vocesCache: SpeechSynthesisVoice[] = []
 let vocesEscuchaRegistrada = false
 
 let audioSilencioso: HTMLAudioElement | null = null
-let audioCtx: AudioContext | null = null
-let osciladorSilencioso: OscillatorNode | null = null
-let gananciaSilenciosa: GainNode | null = null
-
 let usuariosAudioSilencioso = 0
 let intervaloMantenimiento: ReturnType<typeof setInterval> | null = null
 let listenersRegistrados = false
+let reproduccionTtsActiva = false
 
 function actualizarEstadoReproduccionTts(): void {
   reproduccionTtsActiva = usuariosAudioSilencioso > 0
-}
-
-let reproduccionTtsActiva = false
-
-/** @deprecated El estado se deriva del audio en segundo plano. */
-export function marcarReproduccionTts(_activa: boolean): void {
-  /* noop: usar activarAudioSilencioso / desactivarAudioSilencioso */
 }
 
 export function precargarVocesSintesis(): void {
@@ -69,56 +59,33 @@ function obtenerAudioSilencioso(): HTMLAudioElement {
   audioSilencioso.id = AUDIO_KEEPALIVE_ID
   audioSilencioso.src = SILENCE_URL
   audioSilencioso.loop = true
-  audioSilencioso.volume = 0.04
+  audioSilencioso.volume = 0.02
   audioSilencioso.preload = "auto"
   audioSilencioso.setAttribute("playsinline", "true")
   audioSilencioso.setAttribute("webkit-playsinline", "true")
-  audioSilencioso.setAttribute("x-webkit-airplay", "allow")
   document.body.appendChild(audioSilencioso)
   return audioSilencioso
 }
 
-function iniciarAudioContextSilencioso(): void {
-  if (typeof window === "undefined") return
-  const Ctx =
-    window.AudioContext ||
-    (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-  if (!Ctx) return
-
-  if (!audioCtx) audioCtx = new Ctx()
-  if (audioCtx.state === "suspended") void audioCtx.resume()
-
-  if (osciladorSilencioso) return
-
-  osciladorSilencioso = audioCtx.createOscillator()
-  gananciaSilenciosa = audioCtx.createGain()
-  gananciaSilenciosa.gain.value = 0.0001
-  osciladorSilencioso.frequency.value = 440
-  osciladorSilencioso.connect(gananciaSilenciosa)
-  gananciaSilenciosa.connect(audioCtx.destination)
-  osciladorSilencioso.start()
-}
-
 function iniciarElementoAudioSilencioso(): void {
+  if (!esDispositivoMovil()) return
   const el = obtenerAudioSilencioso()
   if (!el.paused) return
   const promesa = el.play()
   if (promesa) promesa.catch(() => {})
 }
 
+/** Solo cuando la pantalla está bloqueada u oculta — no tocar la voz si la app está visible. */
 function reforzarAudioEnSegundoPlano(): void {
-  if (!reproduccionTtsActiva) return
+  if (!reproduccionTtsActiva || !esDispositivoMovil()) return
+  if (!document.hidden) return
 
-  iniciarAudioContextSilencioso()
-  if (audioCtx?.state === "suspended") void audioCtx.resume()
   iniciarElementoAudioSilencioso()
 
-  if (typeof window !== "undefined" && "speechSynthesis" in window) {
-    const syn = window.speechSynthesis
-    if (syn.speaking && !syn.paused) {
-      syn.pause()
-      syn.resume()
-    }
+  const syn = window.speechSynthesis
+  if (syn.speaking && !syn.paused) {
+    syn.pause()
+    syn.resume()
   }
 }
 
@@ -129,17 +96,17 @@ export function prepararSintesisEnGesto(): void {
   const syn = window.speechSynthesis
   syn.cancel()
   syn.resume()
-  iniciarAudioContextSilencioso()
-  iniciarElementoAudioSilencioso()
+  if (esDispositivoMovil()) iniciarElementoAudioSilencioso()
 }
 
 export function activarAudioSilencioso(): void {
   if (typeof window === "undefined") return
   usuariosAudioSilencioso++
   actualizarEstadoReproduccionTts()
-  iniciarAudioContextSilencioso()
-  iniciarElementoAudioSilencioso()
-  iniciarMantenimientoTts()
+  if (esDispositivoMovil()) {
+    iniciarElementoAudioSilencioso()
+    iniciarMantenimientoTts()
+  }
 }
 
 export function desactivarAudioSilencioso(): void {
@@ -147,42 +114,22 @@ export function desactivarAudioSilencioso(): void {
   if (usuariosAudioSilencioso > 0) return
 
   actualizarEstadoReproduccionTts()
-
   audioSilencioso?.pause()
   if (audioSilencioso) audioSilencioso.currentTime = 0
-
-  if (osciladorSilencioso) {
-    try {
-      osciladorSilencioso.stop()
-    } catch {
-      /* ya detenido */
-    }
-    osciladorSilencioso.disconnect()
-    osciladorSilencioso = null
-  }
-  gananciaSilenciosa = null
-
-  if (audioCtx?.state === "running") void audioCtx.suspend()
-
   detenerMantenimientoTts()
 }
 
 export function hablarUtterance(utterance: SpeechSynthesisUtterance): void {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return
-  reforzarAudioEnSegundoPlano()
   const syn = window.speechSynthesis
-  if (esDispositivoMovil()) {
-    syn.cancel()
-    syn.resume()
-  }
+  if (esDispositivoIOS()) syn.resume()
   syn.speak(utterance)
 }
 
-/** Evita que iOS/Android congelen la voz al bloquear pantalla o cambiar de app. */
 export function iniciarMantenimientoTts(): void {
   if (!esDispositivoMovil()) return
   detenerMantenimientoTts()
-  intervaloMantenimiento = setInterval(reforzarAudioEnSegundoPlano, 2000)
+  intervaloMantenimiento = setInterval(reforzarAudioEnSegundoPlano, 10000)
 }
 
 export function detenerMantenimientoTts(): void {
@@ -192,12 +139,12 @@ export function detenerMantenimientoTts(): void {
   }
 }
 
-/** @deprecated Usar iniciarMantenimientoTts */
+/** @deprecated */
 export function iniciarMantenimientoIos(): void {
   iniciarMantenimientoTts()
 }
 
-/** @deprecated Usar detenerMantenimientoTts */
+/** @deprecated */
 export function detenerMantenimientoIos(): void {
   detenerMantenimientoTts()
 }
@@ -210,6 +157,7 @@ type AccionesMedia = {
 
 export function configurarSesionMedia(titulo: string, acciones: AccionesMedia): void {
   if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return
+  if (!esDispositivoMovil()) return
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: titulo.slice(0, 80),
@@ -227,6 +175,7 @@ export function configurarSesionMedia(titulo: string, acciones: AccionesMedia): 
 
 export function actualizarSesionMedia(estado: "playing" | "paused" | "none"): void {
   if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return
+  if (!esDispositivoMovil()) return
   try {
     navigator.mediaSession.playbackState = estado
   } catch {
@@ -251,19 +200,7 @@ function registrarListenersGlobales(): void {
   listenersRegistrados = true
 
   document.addEventListener("visibilitychange", () => {
-    if (reproduccionTtsActiva) reforzarAudioEnSegundoPlano()
-  })
-
-  window.addEventListener("pagehide", () => {
-    if (reproduccionTtsActiva) reforzarAudioEnSegundoPlano()
-  })
-
-  window.addEventListener("pageshow", () => {
-    if (reproduccionTtsActiva) reforzarAudioEnSegundoPlano()
-  })
-
-  window.addEventListener("focus", () => {
-    if (reproduccionTtsActiva) reforzarAudioEnSegundoPlano()
+    if (document.hidden) reforzarAudioEnSegundoPlano()
   })
 }
 

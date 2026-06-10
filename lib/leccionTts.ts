@@ -4,9 +4,8 @@ import {
   actualizarSesionMedia,
   configurarSesionMedia,
   desactivarAudioSilencioso,
-  esDispositivoMovil,
+  esDispositivoIOS,
   hablarUtterance,
-  iniciarMantenimientoTts,
   limpiarSesionMedia,
   obtenerVocesCacheadas,
   prepararSintesisEnGesto,
@@ -185,7 +184,6 @@ export class LectorLeccionVoz {
     if (this.audioFondoActivo) return
     this.audioFondoActivo = true
     activarAudioSilencioso()
-    iniciarMantenimientoTts()
     configurarSesionMedia(this.tituloMedia, {
       onPausa: () => {
         if (this.estado === "playing") this.pausar()
@@ -259,21 +257,13 @@ export class LectorLeccionVoz {
 
     utterance.onerror = () => {
       if (gen !== this.generacion || this.estado !== "playing") return
-      if (esDispositivoMovil() && reintento === 0) {
-        window.setTimeout(() => {
-          if (gen === this.generacion && this.estado === "playing") {
-            this.hablarSiguiente(1)
-          }
-        }, 200)
-        return
-      }
       this.indice += 1
       this.hablarSiguiente()
     }
 
     hablarUtterance(utterance)
 
-    if (esDispositivoMovil() && reintento === 0) {
+    if (esDispositivoIOS() && reintento === 0) {
       window.setTimeout(() => {
         if (inicio.ok || gen !== this.generacion || this.estado !== "playing") return
         this.generacion += 1
