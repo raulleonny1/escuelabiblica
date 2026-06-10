@@ -13,6 +13,15 @@ import {
   registrarReanudarVoz,
 } from "@/lib/sintesisVozIos"
 import { actualizarPosicionMedia, urlAudioTts, usarAudioServidorEnDispositivo } from "@/lib/ttsServidor"
+import {
+  configurarSesionAudioIos,
+  crearAudioPrecargadoIos,
+  detenerMantenimientoAudioIos,
+  iniciarMantenimientoAudioIos,
+  limpiarHandlersAudio,
+  obtenerReproductorAudioIos,
+  pausarReproductorIos,
+} from "@/lib/ttsIos"
 
 export { prepararSintesisEnGesto, precargarVocesSintesis } from "@/lib/sintesisVozIos"
 
@@ -101,6 +110,7 @@ export class LectorLeccionVoz {
   private audioFondoActivo = false
   private usaAudioServidor = false
   private audioActual: HTMLAudioElement | null = null
+  private prefetchIos: { indice: number; audio: HTMLAudioElement } | null = null
 
   setCallbacks(callbacks: CallbacksLector) {
     this.callbacks = callbacks
@@ -189,6 +199,7 @@ export class LectorLeccionVoz {
 
   detener() {
     this.generacion += 1
+    this.prefetchIos = null
     this.pararAudioActual()
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel()
@@ -208,11 +219,24 @@ export class LectorLeccionVoz {
     if (this.fragmentos.length === 0 || this.indice >= this.fragmentos.length) return
 
     if (this.usaAudioServidor) {
-      if (this.audioActual && this.audioActual.paused) {
-        void this.audioActual.play().catch(() => this.hablarSiguiente())
+      if (this.audioActual) {
+        if (this.audioActual.ended) {
+          this.indice += 1
+          if (esDispositivoIOS()) void this.hablarSiguienteAudioIos()
+          else this.hablarSiguiente()
+          return
+        }
+        if (this.audioActual.paused) {
+          void this.audioActual.play().catch(() => {
+            if (esDispositivoIOS()) void this.hablarSiguienteAudioIos()
+            else this.hablarSiguiente()
+          })
+          return
+        }
         return
       }
-      if (!this.audioActual) this.hablarSiguiente()
+      if (esDispositivoIOS()) void this.hablarSiguienteAudioIos()
+      else this.hablarSiguiente()
       return
     }
 
@@ -224,7 +248,12 @@ export class LectorLeccionVoz {
   private activarReproduccionFondo() {
     if (this.audioFondoActivo) return
     this.audioFondoActivo = true
-    if (!this.usaAudioServidor) activarAudioSilencioso()
+    if (!this.usaAudioServidor) {
+      activarAudioSilencioso()
+    } else if (esDispositivoIOS()) {
+      configurarSesionAudioIos()
+      iniciarMantenimientoAudioIos(() => this.reanudarSiCallo())
+    }
     configurarSesionMedia(this.tituloMedia, {
       onPausa: () => {
         if (this.estado === "playing") this.pausar()
@@ -240,6 +269,10 @@ export class LectorLeccionVoz {
     if (!this.audioFondoActivo) return
     this.audioFondoActivo = false
     if (!this.usaAudioServidor) desactivarAudioSilencioso()
+    if (esDispositivoIOS()) {
+      detenerMantenimientoAudioIos()
+      this.prefetchIos = null
+    }
     limpiarSesionMedia()
   }
 
@@ -263,6 +296,13 @@ export class LectorLeccionVoz {
 
   private pararAudioActual() {
     if (!this.audioActual) return
+
+    if (esDispositivoIOS() && this.usaAudioServidor) {
+      pausarReproductorIos(this.audioActual)
+      this.audioActual = null
+      return
+    }
+
     this.audioActual.onended = null
     this.audioActual.onerror = null
     this.audioActual.ontimeupdate = null
@@ -271,6 +311,47 @@ export class LectorLeccionVoz {
     this.audioActual.removeAttribute("src")
     this.audioActual.load()
     this.audioActual = null
+  }
+
+  private enlazarEventosAudio(
+    audio: HTMLAudioElement,
+    gen: number,
+    alTerminar: () => void
+  ) {
+    limpiarHandlersAudio(audio)
+
+    audio.onloadedmetadata = () => {
+      if (gen !== this.generacion) return
+      actualizarPosicionMedia(audio)
+    }
+
+    audio.ontimeupdate = () => {
+      if (gen !== this.generacion) return
+      actualizarPosicionMedia(audio)
+    }
+
+    audio.onended = () => {
+      if (gen !== this.generacion || this.estado !== "playing") return
+      alTerminar()
+    }
+
+    audio.onerror = () => {
+      if (gen !== this.generacion || this.estado !== "playing") return
+      this.pararAudioActual()
+      this.usaAudioServidor = false
+      this.hablarSiguienteVoz(0)
+    }
+  }
+
+  private prefetchProximoFragmentoIos(desdeIndice: number) {
+    if (!esDispositivoIOS()) return
+    const nextIdx = desdeIndice + 1
+    if (nextIdx >= this.fragmentos.length) {
+      this.prefetchIos = null
+      return
+    }
+    const url = urlAudioTts(this.fragmentos[nextIdx]!)
+    this.prefetchIos = { indice: nextIdx, audio: crearAudioPrecargadoIos(url) }
   }
 
   private crearUtterance(texto: string): SpeechSynthesisUtterance {
@@ -292,14 +373,60 @@ export class LectorLeccionVoz {
     }
 
     if (this.usaAudioServidor) {
-      void this.hablarSiguienteAudio()
+      if (esDispositivoIOS()) {
+        void this.hablarSiguienteAudioIos()
+      } else {
+        void this.hablarSiguienteAudioAndroid()
+      }
       return
     }
 
     this.hablarSiguienteVoz(reintento)
   }
 
-  private async hablarSiguienteAudio() {
+  /** iPhone/iPad: reproductor persistente + precarga del siguiente fragmento. */
+  private async hablarSiguienteAudioIos() {
+    if (this.estado !== "playing") return
+    if (this.indice >= this.fragmentos.length) return
+
+    const gen = (this.generacion += 1)
+    const indiceActual = this.indice
+    this.notificarProgreso()
+
+    this.pararAudioActual()
+
+    let audio: HTMLAudioElement
+    if (this.prefetchIos?.indice === indiceActual) {
+      audio = this.prefetchIos.audio
+      this.prefetchIos = null
+    } else {
+      audio = obtenerReproductorAudioIos()
+      audio.src = urlAudioTts(this.fragmentos[indiceActual]!)
+      audio.load()
+    }
+
+    this.audioActual = audio
+    this.enlazarEventosAudio(audio, gen, () => {
+      this.pararAudioActual()
+      this.indice += 1
+      void this.hablarSiguienteAudioIos()
+    })
+
+    this.prefetchProximoFragmentoIos(indiceActual)
+
+    try {
+      await audio.play()
+      actualizarSesionMedia("playing")
+    } catch {
+      if (gen !== this.generacion) return
+      this.pararAudioActual()
+      this.usaAudioServidor = false
+      this.hablarSiguienteVoz(0)
+    }
+  }
+
+  /** Android: sin cambios respecto al flujo que ya funciona. */
+  private async hablarSiguienteAudioAndroid() {
     if (this.estado !== "playing") return
     if (this.indice >= this.fragmentos.length) return
 
@@ -314,29 +441,11 @@ export class LectorLeccionVoz {
     audio.preload = "auto"
     this.audioActual = audio
 
-    audio.onloadedmetadata = () => {
-      if (gen !== this.generacion) return
-      actualizarPosicionMedia(audio)
-    }
-
-    audio.ontimeupdate = () => {
-      if (gen !== this.generacion) return
-      actualizarPosicionMedia(audio)
-    }
-
-    audio.onended = () => {
-      if (gen !== this.generacion || this.estado !== "playing") return
+    this.enlazarEventosAudio(audio, gen, () => {
       this.pararAudioActual()
       this.indice += 1
       this.hablarSiguiente()
-    }
-
-    audio.onerror = () => {
-      if (gen !== this.generacion || this.estado !== "playing") return
-      this.pararAudioActual()
-      this.usaAudioServidor = false
-      this.hablarSiguienteVoz(0)
-    }
+    })
 
     try {
       await audio.play()
