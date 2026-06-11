@@ -1,4 +1,5 @@
 import type { BloqueLeccion } from "@/lib/lecciones"
+import { normalizarTextoParaTts } from "@/lib/ttsNormalizar"
 import {
   activarAudioSilencioso,
   actualizarSesionMedia,
@@ -355,7 +356,7 @@ export class LectorLeccionVoz {
   }
 
   private crearUtterance(texto: string): SpeechSynthesisUtterance {
-    const utterance = new SpeechSynthesisUtterance(texto)
+    const utterance = new SpeechSynthesisUtterance(normalizarTextoParaTts(texto))
     utterance.lang = this.voz?.lang ?? "es-ES"
     if (this.voz) utterance.voice = this.voz
     utterance.rate = 1

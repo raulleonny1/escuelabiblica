@@ -1,8 +1,10 @@
+import { normalizarTextoParaTts } from "@/lib/ttsNormalizar"
+
 const MAX_CARACTERES = 200
 
 /** Síntesis de voz en español vía servicio público (MP3). */
 export async function sintetizarAudioEspanol(texto: string): Promise<Buffer> {
-  const trozo = texto.trim().slice(0, MAX_CARACTERES)
+  const trozo = normalizarTextoParaTts(texto).slice(0, MAX_CARACTERES)
   if (!trozo) throw new Error("Texto vacío")
 
   const url = new URL("https://translate.google.com/translate_tts")

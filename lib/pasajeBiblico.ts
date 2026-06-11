@@ -1,4 +1,5 @@
 import { LIBROS_RVR_1909, ordenarClavesNumericas, type BibliaData } from "@/lib/biblia"
+import { normalizarTextoParaTts } from "@/lib/ttsNormalizar"
 
 const ALIAS_LIBRO: Record<string, string> = {
   Salmo: "Salmos",
@@ -283,5 +284,5 @@ export function textoPasajeParaAudio(resultado: TextoPasajeResultado): string {
     return `${prefijo}Versículo ${v.numero}. ${v.texto}`
   })
 
-  return `${resultado.titulo}. ${partes.join(" ")}`.replace(/\s+/g, " ").trim()
+  return `${normalizarTextoParaTts(resultado.titulo)}. ${partes.join(" ")}`.replace(/\s+/g, " ").trim()
 }
