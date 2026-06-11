@@ -3,6 +3,8 @@ import { normalizarTextoParaTts } from "@/lib/ttsNormalizar"
 
 const ALIAS_LIBRO: Record<string, string> = {
   Salmo: "Salmos",
+  Apocalipsis: "Revelación",
+  Eclesiastés: "Ecclesiastés",
 }
 
 const ABREVIATURAS_LIBRO: Record<string, string[]> = {
