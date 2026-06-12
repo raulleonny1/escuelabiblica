@@ -4,7 +4,8 @@ import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { useSesion } from "@/components/SesionProvider"
 import { registrarVisitaSitio } from "@/lib/analytics"
-import { getHojaDominicalUrlFallback } from "@/lib/hojaDominical"
+import { HOJA_DOMINICAL_PDF_PATH } from "@/lib/hojaDominical"
+import { urlHojaDominical } from "@/lib/hojaDominicalStorage"
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
@@ -28,29 +29,20 @@ export default function HojaDominicalBoton({
   const [abierto, setAbierto] = useState(false)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [cargandoPdf, setCargandoPdf] = useState(false)
-  const [errorPdf, setErrorPdf] = useState<string | null>(null)
   const { usuarioId, nombre } = useSesion()
 
   useEffect(() => {
     if (!abierto) return
     let cancelado = false
     setCargandoPdf(true)
-    setErrorPdf(null)
     setPdfUrl(null)
 
-    fetch(`/api/hoja-dominical?semana=${semana}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("No se pudo cargar el PDF")
-        return res.json() as Promise<{ url?: string }>
-      })
-      .then((data) => {
-        if (cancelado) return
-        setPdfUrl(data.url || getHojaDominicalUrlFallback(semana))
+    urlHojaDominical(semana)
+      .then((url) => {
+        if (!cancelado) setPdfUrl(url)
       })
       .catch(() => {
-        if (cancelado) return
-        setErrorPdf("No se pudo cargar la hoja dominical.")
-        setPdfUrl(getHojaDominicalUrlFallback(semana))
+        if (!cancelado) setPdfUrl(HOJA_DOMINICAL_PDF_PATH)
       })
       .finally(() => {
         if (!cancelado) setCargandoPdf(false)
@@ -143,9 +135,6 @@ export default function HojaDominicalBoton({
                 <div className="flex h-full min-h-[240px] items-center justify-center">
                   <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </div>
-              )}
-              {!cargandoPdf && errorPdf && (
-                <p className="px-4 py-2 text-xs text-amber-800">{errorPdf}</p>
               )}
               {!cargandoPdf && pdfUrl && <PdfViewer url={pdfUrl} />}
             </div>
