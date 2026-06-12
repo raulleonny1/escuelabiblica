@@ -1,6 +1,5 @@
 import { initializeApp, getApps, type FirebaseApp, type FirebaseOptions } from "firebase/app"
 import { getFirestore, type Firestore } from "firebase/firestore"
-import { getStorage, type FirebaseStorage } from "firebase/storage"
 
 /** Config inyectada desde el layout (servidor → cliente). Evita depender solo del build. */
 let runtimeConfig: FirebaseOptions | null = null
@@ -12,7 +11,6 @@ export function setFirebaseRuntimeConfig(config: FirebaseOptions | null) {
   runtimeConfig = config
   appInstance = undefined
   dbInstance = undefined
-  storageInstance = undefined
 }
 
 export function getFirebaseConfig(): FirebaseOptions | null {
@@ -57,7 +55,6 @@ export function esErrorIndiceFirestore(error: Error): boolean {
 
 let appInstance: FirebaseApp | undefined
 let dbInstance: Firestore | undefined
-let storageInstance: FirebaseStorage | undefined
 
 export function getFirebaseApp(): FirebaseApp {
   const config = getFirebaseConfig()
@@ -75,11 +72,4 @@ export function getDb(): Firestore {
     dbInstance = getFirestore(getFirebaseApp())
   }
   return dbInstance
-}
-
-export function getStorageBucket(): FirebaseStorage {
-  if (!storageInstance) {
-    storageInstance = getStorage(getFirebaseApp())
-  }
-  return storageInstance
 }

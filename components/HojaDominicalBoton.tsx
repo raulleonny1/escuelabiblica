@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 import { useSesion } from "@/components/SesionProvider"
 import { registrarVisitaSitio } from "@/lib/analytics"
 import { HOJA_DOMINICAL_PDF_PATH } from "@/lib/hojaDominical"
-import { urlHojaDominical } from "@/lib/hojaDominicalStorage"
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
@@ -37,9 +36,13 @@ export default function HojaDominicalBoton({
     setCargandoPdf(true)
     setPdfUrl(null)
 
-    urlHojaDominical(semana)
-      .then((url) => {
-        if (!cancelado) setPdfUrl(url)
+    fetch(`/api/hoja-dominical?semana=${semana}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("sin pdf")
+        return res.json() as Promise<{ url?: string }>
+      })
+      .then((data) => {
+        if (!cancelado) setPdfUrl(data.url || HOJA_DOMINICAL_PDF_PATH)
       })
       .catch(() => {
         if (!cancelado) setPdfUrl(HOJA_DOMINICAL_PDF_PATH)
