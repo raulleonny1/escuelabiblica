@@ -4,7 +4,7 @@ import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { useSesion } from "@/components/SesionProvider"
 import { registrarVisitaSitio } from "@/lib/analytics"
-import { getHojaDominicalUrl } from "@/lib/hojaDominical"
+import { getHojaDominicalUrlFallback } from "@/lib/hojaDominical"
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
@@ -26,8 +26,40 @@ export default function HojaDominicalBoton({
   className = "",
 }: HojaDominicalBotonProps) {
   const [abierto, setAbierto] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [cargandoPdf, setCargandoPdf] = useState(false)
+  const [errorPdf, setErrorPdf] = useState<string | null>(null)
   const { usuarioId, nombre } = useSesion()
-  const pdfUrl = getHojaDominicalUrl(semana)
+
+  useEffect(() => {
+    if (!abierto) return
+    let cancelado = false
+    setCargandoPdf(true)
+    setErrorPdf(null)
+    setPdfUrl(null)
+
+    fetch(`/api/hoja-dominical?semana=${semana}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("No se pudo cargar el PDF")
+        return res.json() as Promise<{ url?: string }>
+      })
+      .then((data) => {
+        if (cancelado) return
+        setPdfUrl(data.url || getHojaDominicalUrlFallback(semana))
+      })
+      .catch(() => {
+        if (cancelado) return
+        setErrorPdf("No se pudo cargar la hoja dominical.")
+        setPdfUrl(getHojaDominicalUrlFallback(semana))
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoPdf(false)
+      })
+
+    return () => {
+      cancelado = true
+    }
+  }, [abierto, semana])
 
   useEffect(() => {
     if (!abierto) return
@@ -107,7 +139,15 @@ export default function HojaDominicalBoton({
               </button>
             </div>
             <div className="min-h-0 flex-1 bg-slate-100">
-              <PdfViewer url={pdfUrl} />
+              {cargandoPdf && (
+                <div className="flex h-full min-h-[240px] items-center justify-center">
+                  <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              )}
+              {!cargandoPdf && errorPdf && (
+                <p className="px-4 py-2 text-xs text-amber-800">{errorPdf}</p>
+              )}
+              {!cargandoPdf && pdfUrl && <PdfViewer url={pdfUrl} />}
             </div>
           </div>
         </div>

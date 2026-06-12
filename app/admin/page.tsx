@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
+import AdminHojasDominicales from "@/components/admin/AdminHojasDominicales"
 import { estaAdminDesbloqueado, marcarAdminDesbloqueado } from "@/components/AdminAcceso"
 import { ADMIN_PIN_DEFAULT } from "@/lib/adminPin"
 import type { DashboardData } from "@/lib/adminAnalyticsSummary"
@@ -37,6 +38,7 @@ export default function AdminPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [usuarioAbierto, setUsuarioAbierto] = useState<string | null>(null)
   const [diaSeleccionado, setDiaSeleccionado] = useState<string>("general")
+  const [seccionAdmin, setSeccionAdmin] = useState<"analiticas" | "hojas">("analiticas")
 
   useEffect(() => {
     if (estaAdminDesbloqueado()) setAutorizado(true)
@@ -165,20 +167,24 @@ export default function AdminPage() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-semibold text-primary">Sitios visitados</h1>
+            <h1 className="font-display text-2xl font-semibold text-primary">Administración</h1>
             <p className="text-sm text-muted">
-              Estadísticas generales y por día: ingresos, IP/ciudad, navegación y tiempo en app
+              {seccionAdmin === "analiticas"
+                ? "Estadísticas generales y por día: ingresos, IP/ciudad, navegación y tiempo en app"
+                : "Sube el PDF de la hoja dominical para cada semana del trimestre"}
             </p>
           </div>
           <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={cargando}
-              onClick={() => cargar(sessionStorage.getItem("adminPinUsado") ?? ADMIN_PIN_DEFAULT)}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
-            >
-              {cargando ? "Actualizando…" : "Actualizar"}
-            </button>
+            {seccionAdmin === "analiticas" && (
+              <button
+                type="button"
+                disabled={cargando}
+                onClick={() => cargar(sessionStorage.getItem("adminPinUsado") ?? ADMIN_PIN_DEFAULT)}
+                className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
+              >
+                {cargando ? "Actualizando…" : "Actualizar"}
+              </button>
+            )}
             <Link
               href="/"
               className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white"
@@ -187,6 +193,36 @@ export default function AdminPage() {
             </Link>
           </div>
         </div>
+
+        <div className="mt-4 flex flex-wrap gap-2 border-b border-border pb-3">
+          <button
+            type="button"
+            onClick={() => setSeccionAdmin("analiticas")}
+            className={`rounded-lg px-4 py-2 text-sm font-medium ${
+              seccionAdmin === "analiticas"
+                ? "bg-primary text-white"
+                : "border border-border bg-white text-slate-700"
+            }`}
+          >
+            Analíticas
+          </button>
+          <button
+            type="button"
+            onClick={() => setSeccionAdmin("hojas")}
+            className={`rounded-lg px-4 py-2 text-sm font-medium ${
+              seccionAdmin === "hojas"
+                ? "bg-primary text-white"
+                : "border border-border bg-white text-slate-700"
+            }`}
+          >
+            Hojas dominicales
+          </button>
+        </div>
+
+        {seccionAdmin === "hojas" && <AdminHojasDominicales />}
+
+        {seccionAdmin === "analiticas" && (
+          <>
 
         {error && (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -374,6 +410,8 @@ export default function AdminPage() {
                 </p>
               </section>
             )}
+          </>
+        )}
           </>
         )}
       </div>

@@ -97,5 +97,11 @@ service cloud.firestore {
         && (resource.data.autorUsuarioId == request.auth.uid
           || resource.data.oradorUsuarioId == request.auth.uid);
     }
+
+    // Metadatos de PDFs de hoja dominical (escritura solo vía Admin SDK en el servidor)
+    match /hojasDominicales/{semana} {
+      allow read: if true;
+      allow write: if false;
+    }
   }
 }
