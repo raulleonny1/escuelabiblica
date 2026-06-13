@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
 import { adminPinValido } from "@/lib/adminPin"
 import {
-  almacenamientoHojasDisponible,
   guardarHojaDominical,
   listarHojasDominicales,
+  modoAlmacenamientoHojas,
 } from "@/lib/hojaDominicalServer"
 
 export const dynamic = "force-dynamic"
@@ -22,8 +22,7 @@ export async function GET(req: Request) {
   }
 
   const hojas = await listarHojasDominicales()
-  const escribible = await almacenamientoHojasDisponible()
-  return NextResponse.json({ hojas, escribible })
+  return NextResponse.json({ hojas, modo: modoAlmacenamientoHojas() })
 }
 
 export async function POST(req: Request) {
@@ -37,17 +36,6 @@ export async function POST(req: Request) {
   const pin = pinDesdeRequest(req, form)
   if (!adminPinValido(pin)) {
     return NextResponse.json({ error: "Código incorrecto" }, { status: 401 })
-  }
-
-  const escribible = await almacenamientoHojasDisponible()
-  if (!escribible) {
-    return NextResponse.json(
-      {
-        error:
-          "En este servidor no se pueden guardar PDFs (p. ej. Vercel). Sube los archivos a public/pdf/hojas/ en el proyecto o usa un servidor con disco.",
-      },
-      { status: 503 }
-    )
   }
 
   const semana = Number(form.get("semana"))

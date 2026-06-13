@@ -15,7 +15,6 @@ export default function AdminHojasDominicales() {
     }))
   )
   const [cargando, setCargando] = useState(false)
-  const [escribible, setEscribible] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ok, setOk] = useState<string | null>(null)
   const [subiendo, setSubiendo] = useState<number | null>(null)
@@ -33,7 +32,6 @@ export default function AdminHojasDominicales() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "No se pudo cargar la lista")
       if (json.hojas?.length) setHojas(json.hojas)
-      setEscribible(json.escribible !== false)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al cargar")
     } finally {
@@ -62,7 +60,7 @@ export default function AdminHojasDominicales() {
       setHojas((prev) =>
         prev.map((h) => (h.semana === semana ? (json.hoja as HojaDominicalInfo) : h))
       )
-      setOk(`Semana ${semana}: PDF guardado. Ya se verá al pulsar «Hoja dominical».`)
+      setOk(`Semana ${semana} lista. Al pulsar «Hoja dominical» se abrirá este PDF.`)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al subir")
     } finally {
@@ -78,16 +76,8 @@ export default function AdminHojasDominicales() {
     <section className="mt-8 rounded-xl border border-border bg-white p-4 shadow-sm md:p-5">
       <h2 className="font-display text-lg font-semibold text-primary">Hojas dominicales (PDF)</h2>
       <p className="mt-1 text-sm text-muted">
-        Sube el PDF de cada semana. Al pulsar «Hoja dominical» en la lección se abre ese PDF.
+        Elige la semana y sube el PDF. Se verá al pulsar «Hoja dominical» en esa lección.
       </p>
-
-      {!escribible && (
-        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Este entorno no permite guardar archivos. Copia los PDF a{" "}
-          <code className="text-xs">public/pdf/hojas/</code> con nombre{" "}
-          <code className="text-xs">semana-01.pdf</code>, <code className="text-xs">semana-02.pdf</code>, etc.
-        </p>
-      )}
 
       {error && (
         <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -155,7 +145,7 @@ export default function AdminHojasDominicales() {
               />
               <button
                 type="button"
-                disabled={!escribible || ocupado}
+                disabled={ocupado}
                 onClick={() => inputsRef.current[leccion.numero]?.click()}
                 className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
               >
