@@ -4,7 +4,6 @@ import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { useSesion } from "@/components/SesionProvider"
 import { registrarVisitaSitio } from "@/lib/analytics"
-import { HOJA_DOMINICAL_PDF_PATH } from "@/lib/hojaDominical"
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
@@ -27,6 +26,7 @@ export default function HojaDominicalBoton({
 }: HojaDominicalBotonProps) {
   const [abierto, setAbierto] = useState(false)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [sinPdf, setSinPdf] = useState(false)
   const [cargandoPdf, setCargandoPdf] = useState(false)
   const { usuarioId, nombre } = useSesion()
 
@@ -35,17 +35,20 @@ export default function HojaDominicalBoton({
     let cancelado = false
     setCargandoPdf(true)
     setPdfUrl(null)
+    setSinPdf(false)
 
     fetch(`/api/hoja-dominical?semana=${semana}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("sin pdf")
-        return res.json() as Promise<{ url?: string }>
-      })
+      .then(async (res) => res.json() as Promise<{ url?: string | null; origen?: string }>)
       .then((data) => {
-        if (!cancelado) setPdfUrl(data.url || HOJA_DOMINICAL_PDF_PATH)
+        if (cancelado) return
+        if (data.url && data.origen === "subido") {
+          setPdfUrl(data.url)
+        } else {
+          setSinPdf(true)
+        }
       })
       .catch(() => {
-        if (!cancelado) setPdfUrl(HOJA_DOMINICAL_PDF_PATH)
+        if (!cancelado) setSinPdf(true)
       })
       .finally(() => {
         if (!cancelado) setCargandoPdf(false)
@@ -137,6 +140,12 @@ export default function HojaDominicalBoton({
               {cargandoPdf && (
                 <div className="flex h-full min-h-[240px] items-center justify-center">
                   <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              )}
+              {!cargandoPdf && sinPdf && (
+                <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-2 p-6 text-center">
+                  <p className="font-medium text-slate-700">Aún no hay hoja dominical para la semana {semana}.</p>
+                  <p className="text-sm text-muted">El administrador debe subir el PDF en Admin → Subir PDFs.</p>
                 </div>
               )}
               {!cargandoPdf && pdfUrl && <PdfViewer url={pdfUrl} />}

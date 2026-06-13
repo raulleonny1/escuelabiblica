@@ -1,10 +1,10 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import { ADMIN_PIN_DEFAULT } from "@/lib/adminPin"
 import { estaAdminDesbloqueado } from "@/components/AdminAcceso"
-import { LECCIONES } from "@/lib/lecciones"
+import { TOTAL_LECCIONES } from "@/lib/lecciones"
 
 export default function AdminHojasPage() {
   const [error, setError] = useState<string | null>(null)
@@ -14,20 +14,6 @@ export default function AdminHojasPage() {
   const inputsRef = useRef<Record<number, HTMLInputElement | null>>({})
 
   const pin = () => sessionStorage.getItem("adminPinUsado") ?? ADMIN_PIN_DEFAULT
-
-  const marcarSubidas = useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/hoja-dominical", {
-        headers: { "x-admin-pin": pin() },
-      })
-      const json = await res.json()
-      if (res.ok && json.hojas) {
-        setSubidas(new Set(json.hojas.filter((h: { subido: boolean }) => h.subido).map((h: { semana: number }) => h.semana)))
-      }
-    } catch {
-      /* ignorar */
-    }
-  }, [])
 
   async function subir(semana: number, file: File) {
     setSubiendo(semana)
@@ -44,7 +30,7 @@ export default function AdminHojasPage() {
       if (!res.ok) throw new Error(json.error ?? "No se pudo subir el PDF")
 
       setSubidas((prev) => new Set(prev).add(semana))
-      setOk(`Semana ${semana} subida. Ya se ve al pulsar «Hoja dominical».`)
+      setOk(`Semana ${semana}: hoja dominical subida.`)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al subir")
     } finally {
@@ -67,14 +53,14 @@ export default function AdminHojasPage() {
 
   return (
     <div className="custom-scroll h-full min-h-0 overflow-y-auto bg-slate-50 p-3 md:p-6">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-md">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="font-display text-xl font-semibold text-primary">Hojas dominicales</h1>
-            <p className="text-sm text-muted">Sube un PDF por semana del trimestre.</p>
+            <p className="text-sm text-muted">Un PDF por semana. Solo se muestra lo que subas aquí.</p>
           </div>
           <Link href="/admin" className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white">
-            ← Volver al panel
+            ← Panel
           </Link>
         </div>
 
@@ -85,37 +71,36 @@ export default function AdminHojasPage() {
           <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{ok}</p>
         )}
 
-        <ul className="mt-6 divide-y divide-border rounded-xl border border-border bg-white p-2 shadow-sm">
-          {LECCIONES.map((leccion) => {
-            const ocupado = subiendo === leccion.numero
-            const tiene = subidas.has(leccion.numero)
+        <ul className="mt-6 divide-y divide-border rounded-xl border border-border bg-white shadow-sm">
+          {Array.from({ length: TOTAL_LECCIONES }, (_, i) => i + 1).map((semana) => {
+            const ocupado = subiendo === semana
+            const tiene = subidas.has(semana)
 
             return (
-              <li key={leccion.numero} className="flex flex-wrap items-center gap-3 px-2 py-3">
-                <span className="w-8 font-semibold text-primary">{leccion.numero}</span>
-                <span className="min-w-0 flex-1 text-sm">{leccion.titulo}</span>
+              <li key={semana} className="flex items-center gap-3 px-4 py-3">
+                <span className="w-20 text-sm font-semibold text-primary">Semana {semana}</span>
                 {tiene && (
                   <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[0.6875rem] font-medium text-emerald-800">
-                    Subido
+                    Subida
                   </span>
                 )}
                 <input
                   ref={(el) => {
-                    inputsRef.current[leccion.numero] = el
+                    inputsRef.current[semana] = el
                   }}
                   type="file"
                   accept="application/pdf,.pdf"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0]
-                    if (file) void subir(leccion.numero, file)
+                    if (file) void subir(semana, file)
                   }}
                 />
                 <button
                   type="button"
                   disabled={ocupado}
-                  onClick={() => inputsRef.current[leccion.numero]?.click()}
-                  className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                  onClick={() => inputsRef.current[semana]?.click()}
+                  className="ml-auto rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                 >
                   {ocupado ? "Subiendo…" : "Subir PDF"}
                 </button>
@@ -123,14 +108,6 @@ export default function AdminHojasPage() {
             )
           })}
         </ul>
-
-        <button
-          type="button"
-          onClick={marcarSubidas}
-          className="mt-4 text-xs text-primary underline"
-        >
-          Ver cuáles ya están subidas
-        </button>
       </div>
     </div>
   )

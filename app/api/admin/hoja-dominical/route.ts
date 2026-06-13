@@ -3,7 +3,6 @@ import { adminPinValido } from "@/lib/adminPin"
 import {
   guardarHojaDominical,
   listarHojasDominicales,
-  modoAlmacenamientoHojas,
 } from "@/lib/hojaDominicalServer"
 
 export const dynamic = "force-dynamic"
@@ -22,7 +21,7 @@ export async function GET(req: Request) {
   }
 
   const hojas = await listarHojasDominicales()
-  return NextResponse.json({ hojas, modo: modoAlmacenamientoHojas() })
+  return NextResponse.json({ hojas })
 }
 
 export async function POST(req: Request) {
