@@ -1,5 +1,2 @@
-import { TOTAL_LECCIONES } from "@/lib/lecciones"
-
-export function semanaHojaDominicalValida(semana: number): number {
-  return Math.min(Math.max(Math.floor(semana), 1), TOTAL_LECCIONES)
-}
+/** PDF fijo en public/pdf/ — botón «Hoja dominical». */
+export const HOJA_DOMINICAL_PDF_URL = "/pdf/hoja-dominical-domingo-14-junio.pdf"
