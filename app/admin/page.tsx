@@ -2,9 +2,9 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
-import AdminHojasDominicales from "@/components/admin/AdminHojasDominicales"
 import { estaAdminDesbloqueado, marcarAdminDesbloqueado } from "@/components/AdminAcceso"
 import { ADMIN_PIN_DEFAULT } from "@/lib/adminPin"
+import { ensureUsuarioAuth } from "@/lib/auth"
 import type { DashboardData } from "@/lib/adminAnalyticsSummary"
 import { cargarAnalyticsDesdeCliente } from "@/lib/analyticsAdminClient"
 import { resumirSitiosVisitados, sitioDesdeEvento } from "@/lib/analyticsSitios"
@@ -59,6 +59,7 @@ export default function AdminPage() {
         return
       }
       if (res.status === 503 && json.usarCliente) {
+        await ensureUsuarioAuth()
         const local = await cargarAnalyticsDesdeCliente()
         setData(local as DashboardData)
         setDiaSeleccionado("general")
@@ -70,6 +71,7 @@ export default function AdminPage() {
       throw new Error(json.error ?? "No se pudieron cargar los datos")
     } catch (e) {
       try {
+        await ensureUsuarioAuth()
         const local = await cargarAnalyticsDesdeCliente()
         setData(local as DashboardData)
         setDiaSeleccionado("general")
@@ -172,6 +174,12 @@ export default function AdminPage() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Link
+              href="/admin/hojas"
+              className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700"
+            >
+              Subir PDFs
+            </Link>
             <button
               type="button"
               disabled={cargando}
@@ -377,8 +385,6 @@ export default function AdminPage() {
             )}
           </>
         )}
-
-        <AdminHojasDominicales />
       </div>
     </div>
   )

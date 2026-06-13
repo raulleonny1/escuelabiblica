@@ -92,16 +92,35 @@ export async function obtenerHojaDominical(semana: number): Promise<{
 }
 
 export async function listarHojasDominicales(): Promise<HojaDominicalInfo[]> {
+  const subidas = new Set<number>()
+
+  const supabase = getSupabaseServer()
+  if (supabase) {
+    try {
+      const { data } = await supabase.storage.from(SUPABASE_BUCKET_HOJAS).list("", { limit: 100 })
+      for (const f of data ?? []) {
+        const m = f.name.match(/^semana-(\d+)\.pdf$/i)
+        if (m) subidas.add(Number(m[1]))
+      }
+    } catch {
+      /* bucket vacío o sin permiso */
+    }
+  }
+
+  for (let s = 1; s <= TOTAL_LECCIONES; s++) {
+    if (!subidas.has(s) && existsSync(rutaLocal(s))) subidas.add(s)
+  }
+
   const lista: HojaDominicalInfo[] = []
   for (let s = 1; s <= TOTAL_LECCIONES; s++) {
-    lista.push(
-      (await infoHoja(s)) ?? {
-        semana: s,
-        subido: false,
-        url: "",
-        actualizadoEn: null,
-      }
-    )
+    if (subidas.has(s)) {
+      const info = await infoHoja(s)
+      lista.push(
+        info ?? { semana: s, subido: true, url: "", actualizadoEn: null }
+      )
+    } else {
+      lista.push({ semana: s, subido: false, url: "", actualizadoEn: null })
+    }
   }
   return lista
 }
