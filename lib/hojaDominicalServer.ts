@@ -3,7 +3,12 @@ import { mkdir, stat, writeFile } from "fs/promises"
 import path from "path"
 import { semanaHojaDominicalValida } from "@/lib/hojaDominical"
 import { TOTAL_LECCIONES } from "@/lib/lecciones"
-import { getSupabaseServer, SUPABASE_BUCKET_HOJAS, supabaseConfigurado } from "@/lib/supabaseServer"
+import {
+  listarArchivosStorage,
+  subirArchivoStorage,
+  supabaseStorageConfigurado,
+  urlPublicaStorage,
+} from "@/lib/supabaseStorage"
 
 export type HojaDominicalInfo = {
   semana: number
@@ -35,75 +40,62 @@ function rutaLocal(semana: number): string {
   return path.join(CARPETA, nombrePdfHojaDominical(semana))
 }
 
-function urlPublicaSupabase(pathArchivo: string): string {
-  const supabase = getSupabaseServer()!
-  return supabase.storage.from(SUPABASE_BUCKET_HOJAS).getPublicUrl(pathArchivo).data.publicUrl
-}
-
-async function nombresEnSupabase(): Promise<Set<string>> {
+async function nombresSubidos(): Promise<Set<string>> {
   const nombres = new Set<string>()
-  const supabase = getSupabaseServer()
-  if (!supabase) return nombres
-  try {
-    const { data } = await supabase.storage.from(SUPABASE_BUCKET_HOJAS).list("", { limit: 100 })
-    for (const f of data ?? []) nombres.add(f.name)
-  } catch {
-    /* vacío */
+  if (supabaseStorageConfigurado()) {
+    for (const n of await listarArchivosStorage()) nombres.add(n)
+  }
+  for (let s = 1; s <= TOTAL_LECCIONES; s++) {
+    if (existsSync(rutaLocal(s))) nombres.add(nombrePdfHojaDominical(s))
   }
   return nombres
 }
 
-async function infoDesdeSupabase(
-  semana: number,
-  cache?: Set<string>
-): Promise<HojaDominicalInfo | null> {
-  if (!supabaseConfigurado()) return null
+async function infoDesdeNombre(semana: number, nombres: Set<string>): Promise<HojaDominicalInfo | null> {
   const archivo = nombrePdfHojaDominical(semana)
-  const nombres = cache ?? (await nombresEnSupabase())
   if (!nombres.has(archivo)) return null
-  return {
-    semana,
-    subido: true,
-    url: urlPublicaSupabase(archivo),
-    actualizadoEn: null,
-  }
-}
 
-async function infoDesdeDisco(semana: number): Promise<HojaDominicalInfo | null> {
   const local = rutaLocal(semana)
-  if (!existsSync(local)) return null
-  try {
-    const { mtimeMs } = await stat(local)
+  if (existsSync(local)) {
+    try {
+      const { mtimeMs } = await stat(local)
+      return {
+        semana,
+        subido: true,
+        url: urlPublicaLocal(semana, Math.floor(mtimeMs)),
+        actualizadoEn: new Date(mtimeMs).toISOString(),
+      }
+    } catch {
+      return { semana, subido: true, url: urlPublicaLocal(semana), actualizadoEn: null }
+    }
+  }
+
+  if (supabaseStorageConfigurado()) {
     return {
       semana,
       subido: true,
-      url: urlPublicaLocal(semana, Math.floor(mtimeMs)),
-      actualizadoEn: new Date(mtimeMs).toISOString(),
+      url: urlPublicaStorage(archivo),
+      actualizadoEn: null,
     }
-  } catch {
-    return { semana, subido: true, url: urlPublicaLocal(semana), actualizadoEn: null }
   }
-}
 
-async function infoHoja(semana: number, cache?: Set<string>): Promise<HojaDominicalInfo | null> {
-  return (await infoDesdeSupabase(semana, cache)) ?? (await infoDesdeDisco(semana))
+  return null
 }
 
 export async function obtenerHojaDominical(semana: number): Promise<HojaDominicalRespuesta> {
   const n = semanaHojaDominicalValida(semana)
-  const info = await infoHoja(n)
-  if (info?.url) {
-    return { url: info.url, origen: "subido", semana: n }
-  }
+  const nombres = await nombresSubidos()
+  const info = await infoDesdeNombre(n, nombres)
+  if (info?.url) return { url: info.url, origen: "subido", semana: n }
   return { url: null, origen: "ninguno", semana: n }
 }
 
 export async function listarHojasDominicales(): Promise<HojaDominicalInfo[]> {
-  const cache = await nombresEnSupabase()
+  const nombres = await nombresSubidos()
   const lista: HojaDominicalInfo[] = []
   for (let s = 1; s <= TOTAL_LECCIONES; s++) {
     lista.push(
-      (await infoHoja(s, cache)) ?? {
+      (await infoDesdeNombre(s, nombres)) ?? {
         semana: s,
         subido: false,
         url: "",
@@ -128,24 +120,14 @@ export async function guardarHojaDominical(
     buffer.subarray(0, 5).toString("ascii") === "%PDF-"
   if (!esPdf) throw new Error("Solo se permiten archivos PDF")
 
-  const supabase = getSupabaseServer()
-  if (supabase) {
-    const pathArchivo = nombrePdfHojaDominical(n)
-    const { error } = await supabase.storage.from(SUPABASE_BUCKET_HOJAS).upload(pathArchivo, buffer, {
-      contentType: "application/pdf",
-      upsert: true,
-    })
-    if (error) {
-      throw new Error(
-        error.message.includes("Bucket not found")
-          ? "Crea el bucket «hojas-dominicales» en Supabase (público). Ejecuta supabase/storage-setup.sql"
-          : error.message
-      )
-    }
+  const pathArchivo = nombrePdfHojaDominical(n)
+
+  if (supabaseStorageConfigurado()) {
+    await subirArchivoStorage(pathArchivo, buffer, "application/pdf")
     return {
       semana: n,
       subido: true,
-      url: urlPublicaSupabase(pathArchivo),
+      url: urlPublicaStorage(pathArchivo),
       actualizadoEn: new Date().toISOString(),
     }
   }
