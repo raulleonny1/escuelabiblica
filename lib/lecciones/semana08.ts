@@ -15,7 +15,12 @@ export const semana08: LeccionContenido = {
       {
         titulo: "Introducción",
         texto:
-          "El perdón es uno de los temas más centrales del evangelio y, paradójicamente, uno de los más difíciles de vivir. Muchos creyentes aceptan intelectualmente que Dios los ha perdonado, pero luchan para perdonar a otros o para recibir ese perdón en lo profundo del corazón. Esta semana exploraremos la conexión inseparable entre fe y perdón: la fe nos abre la puerta al perdón divino, y el perdón que recibimos nos capacita para perdonar. Sin fe genuina, el perdón se convierte en un esfuerzo humano agotador; con fe, se transforma en un flujo de gracia.",
+          "El perdón es uno de los temas más centrales del evangelio y, paradójicamente, uno de los más difíciles de vivir. Muchos creyentes aceptan intelectualmente que Dios los ha perdonado, pero luchan para perdonar a otros o para recibir ese perdón en lo profundo del corazón. Esta semana exploraremos la conexión inseparable entre fe y perdón —siempre centrados en Cristo y su cruz— y veremos cómo la fe, la oración y la Palabra de Dios trabajan juntas para que recibamos, vivamos y extendamos el perdón. Sin fe genuina en Jesús, el perdón se convierte en un esfuerzo humano agotador; con fe en Cristo, se transforma en un flujo de gracia.",
+      },
+      {
+        titulo: "Fe, oración y Palabra: cómo trabajan juntos en el perdón",
+        texto:
+          "El perdón cristiano no se vive con un solo «pilar» espiritual, sino con tres que Dios une en Cristo. La Palabra de Dios declara el hecho objetivo: en la cruz, Cristo canceló nuestra deuda (Colosenses 2:13-14; 1 Juan 1:9). La fe recibe esa verdad y descansa en Jesús, no en nuestros sentimientos (Romanos 8:1). La oración aplica el perdón al corazón: confesamos, damos gracias y pedimos al Padre, en el nombre de Jesús, que nos libere de la culpa y nos capacite para perdonar (Salmo 51; Lucas 23:34). Cuando la Palabra declara, la fe cree y la oración responde, el alma experimenta la paz que solo Cristo da. Así funcionan juntos los tres pilares: la Escritura revela, la fe abraza a Cristo y la oración mantiene viva la comunión con Él.",
       },
       {
         titulo: "Desarrollo",
@@ -150,7 +155,7 @@ export const semana08: LeccionContenido = {
       8,
       "La fe y el perdón",
       "«Y Jesús le dijo: Mujer, tu fe te ha salvado; ve en paz.» — Lucas 7:50",
-      "Esta semana exploramos la profunda conexión entre fe y perdón. La mujer pecadora de Lucas 7 nos enseñó que el perdón divino se recibe por fe expresada en amor y arrepentimiento, no por mérito propio. Aprendimos que el fundamento de todo perdón es la cruz de Cristo, donde Dios canceló nuestra deuda infinita. Recibir el perdón requiere la misma fe que lo solicita: creer que Dios es fiel para perdonar cuando confesamos. Perdonar a otros es la respuesta natural de quien ha experimentado gracia: José perdonó a quienes lo traicionaron viendo la providencia de Dios; Jesús intercedió por sus verdugos desde la cruz. Aprendimos que perdonarse a uno mismo es alinearse con la sentencia divina de «ninguna condenación», y que el Espíritu Santo nos capacita para un perdón que excede nuestra capacidad humana.",
+      "Esta semana exploramos la profunda conexión entre fe y perdón, siempre con Cristo en el centro. Aprendimos que la Palabra declara el perdón en la cruz, la fe lo recibe en Jesús y la oración lo aplica al corazón cada día. La mujer pecadora de Lucas 7 nos enseñó que el perdón divino se recibe por fe expresada en amor y arrepentimiento, no por mérito propio. Aprendimos que el fundamento de todo perdón es la cruz de Cristo, donde Dios canceló nuestra deuda infinita. Recibir el perdón requiere la misma fe que lo solicita: creer que Dios es fiel para perdonar cuando confesamos. Perdonar a otros es la respuesta natural de quien ha experimentado gracia: José perdonó a quienes lo traicionaron viendo la providencia de Dios; Jesús intercedió por sus verdugos desde la cruz. Aprendimos que perdonarse a uno mismo es alinearse con la sentencia divina de «ninguna condenación», y que el Espíritu Santo nos capacita para un perdón que excede nuestra capacidad humana.",
       [
         "El fundamento del perdón en la cruz: fe para recibir gracia (Colosenses 2:13-14)",
         "Perdonar a otros: la parábola del siervo impío y el ejemplo de José (Mateo 18, Génesis 50)",

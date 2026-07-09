@@ -15,7 +15,12 @@ export const semana09: LeccionContenido = {
       {
         titulo: "Introducción",
         texto:
-          "La segunda venida de Cristo es una de las doctrinas más mencionadas en el Nuevo Testamento —más de trescientas referencias directas e indirectas— y una de las más transformadoras para la vida de fe. La esperanza del regreso de Cristo no es una especulación profética para entusiastas del apocalipsis; es una promesa personal de Jesús a sus discípulos, ratificada por los apóstoles y sellada por los ángeles en la ascensión (Hechos 1:11). Esta esperanza cambia la manera en que vivimos hoy: cómo invertimos el tiempo, cómo tratamos a los demás, cómo enfrentamos el sufrimiento y cómo tomamos decisiones.",
+          "La segunda venida de Cristo es una de las doctrinas más mencionadas en el Nuevo Testamento —más de trescientas referencias directas e indirectas— y una de las más transformadoras para la vida de fe. La esperanza del regreso de Cristo no es una especulación profética para entusiastas del apocalipsis; es una promesa personal de Jesús a sus discípulos, ratificada por los apóstoles y sellada por los ángeles en la ascensión (Hechos 1:11). Esta semana veremos cómo la fe, la oración y la Palabra de Dios sostienen juntas esa esperanza cristocéntrica: no un futuro vago, sino el regreso personal del mismo Jesús que murió y resucitó. Esta esperanza cambia la manera en que vivimos hoy: cómo invertimos el tiempo, cómo tratamos a los demás, cómo enfrentamos el sufrimiento y cómo tomamos decisiones.",
+      },
+      {
+        titulo: "Fe, oración y Palabra: cómo trabajan juntos en la esperanza",
+        texto:
+          "La esperanza del regreso de Cristo se sostiene cuando los tres pilares de la vida cristiana caminan unidos. La Palabra de Dios anuncia la promesa: Jesús dijo «vendré otra vez» (Juan 14:3), los profetas y apóstoles la confirmaron (1 Tesalonicenses 4:16-17; Apocalipsis 22:20). La fe descansa en esa revelación y fija los ojos en Cristo, no en cálculos de fechas ni en miedo al futuro (Hebreos 12:2). La oración expresa esa fe con el clamor de la iglesia: «¡Maranatha! ¡Ven, Señor Jesús!» (1 Corintios 16:22; Apocalipsis 22:20). Cuando leemos la Palabra sobre su venida, creemos la promesa y oramos «ven», la esperanza deja de ser teoría y se vuelve fuerza para vivir en santidad hoy. Todo apunta a Jesús: Él prepara el lugar, Él regresa, Él nos recibe para estar con Él para siempre.",
       },
       {
         titulo: "Desarrollo",
@@ -150,7 +155,7 @@ export const semana09: LeccionContenido = {
       9,
       "La fe y la esperanza del regreso de Cristo",
       "«No se turbe vuestro corazón... voy a preparar lugar para vosotros... vendré otra vez, y os tomaré a mí mismo.» — Juan 14:1-3",
-      "Esta semana llenamos el corazón con la esperanza más transformadora del evangelio: el regreso personal, visible y glorioso de Jesús. Aprendimos que esta esperanza no pasiviza al creyente sino que lo galvaniza para la santidad, la misión y el servicio. La iglesia primitiva vivía con el «Maranatha» como oración constante, y esa expectativa viva los hacía radicalmente valientes y radicalmente compasivos. Las parábolas de Mateo 25 nos enseñaron que la fe que espera el regreso de Cristo trabaja activamente, sirve fielmente y mantiene encendida la lámpara del Espíritu. La esperanza del regreso de Cristo es el ancla que impide que las tormentas del presente nos arrastren a la desesperanza.",
+      "Esta semana llenamos el corazón con la esperanza más transformadora del evangelio: el regreso personal, visible y glorioso de Jesús. Vimos cómo la Palabra anuncia su venida, la fe descansa en Cristo resucitado y la oración clama «Maranatha» con anhelo santo. Aprendimos que esta esperanza no pasiviza al creyente sino que lo galvaniza para la santidad, la misión y el servicio. La iglesia primitiva vivía con el «Maranatha» como oración constante, y esa expectativa viva los hacía radicalmente valientes y radicalmente compasivos. Las parábolas de Mateo 25 nos enseñaron que la fe que espera el regreso de Cristo trabaja activamente, sirve fielmente y mantiene encendida la lámpara del Espíritu. La esperanza del regreso de Cristo es el ancla que impide que las tormentas del presente nos arrastren a la desesperanza.",
       [
         "Maranatha: la oración de la iglesia primitiva que revela la urgencia escatológica viva (1 Corintios 16:22)",
         "El aceite en la lámpara: la fe personal y sostenida que no puede ser prestada de otros (Mateo 25:1-13)",

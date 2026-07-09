@@ -15,7 +15,12 @@ export const semana11: LeccionContenido = {
       {
         titulo: "Introducción",
         texto:
-          "La fe cristiana nunca fue diseñada para vivirse en aislamiento. Desde el principio, Dios formó un pueblo —no individuos aislados— y la iglesia es la continuación de ese designio. Hebreos 10:25 nos exhorta a no abandonar la congregación, reconociendo que la fe se fortalece, se prueba y se expresa en comunidad. En una era de individualismo espiritual, donde muchos prefieren «Dios y yo» sin compromiso con otros creyentes, este mandato bíblico es más relevante que nunca. La fe en comunidad no es opcional; es esencial.",
+          "La fe cristiana nunca fue diseñada para vivirse en aislamiento. Desde el principio, Dios formó un pueblo —no individuos aislados— y la iglesia es el cuerpo de Cristo en la tierra (1 Corintios 12:27). Hebreos 10:25 nos exhorta a no abandonar la congregación, reconociendo que la fe se fortalece, se prueba y se expresa en comunidad unida a Jesús. En una era de individualismo espiritual, donde muchos prefieren «Dios y yo» sin compromiso con otros creyentes, este mandato bíblico es más relevante que nunca. La fe en comunidad no es opcional; es esencial —y su centro es Cristo, no la institución ni las tradiciones humanas.",
+      },
+      {
+        titulo: "Cristo en el centro de la comunidad",
+        texto:
+          "La iglesia no es un club social ni un sistema de moralidad; es el cuerpo de Cristo. Efesios 1:22-23 declara que Dios «sometió todas las cosas bajo sus pies, y lo dio por cabeza sobre todas las cosas a la iglesia, la cual es su cuerpo.» Toda doctrina cristocéntrica converge aquí: nos congregamos porque pertenecemos a Jesús, nos amamos porque Él nos amó primero (1 Juan 4:19), predicamos su evangelio y nos sometemos a su Palabra. La fe, la oración y la Escritura no se practican solo en privado; en la iglesia se proclama a Cristo, se ora en su nombre y se enseña «toda la palabra de Dios» (Hechos 20:27). Una comunidad genuina mira siempre al Señor Jesús como cabeza, fundamento y razón de su unidad.",
       },
       {
         titulo: "Desarrollo",
@@ -150,7 +155,7 @@ export const semana11: LeccionContenido = {
       11,
       "La fe en comunidad",
       "«No dejando de congregarnos, como algunos tienen por costumbre, sino exhortándonos.» — Hebreos 10:25",
-      "Esta semana descubrimos que la fe cristiana fue diseñada para vivirse en comunidad, no en aislamiento. Hebreos 10:25 nos exhorta a no abandonar la congregación sino exhortarnos mutuamente mientras se acerca el día del Señor. La iglesia primitiva modeló fe comunitaria mediante enseñanza, comunión, partimiento del pan y oraciones compartidas. Aprendimos que somos un cuerpo con miembros interdependientes, cada uno con dones únicos para edificar a los demás. La exhortación mutua, la rendición de cuentas, la adoración corporativa y la generosidad compartida son expresiones concretas de fe comunitaria. En medio de conflictos y diversidad, la unidad en Cristo se mantiene mediante gracia, hospitalidad y el compromiso de no dejar de congregarnos.",
+      "Esta semana descubrimos que la fe cristiana fue diseñada para vivirse en comunidad, con Cristo como cabeza del cuerpo. Hebreos 10:25 nos exhorta a no abandonar la congregación sino exhortarnos mutuamente mientras se acerca el día del Señor. La iglesia primitiva modeló fe comunitaria mediante enseñanza, comunión, partimiento del pan y oraciones compartidas. Aprendimos que somos un cuerpo con miembros interdependientes, cada uno con dones únicos para edificar a los demás. La exhortación mutua, la rendición de cuentas, la adoración corporativa y la generosidad compartida son expresiones concretas de fe comunitaria. En medio de conflictos y diversidad, la unidad en Cristo se mantiene mediante gracia, hospitalidad y el compromiso de no dejar de congregarnos.",
       [
         "El cuerpo de Cristo: diversidad de dones e interdependencia (1 Corintios 12, Romanos 12)",
         "Exhortación mutua y rendición de cuentas: hierro con hierro (Proverbios 27:17, Hebreos 3:13)",

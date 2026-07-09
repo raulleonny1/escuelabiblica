@@ -15,7 +15,12 @@ export const semana13: LeccionContenido = {
       {
         titulo: "Introducción",
         texto:
-          "Hemos recorrido doce semanas explorando la fe desde múltiples ángulos: su definición, su origen, su expresión en pruebas, obediencia, oración, perdón, esperanza, Espíritu Santo, comunidad y servicio. Esta última semana del trimestre nos lleva al clímax de la jornada de fe: la perseverancia hasta el fin. Apocalipsis 2:10 fue escrita a la iglesia de Esmirna, una congregación pobre pero fiel, bajo persecución inminente. Cristo no prometió alivio inmediato sino recompensa eterna a quienes permanecieran firmes. La fe que comenzó con confianza debe terminar con fidelidad.",
+          "Hemos recorrido doce semanas explorando la fe desde múltiples ángulos: su definición, su origen en la Palabra, su expresión en pruebas, obediencia, oración, confianza, victoria sobre el miedo, perdón, esperanza del regreso de Cristo, obra del Espíritu Santo, comunidad y servicio. Esta última semana del trimestre nos lleva al clímax de la jornada de fe: la perseverancia hasta el fin, con los ojos puestos en Jesús —«el autor y consumador de la fe» (Hebreos 12:2). Apocalipsis 2:10 fue escrita a la iglesia de Esmirna bajo persecución; Cristo no prometió alivio inmediato sino la corona de la vida a quienes permanecieran fieles a Él. La fe que comenzó confiando en Cristo debe terminar fiel a Cristo.",
+      },
+      {
+        titulo: "Permanecer firmes: fe, oración y Palabra hasta el fin",
+        texto:
+          "La perseverancia cristiana no es resistencia humana sola; es mantener viva la relación con Cristo por los medios que Él instituyó. La Palabra es el fundamento que no se mueve cuando llegan las tormentas (Mateo 7:24-27). La fe fija la mirada en Jesús, no en las circunstancias (Hebreos 12:2). La oración nos guarda en vigilancia: «Velad y orad, para que no entréis en tentación» (Mateo 26:41). Pablo «guardó la fe» porque permaneció en Cristo, no porque nunca dudara (2 Timoteo 4:7). Al cerrar este trimestre, afirmamos una convicción cristocéntrica: no hay salvación, crecimiento ni fidelidad duradera aparte de Jesucristo. Él es el camino, la verdad y la vida (Juan 14:6); la Palabra testifica de Él, la fe se une a Él y la oración clama su nombre hasta el fin.",
       },
       {
         titulo: "Desarrollo",
@@ -131,9 +136,9 @@ export const semana13: LeccionContenido = {
           "La historia de la iglesia registra millones que fueron «fieles hasta la muerte»: Esteban apedreado (Hechos 7), Pedro crucificado, Pablo decapitado, Policarpo quemado, mártires de la persecución romana, reformadores, misioneros en tierras hostiles. Apocalipsis 6:9-11 muestra a las almas de los mártires bajo el altar clamando «¿Hasta cuándo?» y recibiendo vestiduras blancas. Su testimonio anima nuestra perseverancia: si ellos permanecieron firmes ante la muerte, nosotros podemos permanecer firmes ante nuestras pruebas.",
       },
       {
-        titulo: "Repaso del trimestre: la fe integrada",
+        titulo: "Repaso del trimestre: la fe integrada en Cristo",
         texto:
-          "Este trimestre hemos estudiado la fe desde múltiples dimensiones: definición (semana 1), origen en la Palabra (semana 2), pruebas (3), obediencia (4), oración (5), confianza (6), victoria sobre miedo (7), perdón (8), esperanza del regreso (9), Espíritu Santo (10), comunidad (11), servicio (12). La fe bíblica no es un solo aspecto sino un todo integrado. Permanecer firmes significa mantener viva cada dimensión: seguir escuchando la Palabra, orando, perdonando, esperando, sirviendo, congregándonos.",
+          "Este trimestre hemos estudiado la fe desde múltiples dimensiones: definición (semana 1), origen en la Palabra (2), pruebas (3), obediencia (4), oración (5), confianza (6), victoria sobre el miedo (7), perdón en la cruz (8), esperanza del regreso de Cristo (9), Espíritu Santo que glorifica a Jesús (10), comunidad como cuerpo de Cristo (11), servicio a imagen del Maestro (12). La fe bíblica es un todo cristocéntrico: todo apunta a Jesús como Señor y Salvador. Permanecer firmes significa seguir escuchando su Palabra, orando en su nombre, confiando en su obra y sirviendo por su amor hasta que Él regrese o nos llame a su presencia.",
       },
       {
         titulo: "Proyección: fe para el futuro",
@@ -150,7 +155,7 @@ export const semana13: LeccionContenido = {
       13,
       "Permaneciendo firmes en la fe",
       "«Sé fiel hasta la muerte, y yo te daré la corona de la vida.» — Apocalipsis 2:10",
-      "Esta semana final del trimestre nos llevó al clímax de la jornada de fe: la perseverancia hasta el fin. Apocalipsis 2:10 fue escrita a la iglesia de Esmirna bajo persecución inminente; Cristo no prometió alivio inmediato sino corona de vida a quienes permanecieran fieles. Aprendimos que la fe bíblica es maratón, no sprint: requiere paciencia, rutinas espirituales y la mirada fija en Jesús, autor y consumador de la fe. La amenaza de apostasía nos alerta a vigilar contra el enfriamiento del primer amor y a restaurarlo mediante arrepentimiento. Pablo terminó su carrera diciendo «he guardado la fe»; su ejemplo nos anima a pelear la buena batalla hasta el fin. Vestirnos de la armadura espiritual, permanecer en comunidad, anclar nuestra fe en la Palabra y mirar hacia la corona de la vida son estrategias bíblicas para permanecer firmes cuando las tormentas vengan.",
+      "Esta semana final del trimestre nos llevó al clímax de la jornada de fe: perseverar en Cristo hasta el fin. Afirmamos que la fe cristiana es cristocéntrica: la Palabra revela a Jesús, la fe descansa en Él y la oración nos mantiene unidos al Padre por medio del Hijo. Apocalipsis 2:10 fue escrita a la iglesia de Esmirna bajo persecución inminente; Cristo no prometió alivio inmediato sino corona de vida a quienes permanecieran fieles. Aprendimos que la fe bíblica es maratón, no sprint: requiere paciencia, rutinas espirituales y la mirada fija en Jesús, autor y consumador de la fe. La amenaza de apostasía nos alerta a vigilar contra el enfriamiento del primer amor y a restaurarlo mediante arrepentimiento. Pablo terminó su carrera diciendo «he guardado la fe»; su ejemplo nos anima a pelear la buena batalla hasta el fin. Vestirnos de la armadura espiritual, permanecer en comunidad, anclar nuestra fe en la Palabra y mirar hacia la corona de la vida son estrategias bíblicas para permanecer firmes cuando las tormentas vengan.",
       [
         "Perseverancia y paciencia: correr la carrera sin desmayar (Hebreos 12:1-2, Gálatas 6:9)",
         "Amenazas a la fidelidad: apostasía, pérdida del primer amor, restauración (Hebreos 6, Apocalipsis 2:4-5)",

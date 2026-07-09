@@ -15,7 +15,12 @@ export const semana12: LeccionContenido = {
       {
         titulo: "Introducción",
         texto:
-          "En un mundo que celebra el poder, la fama y el éxito personal, Jesús revolucionó el concepto de grandeza: «El que quiera ser grande entre vosotros, sea vuestro servidor» (Mateo 20:26). La fe auténtica no busca ser servida sino servir. Mateo 20:28 resume la misión de Cristo en una frase: no vino para ser servido sino para servir y dar su vida. Esta semana exploraremos cómo la fe verdadera se manifiesta en servicio sacrificial hacia Dios y hacia el prójimo, siguiendo el ejemplo del Maestro.",
+          "En un mundo que celebra el poder, la fama y el éxito personal, Jesús revolucionó el concepto de grandeza: «El que quiera ser grande entre vosotros, sea vuestro servidor» (Mateo 20:26). La fe auténtica no busca ser servida sino servir, imitando al Cristo crucificado y resucitado. Mateo 20:28 resume la misión de Cristo en una frase: no vino para ser servido sino para servir y dar su vida en rescate. Esta semana exploraremos cómo la fe verdadera —alimentada por la Palabra, expresada en oración y centrada en Jesús— se manifiesta en servicio sacrificial hacia Dios y hacia el prójimo.",
+      },
+      {
+        titulo: "Servir como Cristo: fe, oración y Palabra en acción",
+        texto:
+          "El servicio cristiano nace de una vida anclada en Cristo. La Palabra nos muestra el ejemplo supremo: Jesús «se despojó a sí mismo, tomando forma de siervo» (Filipenses 2:7). La fe confía en que, al servir al necesitado, servimos al mismo Cristo (Mateo 25:40). La oración nos prepara para servir sin orgullo ni agotamiento —Jesús oraba antes de enseñar, sanar y decidir (Lucas 6:12; Marcos 1:35). Los tres pilares impiden un servicio meramente humanitario: la Escritura define el estándar, la fe obedece por amor a Jesús y la oración pide fuerza al Espíritu. Servir «como para el Señor» (Colosenses 3:23) es la prueba de una fe cristocéntrica: no buscamos aplauso propio, sino glorificar al que nos envió.",
       },
       {
         titulo: "Desarrollo",
@@ -150,7 +155,7 @@ export const semana12: LeccionContenido = {
       12,
       "La fe que sirve",
       "«Así como el Hijo del Hombre no vino para ser servido, sino para servir, y para dar su vida en rescate por muchos.» — Mateo 20:28",
-      "Esta semana aprendimos que la fe auténtica se manifiesta en servicio sacrificial, siguiendo el ejemplo de Cristo. Mateo 20:28 revoluciona el concepto de grandeza: en el reino de Dios, quien quiera ser primero debe ser siervo de todos. Jesús lavando los pies de sus discípulos modeló que ninguna tarea es demasiado humilde para el creyente. Aprendimos que servir es adoración, que nuestros dones están dados para administrarlos en beneficio de otros, y que la fe fiel comienza en lo pequeño. El buen samaritano nos enseñó a servir sin fronteras; Dorcas nos mostró que el servicio ordinario deja huellas eternas. La fe que sirve no busca reconocimiento humano sino la aprobación del Padre, y descubre que el gozo más profundo viene de dar, no de recibir.",
+      "Esta semana aprendimos que la fe auténtica, centrada en Cristo, se manifiesta en servicio sacrificial siguiendo su ejemplo. Mateo 20:28 revoluciona el concepto de grandeza: en el reino de Dios, quien quiera ser primero debe ser siervo de todos. Jesús lavando los pies de sus discípulos modeló que ninguna tarea es demasiado humilde para el creyente. Aprendimos que servir es adoración, que nuestros dones están dados para administrarlos en beneficio de otros, y que la fe fiel comienza en lo pequeño. El buen samaritano nos enseñó a servir sin fronteras; Dorcas nos mostró que el servicio ordinario deja huellas eternas. La fe que sirve no busca reconocimiento humano sino la aprobación del Padre, y descubre que el gozo más profundo viene de dar, no de recibir.",
       [
         "Servir como adoración: los dones dados para ministrar a otros (Romanos 12:1, 1 Pedro 4:10)",
         "El buen samaritano y Dorcas: servicio práctico que transforma vidas (Lucas 10, Hechos 9)",

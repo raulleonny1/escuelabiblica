@@ -15,7 +15,12 @@ export const semana10: LeccionContenido = {
       {
         titulo: "Introducción",
         texto:
-          "La fe cristiana no es una empresa humana solitaria. Desde el momento de la conversión, el creyente recibe el Espíritu Santo, quien habita en él como el agente de Dios que produce, sostiene y perfecciona la fe. Juan 6:63 dice que «el Espíritu es el que da vida». Sin el Espíritu, la fe sería un esfuerzo humano vano. Con el Espíritu, la fe se convierte en una experiencia sobrenatural que trasciende las limitaciones de la naturaleza humana. Esta semana exploraremos la relación profunda entre la fe y el Espíritu Santo, y cómo vivir en plena cooperación con Él.",
+          "La fe cristiana no es una empresa humana solitaria. Desde el momento de la conversión, el creyente recibe el Espíritu Santo, quien habita en él para glorificar a Cristo y producir, sostener y perfeccionar la fe. Juan 16:14 declara que el Espíritu «me glorificará, porque tomará de lo mío y os lo anunciará.» Esta semana exploraremos cómo el Espíritu obra junto con la fe, la oración y la Palabra de Dios —siempre señalando a Jesús como Señor y Salvador, nunca apartándonos de Él.",
+      },
+      {
+        titulo: "Fe, oración y Palabra: cómo trabajan juntos por el Espíritu",
+        texto:
+          "El Espíritu Santo no reemplaza a Cristo ni a la Escritura; los une en la vida del creyente. La Palabra de Dios es la espada del Espíritu (Efesios 6:17) y el medio por el cual Él produce fe (Romanos 10:17; Juan 16:13). La fe confiesa a «Jesús Señor» solo por obra del Espíritu (1 Corintios 12:3) y descansa en la obra terminada de Cristo, no en experiencias vacías. La oración es el lugar donde el Espíritu intercede cuando somos débiles (Romanos 8:26-27) y donde el Padre nos da más del Espíritu cuando se lo pedimos en el nombre de Jesús (Lucas 11:13). Los tres pilares funcionan así: la Palabra revela a Cristo, el Espíritu abre el corazón para creer y la oración mantiene la comunión con el Padre por medio del Hijo. Toda espiritualidad genuina es cristocéntrica: el Espíritu siempre glorifica a Jesús.",
       },
       {
         titulo: "Desarrollo",
@@ -150,7 +155,7 @@ export const semana10: LeccionContenido = {
       10,
       "La fe y el Espíritu Santo",
       "«Porque nosotros por el Espíritu aguardamos por fe la esperanza de la justicia.» — Gálatas 5:5",
-      "Esta semana descubrimos que la fe cristiana no es un esfuerzo solitario sino una experiencia sostenida por el Espíritu Santo que habita en todo creyente. El Espíritu es el autor de la fe —nadie puede llamar a Jesús Señor sino por Él— y su sustentador, que intercede por nosotros con gemidos indecibles cuando no sabemos cómo orar. Pentecostés no fue un evento histórico cerrado; es la promesa disponible para todo creyente que pida ser lleno del Espíritu. Los frutos del Espíritu son las señales visibles de una fe rendida, y la llenura continua del Espíritu es la fuente de esa fe que crece de gloria en gloria.",
+      "Esta semana descubrimos que la fe cristiana no es un esfuerzo solitario sino una experiencia sostenida por el Espíritu Santo, quien siempre glorifica a Cristo. La Palabra revela al Señor, la fe descansa en Él y la oración nos mantiene en comunión con el Padre por medio de Jesús. El Espíritu es el autor de la fe —nadie puede llamar a Jesús Señor sino por Él— y su sustentador, que intercede por nosotros con gemidos indecibles cuando no sabemos cómo orar. Pentecostés no fue un evento histórico cerrado; es la promesa disponible para todo creyente que pida ser lleno del Espíritu. Los frutos del Espíritu son las señales visibles de una fe rendida, y la llenura continua del Espíritu es la fuente de esa fe que crece de gloria en gloria.",
       [
         "El Espíritu como autor de la fe: nadie puede llamar a Jesús Señor sino por el Espíritu (1 Corintios 12:3)",
         "Los frutos del Espíritu como evidencia de la fe rendida — la fe misma aparece en la lista (Gálatas 5:22-23)",
