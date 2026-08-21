@@ -1,4 +1,16 @@
-/** Sube la versión al reemplazar `public/portada.png` para refrescar caché en navegador y Vercel */
-export const PORTADA_VERSION = "20260524"
+import { getTrimestreActivo } from "@/lib/lecciones/trimestres"
 
-export const PORTADA_SRC = `/portada.png?v=${PORTADA_VERSION}`
+export function getPortadaVersion(): string {
+  return getTrimestreActivo().portadaVersion
+}
+
+export function getPortadaSrc(): string {
+  const t = getTrimestreActivo()
+  return `${t.portada}?v=${t.portadaVersion}`
+}
+
+/** @deprecated preferir getPortadaSrc() */
+export const PORTADA_VERSION = getPortadaVersion()
+
+/** @deprecated preferir getPortadaSrc() */
+export const PORTADA_SRC = getPortadaSrc()

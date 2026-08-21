@@ -1,11 +1,11 @@
 import { diaLeccionIdDesdeIndice, type DiaLeccionId } from "@/lib/lecciones"
+import { getTrimestreParaFecha } from "@/lib/lecciones/trimestres"
 import {
   fechaEnSemana,
   fechaLocalHoy,
   getFechaDestacadaEnSemana,
   getSemanaActual,
   TOTAL_SEMANAS,
-  TRIMESTRE_INICIO,
 } from "@/lib/semana"
 import { diaLeccionDeFecha } from "@/lib/semanaDia"
 
@@ -17,11 +17,14 @@ export type DiaEstudio = {
 
 /** Semana del trimestre (1–13) a la que pertenece una fecha YYYY-MM-DD */
 export function getSemanaDeFecha(fecha: string): number | null {
-  const inicio = new Date(TRIMESTRE_INICIO + "T12:00:00")
+  const tri = getTrimestreParaFecha(fecha)
+  const inicio = new Date(tri.inicio + "T12:00:00")
   const f = new Date(fecha + "T12:00:00")
   if (Number.isNaN(f.getTime())) return null
 
   const diffDias = Math.floor((f.getTime() - inicio.getTime()) / (24 * 60 * 60 * 1000))
+  // Fuera del rango del trimestre de esa fecha
+  if (fecha < tri.inicio || fecha > tri.fin) return null
   if (diffDias < 0) return null
 
   const semana = Math.floor(diffDias / 7) + 1
@@ -56,14 +59,16 @@ export function resolverDiaEstudio(
   return { semana, fecha, diaLeccion: dia }
 }
 
-/** Al abrir la app: hoy si está en el trimestre; si no, inicio del trimestre */
+/** Al abrir la app: hoy dentro del trimestre activo (fe o corintios según fecha) */
 export function diaEstudioInicial(): DiaEstudio {
   const hoy = fechaLocalHoy()
   const semanaHoy = getSemanaDeFecha(hoy)
   if (semanaHoy) {
     return resolverDiaEstudio(hoy, semanaHoy)
   }
-  return resolverDiaEstudio(getFechaDestacadaEnSemana(1), 1)
+  // Si por cualquier motivo no hay semana, primer día del trimestre activo
+  const tri = getTrimestreParaFecha(hoy)
+  return resolverDiaEstudio(tri.inicio, 1)
 }
 
 export function mismoDiaEstudio(a: DiaEstudio, b: DiaEstudio) {

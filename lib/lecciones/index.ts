@@ -1,9 +1,15 @@
-/** Domingo de inicio: semana 1 = Lección 1 (domingo a sábado) */
-export const TRIMESTRE_TEMA = "fe"
+/** Trimestre activo según la fecha (fe hasta 22/08; corintios desde 23/08). */
 export const TOTAL_LECCIONES = 13
 
 export type { BloqueLeccion, DiaLeccionId, LeccionContenido } from "./types"
 export { repasoSemana } from "./types"
+export {
+  TRIMESTRES,
+  getTrimestreActivo,
+  getTrimestreParaFecha,
+  type TrimestreConfig,
+  type TrimestreId,
+} from "./trimestres"
 
 export const ORDEN_DIAS_LECCION = [
   "dom",
@@ -29,39 +35,23 @@ export const ETIQUETAS_DIA_LECCION: Record<
 }
 
 import type { LeccionContenido } from "./types"
-import { semana01 } from "./semana01"
-import { semana02 } from "./semana02"
-import { semana03 } from "./semana03"
-import { semana04 } from "./semana04"
-import { semana05 } from "./semana05"
-import { semana06 } from "./semana06"
-import { semana07 } from "./semana07"
-import { semana08 } from "./semana08"
-import { semana09 } from "./semana09"
-import { semana10 } from "./semana10"
-import { semana11 } from "./semana11"
-import { semana12 } from "./semana12"
-import { semana13 } from "./semana13"
+import { getTrimestreActivo } from "./trimestres"
 
-export const LECCIONES: LeccionContenido[] = [
-  semana01,
-  semana02,
-  semana03,
-  semana04,
-  semana05,
-  semana06,
-  semana07,
-  semana08,
-  semana09,
-  semana10,
-  semana11,
-  semana12,
-  semana13,
-]
+/** Tema del trimestre vigente hoy */
+export function getTrimestreTema(): string {
+  return getTrimestreActivo().tema
+}
+
+/** @deprecated usar getTrimestreTema() — se mantiene para imports existentes */
+export const TRIMESTRE_TEMA = getTrimestreTema()
+
+export function getLeccionesActivas(): LeccionContenido[] {
+  return getTrimestreActivo().lecciones
+}
 
 export function getLeccionPorSemana(semana: number): LeccionContenido | null {
   const n = Math.min(Math.max(Math.floor(semana), 1), TOTAL_LECCIONES)
-  return LECCIONES.find((l) => l.numero === n) ?? null
+  return getLeccionesActivas().find((l) => l.numero === n) ?? null
 }
 
 export function diaLeccionIdDesdeIndice(diaSemana: number) {

@@ -1,8 +1,9 @@
 import type { DiaLeccionId } from "@/lib/lecciones"
-import { PORTADA_VERSION } from "@/lib/portada"
+import { getTrimestreActivo } from "@/lib/lecciones/trimestres"
+import { getPortadaVersion } from "@/lib/portada"
 
-/** Solo archivos que existen en `public/fondos/` */
-export const FONDOS_VERSICULO = [
+/** Fondos generales (sin la portada de Corintios) */
+const FONDOS_BASE = [
   "12019-plouzane-1758197_640.jpg",
   "22419767-cross-7219450_640.jpg",
   "bessi-tree-838666_640.jpg",
@@ -27,12 +28,16 @@ const INDICE_DIA: Record<DiaLeccionId, number> = {
 }
 
 /**
- * Un fondo distinto por día de la lección (dom–sáb), rotando por las 11 imágenes.
- * Misma semana + mismo día = misma foto; al cambiar de pestaña cambia el fondo.
+ * Un fondo distinto por día de la lección (dom–sáb).
+ * En el trimestre Corintios incluye la portada nueva en la rotación.
  */
 export function getFondoVersiculoUrl(semana: number, dia: DiaLeccionId): string {
+  const fondos =
+    getTrimestreActivo().id === "corintios"
+      ? (["corintios.png", ...FONDOS_BASE] as const)
+      : FONDOS_BASE
   const slot = (Math.max(1, semana) - 1) * 7 + INDICE_DIA[dia]
-  const indice = slot % FONDOS_VERSICULO.length
-  const archivo = FONDOS_VERSICULO[indice]!
-  return `/fondos/${archivo}?v=${PORTADA_VERSION}`
+  const indice = slot % fondos.length
+  const archivo = fondos[indice]!
+  return `/fondos/${archivo}?v=${getPortadaVersion()}`
 }

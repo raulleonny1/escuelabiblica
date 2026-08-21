@@ -6,11 +6,13 @@ import { useEstudio } from "@/components/EstudioContext"
 import FontSizeControls from "@/components/FontSizeControls"
 import AdminAcceso from "@/components/AdminAcceso"
 import PwaInstallButton from "@/components/PwaInstallButton"
-import { TRIMESTRE_TEMA } from "@/lib/lecciones"
-import { PORTADA_SRC } from "@/lib/portada"
+import { getTrimestreTema } from "@/lib/lecciones"
+import { getPortadaSrc } from "@/lib/portada"
 
 export default function AppHeader() {
   const { estudio } = useEstudio()
+  const trimestreTema = getTrimestreTema()
+  const portadaSrc = getPortadaSrc()
 
   return (
     <header className="relative shrink-0 bg-gradient-to-r from-primary-dark via-primary to-primary-light text-white shadow-md lg:shadow">
@@ -50,7 +52,7 @@ export default function AppHeader() {
             Escuela Bíblica
           </h1>
           <p className="truncate text-[0.6875rem] text-amber-50/90 xl:text-xs">
-            Trimestre {TRIMESTRE_TEMA} · 1 lección/semana
+            Trimestre {trimestreTema} · 1 lección/semana
           </p>
         </div>
 
@@ -61,7 +63,7 @@ export default function AppHeader() {
           >
             <div className="relative h-11 w-8 shrink-0 overflow-hidden rounded shadow ring-1 ring-white/25">
               <Image
-                src={PORTADA_SRC}
+                src={portadaSrc}
                 unoptimized
                 alt=""
                 fill

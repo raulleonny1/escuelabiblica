@@ -1,6 +1,14 @@
-/** Domingo de inicio: semana 1 = Lección 1 (domingo a sábado) */
-export const TRIMESTRE_INICIO = "2026-05-24"
+import { getTrimestreActivo, getTrimestreParaFecha } from "@/lib/lecciones/trimestres"
+
 export const TOTAL_SEMANAS = 13
+
+/** Domingo de inicio del trimestre activo hoy */
+export function getTrimestreInicio(): string {
+  return getTrimestreActivo().inicio
+}
+
+/** @deprecated preferir getTrimestreInicio() */
+export const TRIMESTRE_INICIO = getTrimestreInicio()
 
 export function fechaLocalHoy(): string {
   const d = new Date()
@@ -10,11 +18,13 @@ export function fechaLocalHoy(): string {
   return `${y}-${m}-${day}`
 }
 
-/** Semana de lección según la fecha de hoy (1–13) */
+/** Semana de lección según la fecha de hoy (1–13) dentro del trimestre activo */
 export function getSemanaActual(totalSemanas = TOTAL_SEMANAS): number {
-  const inicio = new Date(TRIMESTRE_INICIO + "T12:00:00")
-  const hoy = new Date(fechaLocalHoy() + "T12:00:00")
-  const diffDias = Math.floor((hoy.getTime() - inicio.getTime()) / (24 * 60 * 60 * 1000))
+  const hoy = fechaLocalHoy()
+  const tri = getTrimestreParaFecha(hoy)
+  const inicio = new Date(tri.inicio + "T12:00:00")
+  const f = new Date(hoy + "T12:00:00")
+  const diffDias = Math.floor((f.getTime() - inicio.getTime()) / (24 * 60 * 60 * 1000))
   if (diffDias < 0) return 1
   const semana = Math.floor(diffDias / 7) + 1
   return Math.min(Math.max(semana, 1), totalSemanas)
@@ -35,8 +45,11 @@ export type DiaSemana = {
   mesCorto: string
 }
 
-export function getFechasSemana(semana: number): DiaSemana[] {
-  const inicio = new Date(TRIMESTRE_INICIO + "T12:00:00")
+export function getFechasSemana(semana: number, fechaReferencia?: string): DiaSemana[] {
+  const tri = fechaReferencia
+    ? getTrimestreParaFecha(fechaReferencia)
+    : getTrimestreActivo()
+  const inicio = new Date(tri.inicio + "T12:00:00")
   inicio.setDate(inicio.getDate() + (semana - 1) * 7)
 
   const nombres = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
@@ -59,7 +72,7 @@ export function getFechasSemana(semana: number): DiaSemana[] {
 }
 
 export function fechaEnSemana(fecha: string, semana: number): boolean {
-  return getFechasSemana(semana).some((d) => d.fecha === fecha)
+  return getFechasSemana(semana, fecha).some((d) => d.fecha === fecha)
 }
 
 /** Día de la semana lectiva (0=dom … 6=sáb) según la fecha */

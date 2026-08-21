@@ -1,5 +1,5 @@
-import type { LeccionContenido } from "./index"
-import { repasoSemana } from "./index"
+import type { LeccionContenido } from "../types"
+import { repasoSemana } from "../types"
 
 export const semana09: LeccionContenido = {
   numero: 9,

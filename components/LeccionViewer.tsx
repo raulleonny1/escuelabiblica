@@ -8,7 +8,7 @@ import VersiculoDelDiaCard from "@/components/VersiculoDelDiaCard"
 import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import type { AnotacionLeccion, MarcaFormato } from "@/lib/anotaciones"
-import { PORTADA_SRC } from "@/lib/portada"
+import { getPortadaSrc } from "@/lib/portada"
 import {
   ETIQUETAS_DIA_LECCION,
   ORDEN_DIAS_LECCION,
@@ -97,7 +97,7 @@ export default function LeccionViewer({
         <div className="hidden gap-3 sm:flex sm:items-stretch md:gap-4">
           <div className="relative h-24 w-[4.5rem] shrink-0 overflow-hidden rounded-lg border border-primary/20 shadow-md md:h-28 md:w-20">
             <Image
-              src={PORTADA_SRC}
+              src={getPortadaSrc()}
               unoptimized
               alt=""
               fill
