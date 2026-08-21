@@ -30,6 +30,41 @@ function formatearFecha(iso: string | null): string {
   }
 }
 
+function formatearDiaCorto(fechaIso: string): string {
+  try {
+    return new Date(`${fechaIso}T12:00:00`).toLocaleDateString("es", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+  } catch {
+    return fechaIso
+  }
+}
+
+/** YYYY-MM-DD local */
+function fechaLocalISO(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
+const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const
+
+/** Celdas del mes: null = vacío; lunes = inicio de semana */
+function celdasDelMes(anio: number, mes: number): (number | null)[] {
+  const primero = new Date(anio, mes, 1)
+  const diasEnMes = new Date(anio, mes + 1, 0).getDate()
+  // getDay(): 0=dom … 6=sáb → lunes primero
+  const offset = (primero.getDay() + 6) % 7
+  const celdas: (number | null)[] = Array.from({ length: offset }, () => null)
+  for (let d = 1; d <= diasEnMes; d++) celdas.push(d)
+  while (celdas.length % 7 !== 0) celdas.push(null)
+  return celdas
+}
+
 export default function AdminPage() {
   const [pin, setPin] = useState("")
   const [autorizado, setAutorizado] = useState(false)
@@ -38,6 +73,10 @@ export default function AdminPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [usuarioAbierto, setUsuarioAbierto] = useState<string | null>(null)
   const [diaSeleccionado, setDiaSeleccionado] = useState<string>("general")
+  const [mesCalendario, setMesCalendario] = useState(() => {
+    const hoy = new Date()
+    return { anio: hoy.getFullYear(), mes: hoy.getMonth() }
+  })
 
   useEffect(() => {
     if (estaAdminDesbloqueado()) setAutorizado(true)
@@ -242,39 +281,131 @@ export default function AdminPage() {
             <p className="mt-2 text-xs text-muted">
               Generado: {formatearFecha(data.generadoEn)}
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setDiaSeleccionado("general")}
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  diaSeleccionado === "general"
-                    ? "bg-primary text-white"
-                    : "border border-border bg-white text-slate-700"
-                }`}
-              >
-                General
-              </button>
-              {data.porDia.map((d) => (
-                <button
-                  key={d.fecha}
-                  type="button"
-                  onClick={() => setDiaSeleccionado(d.fecha)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    diaSeleccionado === d.fecha
-                      ? "bg-primary text-white"
-                      : "border border-border bg-white text-slate-700"
-                  }`}
-                >
-                  {formatearFecha(`${d.fecha}T00:00:00.000Z`)}
-                </button>
-              ))}
-            </div>
 
-            <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-slate-700">
-              <p className="font-semibold text-primary">Secciones que se registran</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted">
-                Lección · Estudio y notas · Biblia · Chat · Hoja dominical · Pedido de oración
-              </p>
+            <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,320px)_1fr]">
+              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    aria-label="Mes anterior"
+                    onClick={() =>
+                      setMesCalendario((m) => {
+                        const d = new Date(m.anio, m.mes - 1, 1)
+                        return { anio: d.getFullYear(), mes: d.getMonth() }
+                      })
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-slate-600 hover:bg-slate-50"
+                  >
+                    ‹
+                  </button>
+                  <p className="font-display text-sm font-semibold capitalize text-primary">
+                    {new Date(mesCalendario.anio, mesCalendario.mes, 1).toLocaleDateString("es", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                  <button
+                    type="button"
+                    aria-label="Mes siguiente"
+                    onClick={() =>
+                      setMesCalendario((m) => {
+                        const d = new Date(m.anio, m.mes + 1, 1)
+                        return { anio: d.getFullYear(), mes: d.getMonth() }
+                      })
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-slate-600 hover:bg-slate-50"
+                  >
+                    ›
+                  </button>
+                </div>
+
+                <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[0.65rem] font-semibold uppercase text-muted">
+                  {DIAS_SEMANA.map((d) => (
+                    <div key={d} className="py-1">
+                      {d}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1">
+                  {(() => {
+                    const diasConDatos = new Set(data.porDia.map((d) => d.fecha))
+                    const hoyIso = fechaLocalISO(new Date())
+                    return celdasDelMes(mesCalendario.anio, mesCalendario.mes).map((dia, i) => {
+                      if (dia == null) {
+                        return <div key={`e-${i}`} className="aspect-square" />
+                      }
+                      const fecha = `${mesCalendario.anio}-${String(mesCalendario.mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`
+                      const tieneDatos = diasConDatos.has(fecha)
+                      const seleccionado = diaSeleccionado === fecha
+                      const esHoy = fecha === hoyIso
+                      return (
+                        <button
+                          key={fecha}
+                          type="button"
+                          disabled={!tieneDatos}
+                          title={
+                            tieneDatos
+                              ? `Ver ingresos del ${fecha}`
+                              : "Sin ingresos este día"
+                          }
+                          onClick={() => {
+                            if (!tieneDatos) return
+                            setUsuarioAbierto(null)
+                            setDiaSeleccionado(fecha)
+                          }}
+                          className={`relative flex aspect-square items-center justify-center rounded-lg text-sm font-medium transition ${
+                            seleccionado
+                              ? "bg-primary text-white shadow-sm"
+                              : tieneDatos
+                                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                : "text-slate-300"
+                          } ${esHoy && !seleccionado ? "ring-1 ring-primary/40" : ""} disabled:cursor-default`}
+                        >
+                          {dia}
+                          {tieneDatos && !seleccionado && (
+                            <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
+                          )}
+                        </button>
+                      )
+                    })
+                  })()}
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUsuarioAbierto(null)
+                      setDiaSeleccionado("general")
+                    }}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                      diaSeleccionado === "general"
+                        ? "bg-primary text-white"
+                        : "border border-border bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    General (todos)
+                  </button>
+                  <p className="text-[0.6875rem] text-muted">
+                    {diaSeleccionado === "general"
+                      ? "Mostrando todos los registros"
+                      : `Día: ${formatearDiaCorto(diaSeleccionado)}`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-slate-700 lg:self-start">
+                <p className="font-semibold text-primary">Cómo usar</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  Elige un día en el calendario para ver quién ingresó ese día. Los días con punto
+                  tienen actividad. «General» muestra el resumen de todos los días.
+                </p>
+                <p className="mt-3 font-semibold text-primary">Secciones que se registran</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  Lección · Estudio y notas · Biblia · Chat · Hoja dominical · Pedido de oración
+                </p>
+              </div>
             </div>
 
             <div className="mt-6 overflow-x-auto rounded-xl border border-border bg-white shadow-sm">
