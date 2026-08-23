@@ -36,6 +36,8 @@ export const ETIQUETAS_DIA_LECCION: Record<
 
 import type { LeccionContenido } from "./types"
 import { getTrimestreActivo } from "./trimestres"
+import { getVersiculoDelDia as getVersiculoFe } from "@/lib/versiculosDia.fe"
+import { getVersiculoDelDia as getVersiculoCorintios } from "@/lib/versiculosDia.corintios"
 
 /** Tema del trimestre vigente hoy */
 export function getTrimestreTema(): string {
@@ -68,5 +70,21 @@ export function getBloquesDia(
   leccion: LeccionContenido,
   dia: (typeof ORDEN_DIAS_LECCION)[number]
 ) {
-  return leccion.dias[dia] ?? []
+  const bloques = leccion.dias[dia] ?? []
+  const yaTieneClave = bloques.some((b) => /^texto\s*clave/i.test(b.titulo))
+  if (yaTieneClave) return bloques
+
+  const v =
+    getTrimestreActivo().id === "corintios"
+      ? getVersiculoCorintios(leccion.numero, dia)
+      : getVersiculoFe(leccion.numero, dia)
+  if (!v) return bloques
+
+  return [
+    {
+      titulo: "Texto clave",
+      texto: `«${v.texto}» — ${v.cita}`,
+    },
+    ...bloques,
+  ]
 }

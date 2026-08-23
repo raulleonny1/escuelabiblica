@@ -7,6 +7,7 @@ import LeccionAudioPlayer from "@/components/LeccionAudioPlayer"
 import VersiculoDelDiaCard from "@/components/VersiculoDelDiaCard"
 import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
+import CompartirLeccionDia from "@/components/CompartirLeccionDia"
 import type { AnotacionLeccion, MarcaFormato } from "@/lib/anotaciones"
 import { getPortadaSrc } from "@/lib/portada"
 import {
@@ -186,6 +187,13 @@ export default function LeccionViewer({
         <LeccionAudioPlayer
           bloques={bloques}
           etiquetaDia={ETIQUETAS_DIA_LECCION[diaActivo]}
+        />
+        <CompartirLeccionDia
+          semana={semana}
+          dia={diaActivo}
+          numeroLeccion={leccion.numero}
+          tituloLeccion={leccion.titulo}
+          bloques={bloques}
         />
         {bloques.map((bloque) => (
           <section

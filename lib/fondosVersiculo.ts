@@ -1,20 +1,21 @@
 import type { DiaLeccionId } from "@/lib/lecciones"
-import { getTrimestreActivo } from "@/lib/lecciones/trimestres"
-import { getPortadaVersion } from "@/lib/portada"
 
-/** Fondos generales (sin la portada de Corintios) */
-const FONDOS_BASE = [
-  "12019-plouzane-1758197_640.jpg",
-  "22419767-cross-7219450_640.jpg",
-  "bessi-tree-838666_640.jpg",
-  "darkmoon_art-road-3478977_640.jpg",
-  "dimhou-sea-3652697_640.jpg",
-  "fondo.jpg",
-  "ichristian-khmer-bible-7357136_640.jpg",
-  "karigamb08-cruz-1655381_640.jpg",
-  "leoooooooooo-jesus-light-2141937_640.jpg",
-  "photo-graphe-sky-3294543_640.jpg",
-  "toniad-bible-888305_640.jpg",
+/** Paleta legible (texto blanco) — un color distinto por slot semana×día */
+const COLORES_FONDO = [
+  "#0f5c5c", // teal profundo
+  "#1a4d7c", // azul
+  "#5c3d1a", // marrón cálido
+  "#3d4a1a", // oliva
+  "#4a1a3d", // mora
+  "#1a3d4a", // petróleo
+  "#5c2a1a", // terracota
+  "#2a3d5c", // índigo
+  "#1a5c3d", // verde bosque
+  "#4a2a5c", // púrpura
+  "#5c4a1a", // mostaza oscuro
+  "#1a2a5c", // azul noche
+  "#3d1a2a", // vino
+  "#2a5c5c", // verde azulado
 ] as const
 
 const INDICE_DIA: Record<DiaLeccionId, number> = {
@@ -27,17 +28,8 @@ const INDICE_DIA: Record<DiaLeccionId, number> = {
   sab: 6,
 }
 
-/**
- * Un fondo distinto por día de la lección (dom–sáb).
- * En el trimestre Corintios incluye la portada nueva en la rotación.
- */
-export function getFondoVersiculoUrl(semana: number, dia: DiaLeccionId): string {
-  const fondos =
-    getTrimestreActivo().id === "corintios"
-      ? (["corintios.png", ...FONDOS_BASE] as const)
-      : FONDOS_BASE
+/** Color sólido de fondo del versículo del día (cambia con semana + día). */
+export function getColorFondoVersiculo(semana: number, dia: DiaLeccionId): string {
   const slot = (Math.max(1, semana) - 1) * 7 + INDICE_DIA[dia]
-  const indice = slot % fondos.length
-  const archivo = fondos[indice]!
-  return `/fondos/${archivo}?v=${getPortadaVersion()}`
+  return COLORES_FONDO[slot % COLORES_FONDO.length]!
 }
