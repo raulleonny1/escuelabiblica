@@ -75,7 +75,7 @@ export default function CondicionesServicioPanel({
   mostrarUrl = false,
 }: CondicionesServicioPanelProps) {
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-3 pb-6">
+    <div className="w-full max-w-none space-y-3 pb-6">
       <p className="text-sm leading-relaxed text-slate-700">
         Condiciones del servicio de <span className="font-semibold">Estudio diario</span> y
         del <span className="font-semibold">bot</span> asociado. Última actualización: agosto

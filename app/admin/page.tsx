@@ -203,7 +203,7 @@ export default function AdminPage() {
   const usuarioDetalleVista = vistaActiva.resumen.find((u) => u.usuarioId === usuarioAbierto) ?? null
 
   return (
-    <div className="custom-scroll h-full min-h-0 overflow-y-auto bg-slate-50 p-3 md:p-6">
+    <div className="custom-scroll h-full min-h-0 w-full flex-1 overflow-y-auto bg-slate-50 p-3 md:p-6">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>

@@ -79,7 +79,7 @@ export default function RootLayout({
                   className="flex min-h-0 flex-1 overflow-hidden bg-surface p-0 lg:p-4"
                   style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
                 >
-                  <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[1800px] overflow-hidden bg-card lg:rounded-2xl lg:border lg:border-border lg:shadow-xl">
+                  <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[1800px] flex-col overflow-hidden bg-card lg:rounded-2xl lg:border lg:border-border lg:shadow-xl">
                     {children}
                   </div>
                 </main>

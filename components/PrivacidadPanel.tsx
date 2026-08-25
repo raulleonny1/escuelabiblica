@@ -45,7 +45,7 @@ const SECCIONES = [
 
 export default function PrivacidadPanel() {
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-3 pb-6">
+    <div className="w-full max-w-none space-y-3 pb-6">
       <p className="text-sm leading-relaxed text-slate-700">
         Declaración de privacidad de <span className="font-semibold">Estudio diario</span>.
         Última actualización: agosto 2026.
