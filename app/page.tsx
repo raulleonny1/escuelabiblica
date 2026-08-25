@@ -402,7 +402,7 @@ export default function Home() {
               onClick={cerrarPanel}
               className="flex min-h-11 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-primary transition hover:bg-primary/8 active:bg-primary/12"
             >
-              ← Lección
+              ← Inicio / Lección
             </button>
             <h2 className="font-display flex-1 truncate text-base font-semibold text-slate-800">
               {tituloPanel}

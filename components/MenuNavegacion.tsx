@@ -106,7 +106,7 @@ export function BotonMenuHamburguesa() {
 }
 
 export function DrawerMenuLateral() {
-  const { menuAbierto, cerrarMenu, abrirPanel, chatNoLeidos } = useMenuNavegacion()
+  const { menuAbierto, cerrarMenu, abrirPanel, cerrarPanel, chatNoLeidos } = useMenuNavegacion()
 
   useEffect(() => {
     if (!menuAbierto) return
@@ -151,6 +151,20 @@ export function DrawerMenuLateral() {
           className="flex flex-1 flex-col gap-1 overflow-y-auto overscroll-contain p-3 [-webkit-overflow-scrolling:touch]"
           aria-label="Secciones"
         >
+          <button
+            type="button"
+            onClick={() => {
+              cerrarPanel()
+              cerrarMenu()
+            }}
+            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+          >
+            <span className="text-xl" aria-hidden>
+              🏠
+            </span>
+            Inicio / Lección
+          </button>
+
           {ITEMS.map((item) => (
             <button
               key={item.id}
