@@ -13,7 +13,7 @@ import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import { useEstudio } from "@/components/EstudioContext"
 
-export type PanelMenu = "biblia" | "notas" | "chat" | "configuracion"
+export type PanelMenu = "biblia" | "notas" | "chat" | "configuracion" | "privacidad"
 
 type MenuNavegacionContextValue = {
   menuAbierto: boolean
@@ -314,6 +314,17 @@ export function DrawerMenuLateral() {
               ⚙️
             </span>
             Configuración
+          </button>
+
+          <button
+            type="button"
+            onClick={() => abrirPanel("privacidad")}
+            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+          >
+            <span className="text-xl" aria-hidden>
+              🔒
+            </span>
+            Declaración de privacidad
           </button>
         </nav>
 
