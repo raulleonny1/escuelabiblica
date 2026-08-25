@@ -62,7 +62,7 @@ const SECCIONES_BOT = [
   {
     titulo: "12. Cambios y contacto",
     texto:
-      "Podemos actualizar estas condiciones. La versión vigente estará en la app (menú) y en la URL pública /condiciones. Para consultas: contacta a la Iglesia El Buen Pastor (IERE) por los canales habituales, como su página de Facebook.",
+      "Más información sobre datos personales en la Declaración de privacidad (/privacidad) y sobre cómo solicitar el borrado en Eliminación de datos (/eliminacion-datos).",
   },
 ]
 

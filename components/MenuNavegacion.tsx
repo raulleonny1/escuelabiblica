@@ -338,6 +338,17 @@ export function DrawerMenuLateral() {
             </span>
             Condiciones del servicio
           </Link>
+
+          <Link
+            href="/eliminacion-datos"
+            onClick={cerrarMenu}
+            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+          >
+            <span className="text-xl" aria-hidden>
+              🗑️
+            </span>
+            Eliminación de datos
+          </Link>
         </nav>
 
         <p className="border-t border-border px-4 py-3 text-xs text-muted">

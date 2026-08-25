@@ -62,7 +62,10 @@ export default function PrivacidadPanel() {
       ))}
 
       <p className="px-1 text-xs text-muted">
-        Iglesia El Buen Pastor · IERE
+        Iglesia El Buen Pastor · IERE ·{" "}
+        <a href="/eliminacion-datos" className="font-medium text-primary hover:underline">
+          Eliminación de datos
+        </a>
       </p>
     </div>
   )
