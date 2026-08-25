@@ -13,7 +13,13 @@ import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import { useEstudio } from "@/components/EstudioContext"
 
-export type PanelMenu = "biblia" | "notas" | "chat" | "configuracion" | "privacidad"
+export type PanelMenu =
+  | "biblia"
+  | "notas"
+  | "chat"
+  | "configuracion"
+  | "privacidad"
+  | "condiciones"
 
 type MenuNavegacionContextValue = {
   menuAbierto: boolean
@@ -325,6 +331,17 @@ export function DrawerMenuLateral() {
               🔒
             </span>
             Declaración de privacidad
+          </button>
+
+          <button
+            type="button"
+            onClick={() => abrirPanel("condiciones")}
+            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+          >
+            <span className="text-xl" aria-hidden>
+              📜
+            </span>
+            Condiciones del servicio
           </button>
         </nav>
 

@@ -51,6 +51,7 @@ import { getChatSessionId, iniciarPresenciaEnApp } from "@/lib/chat"
 import { CHAT_ABRIR_EVENT, CHAT_NO_LEIDOS_EVENT } from "@/lib/chatNotificaciones"
 import AnalyticsTracker from "@/components/AnalyticsTracker"
 import ConfiguracionPanel from "@/components/ConfiguracionPanel"
+import CondicionesServicioPanel from "@/components/CondicionesServicioPanel"
 import PrivacidadPanel from "@/components/PrivacidadPanel"
 import { useMenuNavegacion } from "@/components/MenuNavegacion"
 
@@ -362,7 +363,9 @@ export default function Home() {
             ? "Configuración"
             : panel === "privacidad"
               ? "Privacidad"
-              : ""
+              : panel === "condiciones"
+                ? "Condiciones"
+                : ""
 
   const sitioAnalytics =
     panel === "chat"
@@ -484,6 +487,8 @@ export default function Home() {
             {panel === "configuracion" && <ConfiguracionPanel />}
 
             {panel === "privacidad" && <PrivacidadPanel />}
+
+            {panel === "condiciones" && <CondicionesServicioPanel mostrarUrl />}
           </div>
         </div>
       )}
