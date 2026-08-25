@@ -12,13 +12,13 @@ export const metadata: Metadata = {
 export default function PrivacidadPage() {
   return (
     <div className="custom-scroll h-full min-h-0 overflow-y-auto bg-surface p-4 md:p-6">
-      <div className="mx-auto mb-4 flex max-w-2xl items-center justify-between gap-3">
-        <Link
-          href="/"
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          ← Volver a Estudio diario
+      <div className="mx-auto mb-4 max-w-2xl">
+        <Link href="/" className="text-sm font-medium text-primary hover:underline">
+          ← Volver al estudio
         </Link>
+        <h1 className="font-display mt-3 text-xl font-semibold text-slate-800">
+          Declaración de privacidad
+        </h1>
       </div>
       <PrivacidadPanel />
     </div>

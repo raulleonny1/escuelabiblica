@@ -9,17 +9,12 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import Link from "next/link"
 import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import { useEstudio } from "@/components/EstudioContext"
 
-export type PanelMenu =
-  | "biblia"
-  | "notas"
-  | "chat"
-  | "configuracion"
-  | "privacidad"
-  | "condiciones"
+export type PanelMenu = "biblia" | "notas" | "chat" | "configuracion"
 
 type MenuNavegacionContextValue = {
   menuAbierto: boolean
@@ -322,27 +317,27 @@ export function DrawerMenuLateral() {
             Configuración
           </button>
 
-          <button
-            type="button"
-            onClick={() => abrirPanel("privacidad")}
+          <Link
+            href="/privacidad"
+            onClick={cerrarMenu}
             className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
           >
             <span className="text-xl" aria-hidden>
               🔒
             </span>
             Declaración de privacidad
-          </button>
+          </Link>
 
-          <button
-            type="button"
-            onClick={() => abrirPanel("condiciones")}
+          <Link
+            href="/condiciones"
+            onClick={cerrarMenu}
             className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
           >
             <span className="text-xl" aria-hidden>
               📜
             </span>
             Condiciones del servicio
-          </button>
+          </Link>
         </nav>
 
         <p className="border-t border-border px-4 py-3 text-xs text-muted">

@@ -85,7 +85,9 @@ export default function CondicionesServicioPanel({
       {mostrarUrl && (
         <p className="rounded-lg border border-border bg-surface px-3 py-2 text-xs leading-relaxed text-muted">
           URL pública de estas condiciones (para registro del bot u otros servicios):{" "}
-          <span className="break-all font-medium text-primary">/condiciones</span>
+          <span className="break-all font-medium text-primary">
+            https://www.elbuenpastor.online/condiciones
+          </span>
         </p>
       )}
 
