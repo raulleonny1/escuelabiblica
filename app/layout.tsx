@@ -23,7 +23,7 @@ const sourceSans = Source_Sans_3({
 })
 
 export const metadata = {
-  title: "Escuela Bíblica",
+  title: "Estudio diario",
   description: "Lección del trimestre | Estudio de la Palabra",
   manifest: "/manifest.json",
   icons: {
@@ -37,7 +37,7 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Escuela Bíblica",
+    title: "Estudio diario",
   },
   other: {
     "mobile-web-app-capable": "yes",

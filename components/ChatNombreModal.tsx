@@ -39,7 +39,7 @@ export default function ChatNombreModal({ onConfirm }: ChatNombreModalProps) {
         className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl"
       >
         <h2 id="chat-nombre-titulo" className="font-display text-lg font-semibold text-primary">
-          Bienvenido a Escuela Bíblica
+          Bienvenido a Estudio diario
         </h2>
         <p className="mt-1 text-sm text-slate-600">
           Escribe tu nombre para guardar tus notas, resaltados y comentarios. En este mismo

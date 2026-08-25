@@ -5,8 +5,6 @@ import { useEffect, useMemo, useRef } from "react"
 import TextoLeccionSelectable from "@/components/TextoLeccionSelectable"
 import LeccionAudioPlayer from "@/components/LeccionAudioPlayer"
 import VersiculoDelDiaCard from "@/components/VersiculoDelDiaCard"
-import HojaDominicalBoton from "@/components/HojaDominicalBoton"
-import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import CompartirLeccionDia from "@/components/CompartirLeccionDia"
 import type { AnotacionLeccion, MarcaFormato } from "@/lib/anotaciones"
 import { getPortadaSrc } from "@/lib/portada"
@@ -115,10 +113,6 @@ export default function LeccionViewer({
               Lección {leccion.numero} — {leccion.titulo}
             </h2>
           </div>
-          <div className="hidden shrink-0 items-center gap-2 self-center md:flex">
-            <HojaDominicalBoton semana={semana} fecha={fechaDiaActivo} />
-            <PedidoOracionBoton />
-          </div>
           <VersiculoDelDiaCard semana={semana} dia={diaActivo} />
         </div>
 
@@ -129,10 +123,8 @@ export default function LeccionViewer({
           <p className="mt-0.5 text-[0.6875rem] text-muted">
             {ETIQUETAS_DIA_LECCION[diaActivo].split(" —")[0]} · Sem. {semana}
           </p>
-          <div className="mt-2 flex items-stretch gap-2 md:hidden">
-            <HojaDominicalBoton semana={semana} fecha={fechaDiaActivo} className="shrink-0" />
-            <PedidoOracionBoton className="shrink-0" />
-            <VersiculoDelDiaCard semana={semana} dia={diaActivo} compact className="min-w-0 flex-1" />
+          <div className="mt-2">
+            <VersiculoDelDiaCard semana={semana} dia={diaActivo} compact className="min-w-0 w-full" />
           </div>
         </div>
 

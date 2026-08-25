@@ -7,7 +7,7 @@ import {
   yaInstaladaPwa,
 } from "@/lib/pwa"
 
-export default function PwaInstallButton() {
+export default function PwaInstallButton({ variant = "header" }: { variant?: "header" | "menu" }) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -15,6 +15,20 @@ export default function PwaInstallButton() {
   }, [])
 
   if (!visible) return null
+
+  if (variant === "menu") {
+    return (
+      <button
+        type="button"
+        onClick={solicitarBannerInstalacion}
+        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-white px-3 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/5 active:bg-primary/10"
+        aria-label="Instalar aplicación en este dispositivo"
+      >
+        <span aria-hidden>📲</span>
+        Instalar app
+      </button>
+    )
+  }
 
   return (
     <button

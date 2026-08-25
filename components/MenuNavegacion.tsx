@@ -9,8 +9,11 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import HojaDominicalBoton from "@/components/HojaDominicalBoton"
+import PedidoOracionBoton from "@/components/PedidoOracionBoton"
+import { useEstudio } from "@/components/EstudioContext"
 
-export type PanelMenu = "biblia" | "notas" | "chat"
+export type PanelMenu = "biblia" | "notas" | "chat" | "configuracion"
 
 type MenuNavegacionContextValue = {
   menuAbierto: boolean
@@ -21,6 +24,10 @@ type MenuNavegacionContextValue = {
   cerrarPanel: () => void
   chatNoLeidos: number
   setChatNoLeidos: (n: number) => void
+  pedidoSinLeer: number
+  setPedidoSinLeer: (n: number) => void
+  abrirHojaDominical: () => void
+  abrirPedidoOracion: () => void
 }
 
 const MenuNavegacionContext = createContext<MenuNavegacionContextValue | null>(null)
@@ -29,6 +36,9 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [panel, setPanel] = useState<PanelMenu | null>(null)
   const [chatNoLeidos, setChatNoLeidos] = useState(0)
+  const [pedidoSinLeer, setPedidoSinLeer] = useState(0)
+  const [hojaAbierta, setHojaAbierta] = useState(false)
+  const [pedidoAbierto, setPedidoAbierto] = useState(false)
 
   const abrirMenu = useCallback(() => setMenuAbierto(true), [])
   const cerrarMenu = useCallback(() => setMenuAbierto(false), [])
@@ -37,6 +47,16 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
     setMenuAbierto(false)
   }, [])
   const cerrarPanel = useCallback(() => setPanel(null), [])
+
+  const abrirHojaDominical = useCallback(() => {
+    setMenuAbierto(false)
+    setHojaAbierta(true)
+  }, [])
+
+  const abrirPedidoOracion = useCallback(() => {
+    setMenuAbierto(false)
+    setPedidoAbierto(true)
+  }, [])
 
   const value = useMemo(
     () => ({
@@ -48,6 +68,10 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
       cerrarPanel,
       chatNoLeidos,
       setChatNoLeidos,
+      pedidoSinLeer,
+      setPedidoSinLeer,
+      abrirHojaDominical,
+      abrirPedidoOracion,
     }),
     [
       menuAbierto,
@@ -57,11 +81,59 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
       abrirPanel,
       cerrarPanel,
       chatNoLeidos,
+      pedidoSinLeer,
+      abrirHojaDominical,
+      abrirPedidoOracion,
     ]
   )
 
   return (
-    <MenuNavegacionContext.Provider value={value}>{children}</MenuNavegacionContext.Provider>
+    <MenuNavegacionContext.Provider value={value}>
+      {children}
+      <ModalesMenuGlobales
+        hojaAbierta={hojaAbierta}
+        pedidoAbierto={pedidoAbierto}
+        onCerrarHoja={() => setHojaAbierta(false)}
+        onCerrarPedido={() => setPedidoAbierto(false)}
+      />
+    </MenuNavegacionContext.Provider>
+  )
+}
+
+function ModalesMenuGlobales({
+  hojaAbierta,
+  pedidoAbierto,
+  onCerrarHoja,
+  onCerrarPedido,
+}: {
+  hojaAbierta: boolean
+  pedidoAbierto: boolean
+  onCerrarHoja: () => void
+  onCerrarPedido: () => void
+}) {
+  const { estudio } = useEstudio()
+  const semana = estudio?.semana ?? 1
+  const { setPedidoSinLeer } = useMenuNavegacion()
+
+  return (
+    <>
+      <HojaDominicalBoton
+        semana={semana}
+        abierto={hojaAbierta}
+        onAbiertoChange={(v) => {
+          if (!v) onCerrarHoja()
+        }}
+        ocultarBoton
+      />
+      <PedidoOracionBoton
+        abierto={pedidoAbierto}
+        onAbiertoChange={(v) => {
+          if (!v) onCerrarPedido()
+        }}
+        onSinLeerChange={setPedidoSinLeer}
+        ocultarBoton
+      />
+    </>
   )
 }
 
@@ -106,7 +178,16 @@ export function BotonMenuHamburguesa() {
 }
 
 export function DrawerMenuLateral() {
-  const { menuAbierto, cerrarMenu, abrirPanel, cerrarPanel, chatNoLeidos } = useMenuNavegacion()
+  const {
+    menuAbierto,
+    cerrarMenu,
+    abrirPanel,
+    cerrarPanel,
+    chatNoLeidos,
+    pedidoSinLeer,
+    abrirHojaDominical,
+    abrirPedidoOracion,
+  } = useMenuNavegacion()
 
   useEffect(() => {
     if (!menuAbierto) return
@@ -184,6 +265,33 @@ export function DrawerMenuLateral() {
             </button>
           ))}
 
+          <button
+            type="button"
+            onClick={abrirHojaDominical}
+            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+          >
+            <span className="text-xl" aria-hidden>
+              📄
+            </span>
+            Hoja dominical
+          </button>
+
+          <button
+            type="button"
+            onClick={abrirPedidoOracion}
+            className="relative flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+          >
+            <span className="relative text-xl" aria-hidden>
+              🙏
+              {pedidoSinLeer > 0 && (
+                <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[0.625rem] font-bold text-white">
+                  {pedidoSinLeer > 9 ? "9+" : pedidoSinLeer}
+                </span>
+              )}
+            </span>
+            Pedido de oración
+          </button>
+
           <a
             href={FACEBOOK_IGLESIA}
             target="_blank"
@@ -196,6 +304,17 @@ export function DrawerMenuLateral() {
             </span>
             Facebook
           </a>
+
+          <button
+            type="button"
+            onClick={() => abrirPanel("configuracion")}
+            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+          >
+            <span className="text-xl" aria-hidden>
+              ⚙️
+            </span>
+            Configuración
+          </button>
         </nav>
 
         <p className="border-t border-border px-4 py-3 text-xs text-muted">

@@ -10,17 +10,21 @@ import {
   type FontScaleLevel,
 } from "@/lib/fontScale"
 
-const btn =
+const btnHeader =
   "flex shrink-0 items-center justify-center rounded-md border border-white/35 bg-white/15 font-semibold text-white backdrop-blur-sm transition active:bg-white/30 disabled:opacity-40 disabled:pointer-events-none"
 
+const btnMenu =
+  "flex shrink-0 items-center justify-center rounded-md border border-border bg-white font-semibold text-primary shadow-sm transition hover:bg-primary/5 active:bg-primary/10 disabled:opacity-40 disabled:pointer-events-none"
+
 type Props = {
-  variant?: "header" | "compact" | "default"
+  variant?: "header" | "compact" | "default" | "menu"
 }
 
 export default function FontSizeControls({ variant = "default" }: Props) {
   const [level, setLevel] = useState<FontScaleLevel>(0)
   const isCompact = variant === "compact"
   const isHeader = variant === "header"
+  const isMenu = variant === "menu"
 
   const sync = useCallback((next: FontScaleLevel) => setLevel(next), [])
 
@@ -30,12 +34,12 @@ export default function FontSizeControls({ variant = "default" }: Props) {
 
   const statusLabel = level === 0 ? null : fontScaleLabel(level)
 
-  if (isCompact) {
+  if (isMenu) {
     return (
-      <div className="flex shrink-0 items-center gap-0.5" role="group" aria-label="Tamaño del texto">
+      <div className="flex items-center gap-1.5" role="group" aria-label="Tamaño del texto">
         <button
           type="button"
-          className={`${btn} h-7 w-7 text-xs`}
+          className={`${btnMenu} h-10 w-10 text-sm`}
           onClick={() => sync(decreaseFontScale(level))}
           disabled={level === 0}
           aria-label="Texto más pequeño"
@@ -44,7 +48,45 @@ export default function FontSizeControls({ variant = "default" }: Props) {
         </button>
         <button
           type="button"
-          className={`${btn} h-7 min-w-[2rem] px-1 text-[0.625rem]`}
+          className={`${btnMenu} h-10 min-w-[4.5rem] px-2 text-xs`}
+          onClick={() => sync(resetFontScale())}
+          aria-label="Texto normal"
+        >
+          Normal
+        </button>
+        <button
+          type="button"
+          className={`${btnMenu} h-10 w-10 text-sm`}
+          onClick={() => sync(increaseFontScale(level))}
+          disabled={level === 3}
+          aria-label="Texto más grande"
+        >
+          A+
+        </button>
+        {statusLabel && (
+          <span className="text-xs text-muted" aria-live="polite">
+            {statusLabel}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  if (isCompact) {
+    return (
+      <div className="flex shrink-0 items-center gap-0.5" role="group" aria-label="Tamaño del texto">
+        <button
+          type="button"
+          className={`${btnHeader} h-7 w-7 text-xs`}
+          onClick={() => sync(decreaseFontScale(level))}
+          disabled={level === 0}
+          aria-label="Texto más pequeño"
+        >
+          A−
+        </button>
+        <button
+          type="button"
+          className={`${btnHeader} h-7 min-w-[2rem] px-1 text-[0.625rem]`}
           onClick={() => sync(resetFontScale())}
           aria-label="Texto normal"
         >
@@ -52,7 +94,7 @@ export default function FontSizeControls({ variant = "default" }: Props) {
         </button>
         <button
           type="button"
-          className={`${btn} h-7 w-7 text-xs`}
+          className={`${btnHeader} h-7 w-7 text-xs`}
           onClick={() => sync(increaseFontScale(level))}
           disabled={level === 3}
           aria-label="Texto más grande"
@@ -79,7 +121,7 @@ export default function FontSizeControls({ variant = "default" }: Props) {
       <div className="flex items-center gap-1">
         <button
           type="button"
-          className={`${btn} h-9 min-w-9 text-sm`}
+          className={`${btnHeader} h-9 min-w-9 text-sm`}
           onClick={() => sync(decreaseFontScale(level))}
           disabled={level === 0}
           aria-label="Reducir tamaño del texto"
@@ -88,7 +130,7 @@ export default function FontSizeControls({ variant = "default" }: Props) {
         </button>
         <button
           type="button"
-          className={`${btn} h-9 min-w-[4.25rem] px-2 text-xs font-medium`}
+          className={`${btnHeader} h-9 min-w-[4.25rem] px-2 text-xs font-medium`}
           onClick={() => sync(resetFontScale())}
           aria-label="Tamaño de texto normal"
         >
@@ -96,7 +138,7 @@ export default function FontSizeControls({ variant = "default" }: Props) {
         </button>
         <button
           type="button"
-          className={`${btn} h-9 min-w-9 text-sm`}
+          className={`${btnHeader} h-9 min-w-9 text-sm`}
           onClick={() => sync(increaseFontScale(level))}
           disabled={level === 3}
           aria-label="Aumentar tamaño del texto"

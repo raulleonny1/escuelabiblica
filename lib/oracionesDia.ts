@@ -131,7 +131,7 @@ export function textoParaCompartirOracion(
   semana: number
 ): string {
   return [
-    "Oración del día — Escuela Bíblica",
+    "Oración del día — Estudio diario",
     "",
     oracion.texto,
     "",

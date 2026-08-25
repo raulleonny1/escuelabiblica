@@ -125,6 +125,6 @@ export function notificarMensajeChat(de: string, texto: string, paraNombre: stri
 
 export function actualizarTituloNoLeidos(cantidad: number) {
   if (typeof document === "undefined") return
-  const base = "Escuela Bíblica"
+  const base = "Estudio diario"
   document.title = cantidad > 0 ? `(${cantidad}) ${base}` : base
 }

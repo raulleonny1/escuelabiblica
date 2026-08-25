@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Escuela Bíblica",
-  "short_name": "Bíblica",
+  "name": "Estudio diario",
+  "short_name": "Estudio",
   "description": "Lección del trimestre | Estudio de la Palabra",
   "start_url": "/",
   "scope": "/",

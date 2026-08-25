@@ -204,7 +204,7 @@ export default function PwaInstallPrompt() {
           </div>
           <div className="min-w-0 flex-1">
             <p id="pwa-install-title" className="font-display text-base font-semibold text-primary">
-              Instalar Escuela Bíblica
+              Instalar Estudio diario
             </p>
             <p className="mt-0.5 text-[0.6875rem] font-medium uppercase tracking-wide text-muted">
               {etiquetaDispositivo()}

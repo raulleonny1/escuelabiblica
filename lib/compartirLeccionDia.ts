@@ -13,7 +13,7 @@ export function formatearLeccionDiaParaCompartir(opts: {
   const diaLabel = ETIQUETAS_DIA_LECCION[dia]
 
   const lineas: string[] = [
-    "✦ Escuela Bíblica",
+    "✦ Estudio diario",
     "━━━━━━━━━━━━━━━━━━━━",
     `Lección ${numeroLeccion} — ${tituloLeccion}`,
     `Semana ${semana} · ${diaLabel}`,
@@ -34,7 +34,7 @@ export function formatearLeccionDiaParaCompartir(opts: {
   }
 
   lineas.push("━━━━━━━━━━━━━━━━━━━━")
-  lineas.push("Comparte la Palabra · Escuela Bíblica")
+  lineas.push("Comparte la Palabra · Estudio diario")
 
   return lineas.join("\n").trim()
 }
@@ -48,9 +48,9 @@ export function resumenLeccionParaX(opts: {
 }): string {
   const clave = opts.bloques.find((b) => /^texto\s*clave/i.test(b.titulo))
   const diaCorto = ETIQUETAS_DIA_LECCION[opts.dia].split(" —")[0] ?? ""
-  const base = `✦ Escuela Bíblica\nL${opts.numeroLeccion}: ${opts.tituloLeccion}\n${diaCorto}`
+  const base = `✦ Estudio diario\nL${opts.numeroLeccion}: ${opts.tituloLeccion}\n${diaCorto}`
   const extra = clave ? `\n\n${clave.texto.trim()}` : ""
-  const full = `${base}${extra}\n\n#EscuelaBiblica`
+  const full = `${base}${extra}\n\n#EstudioDiario`
   if (full.length <= 270) return full
   return `${full.slice(0, 269)}…`
 }

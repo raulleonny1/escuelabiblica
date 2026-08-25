@@ -18,9 +18,10 @@ export function marcarAdminDesbloqueado() {
 
 type AdminAccesoProps = {
   className?: string
+  variant?: "header" | "menu"
 }
 
-export default function AdminAcceso({ className = "" }: AdminAccesoProps) {
+export default function AdminAcceso({ className = "", variant = "header" }: AdminAccesoProps) {
   const router = useRouter()
   const [abierto, setAbierto] = useState(false)
   const [pin, setPin] = useState("")
@@ -48,15 +49,20 @@ export default function AdminAcceso({ className = "" }: AdminAccesoProps) {
     setPin("")
   }
 
+  const botonClase =
+    variant === "menu"
+      ? `flex min-h-11 w-full items-center justify-center rounded-xl border border-border bg-white px-3 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/5 active:bg-primary/10 ${className}`
+      : `rounded-md border border-white/25 bg-white/10 px-2 py-1 text-[0.625rem] font-semibold text-white/90 hover:bg-white/20 lg:text-xs ${className}`
+
   return (
     <>
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className={`rounded-md border border-white/25 bg-white/10 px-2 py-1 text-[0.625rem] font-semibold text-white/90 hover:bg-white/20 lg:text-xs ${className}`}
+        className={botonClase}
         aria-label="Acceso administrador"
       >
-        Admin
+        {variant === "menu" ? "Entrar como admin" : "Admin"}
       </button>
 
       {abierto && (

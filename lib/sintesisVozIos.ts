@@ -179,7 +179,7 @@ export function configurarSesionMedia(titulo: string, acciones: AccionesMedia): 
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: titulo.slice(0, 80),
-      artist: "Escuela Bíblica",
+      artist: "Estudio diario",
       album: "Estudio bíblico",
     })
     navigator.mediaSession.playbackState = "playing"

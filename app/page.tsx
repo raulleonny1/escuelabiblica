@@ -50,6 +50,7 @@ import { fechaDeDiaLeccion } from "@/lib/semanaDia"
 import { getChatSessionId, iniciarPresenciaEnApp } from "@/lib/chat"
 import { CHAT_ABRIR_EVENT, CHAT_NO_LEIDOS_EVENT } from "@/lib/chatNotificaciones"
 import AnalyticsTracker from "@/components/AnalyticsTracker"
+import ConfiguracionPanel from "@/components/ConfiguracionPanel"
 import { useMenuNavegacion } from "@/components/MenuNavegacion"
 
 const diaEstudioAlInicio = diaEstudioInicial()
@@ -350,10 +351,22 @@ export default function Home() {
   }
 
   const tituloPanel =
-    panel === "biblia" ? "Biblia" : panel === "notas" ? "Notas" : panel === "chat" ? "Chat" : ""
+    panel === "biblia"
+      ? "Biblia"
+      : panel === "notas"
+        ? "Notas"
+        : panel === "chat"
+          ? "Chat"
+          : panel === "configuracion"
+            ? "Configuración"
+            : ""
 
   const sitioAnalytics =
-    panel === "chat" ? "chat" : panel === "biblia" || panel === "notas" ? "estudio" : "leccion"
+    panel === "chat"
+      ? "chat"
+      : panel === "biblia" || panel === "notas"
+        ? "estudio"
+        : "leccion"
 
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col lg:flex-row">
@@ -464,6 +477,8 @@ export default function Home() {
                 Escribe tu nombre para usar el chat.
               </p>
             )}
+
+            {panel === "configuracion" && <ConfiguracionPanel />}
           </div>
         </div>
       )}

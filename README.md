@@ -1,4 +1,4 @@
-# Escuela Bíblica
+# Estudio diario
 
 App Next.js (PWA) para lecciones del trimestre, notas, biblia RVR1909 y chat en línea. Datos en Firebase Firestore.
 
