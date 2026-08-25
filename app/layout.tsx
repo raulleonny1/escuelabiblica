@@ -2,6 +2,7 @@ import type { Viewport } from "next"
 import { Lora, Source_Sans_3 } from "next/font/google"
 import AppHeader from "@/components/AppHeader"
 import { EstudioProvider } from "@/components/EstudioContext"
+import { MenuNavegacionProvider, DrawerMenuLateral } from "@/components/MenuNavegacion"
 import { SesionProvider } from "@/components/SesionProvider"
 import FirebaseInit from "@/components/FirebaseInit"
 import FontScaleInit from "@/components/FontScaleInit"
@@ -69,15 +70,21 @@ export default function RootLayout({
         <SintesisVozInit />
         <EstudioProvider>
           <SesionProvider>
-            <div className="flex h-dvh flex-col overflow-hidden">
-              <AppHeader />
+            <MenuNavegacionProvider>
+              <div className="flex h-dvh max-h-dvh flex-col overflow-hidden">
+                <AppHeader />
+                <DrawerMenuLateral />
 
-              <main className="flex min-h-0 flex-1 overflow-hidden bg-surface p-0 lg:p-4">
-                <div className="flex h-full min-h-0 w-full max-w-[1800px] mx-auto overflow-hidden bg-card lg:rounded-2xl lg:border lg:border-border lg:shadow-xl">
-                  {children}
-                </div>
-              </main>
-            </div>
+                <main
+                  className="flex min-h-0 flex-1 overflow-hidden bg-surface p-0 lg:p-4"
+                  style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+                >
+                  <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[1800px] overflow-hidden bg-card lg:rounded-2xl lg:border lg:border-border lg:shadow-xl">
+                    {children}
+                  </div>
+                </main>
+              </div>
+            </MenuNavegacionProvider>
           </SesionProvider>
         </EstudioProvider>
       </body>

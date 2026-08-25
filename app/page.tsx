@@ -48,11 +48,9 @@ import {
 } from "@/lib/semana"
 import { fechaDeDiaLeccion } from "@/lib/semanaDia"
 import { getChatSessionId, iniciarPresenciaEnApp } from "@/lib/chat"
-import { useMediaLg } from "@/hooks/useMediaLg"
 import { CHAT_ABRIR_EVENT, CHAT_NO_LEIDOS_EVENT } from "@/lib/chatNotificaciones"
 import AnalyticsTracker from "@/components/AnalyticsTracker"
-
-type MobileTab = "leccion" | "estudio" | "chat"
+import { useMenuNavegacion } from "@/components/MenuNavegacion"
 
 const diaEstudioAlInicio = diaEstudioInicial()
 
@@ -71,11 +69,14 @@ export default function Home() {
   const [cargandoComentarios, setCargandoComentarios] = useState(true)
   const [syncError, setSyncError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
-  const [mobileTab, setMobileTab] = useState<MobileTab>("leccion")
-  const [chatNoLeidos, setChatNoLeidos] = useState(0)
-  const isLg = useMediaLg()
   const { setEstudio } = useEstudio()
   const { usuarioId, nombre: chatNombre, cambiarNombre: handleCambiarNombreChat } = useSesion()
+  const {
+    panel,
+    abrirPanel,
+    cerrarPanel,
+    setChatNoLeidos,
+  } = useMenuNavegacion()
 
   useEffect(() => {
     const leccion = getLeccionPorSemana(semana)
@@ -127,14 +128,9 @@ export default function Home() {
     aplicarDiaEstudio(fecha, nuevaSemana)
   }
 
-  function cambiarTab(tab: MobileTab) {
-    aplicarDiaEstudio(selectedDate)
-    setMobileTab(tab)
-  }
-
   function seleccionarPasaje(v: string) {
     setBibliaPasaje(v)
-    cambiarTab("leccion")
+    cerrarPanel()
   }
 
   function seleccionarDiaLeccion(dia: DiaLeccionId) {
@@ -242,7 +238,7 @@ export default function Home() {
       const det = (e as CustomEvent<{ cantidad: number }>).detail
       setChatNoLeidos(det?.cantidad ?? 0)
     }
-    const onAbrirChat = () => cambiarTab("chat")
+    const onAbrirChat = () => abrirPanel("chat")
 
     window.addEventListener(CHAT_NO_LEIDOS_EVENT, onNoLeidos)
     window.addEventListener(CHAT_ABRIR_EVENT, onAbrirChat)
@@ -250,7 +246,7 @@ export default function Home() {
       window.removeEventListener(CHAT_NO_LEIDOS_EVENT, onNoLeidos)
       window.removeEventListener(CHAT_ABRIR_EVENT, onAbrirChat)
     }
-  }, [])
+  }, [abrirPanel, setChatNoLeidos])
 
   useEffect(() => {
     if (!usuarioId) return
@@ -353,15 +349,17 @@ export default function Home() {
     }
   }
 
+  const tituloPanel =
+    panel === "biblia" ? "Biblia" : panel === "notas" ? "Notas" : panel === "chat" ? "Chat" : ""
+
+  const sitioAnalytics =
+    panel === "chat" ? "chat" : panel === "biblia" || panel === "notas" ? "estudio" : "leccion"
+
   return (
-    <div className="flex h-full min-h-0 w-full flex-col pb-[calc(3.25rem+env(safe-area-inset-bottom))] lg:flex-row lg:pb-0">
-      <AnalyticsTracker mobileTab={mobileTab} />
-      <div
-        className={`layout-pdf-panel flex min-h-0 min-w-0 flex-col bg-slate-50 lg:border-r lg:border-border ${
-          mobileTab === "leccion" ? "flex flex-1" : "hidden lg:flex"
-        }`}
-      >
-        <div className="shrink-0 border-b border-border bg-card px-2 py-1.5 lg:hidden">
+    <div className="relative flex h-full min-h-0 w-full flex-col lg:flex-row">
+      <AnalyticsTracker mobileTab={sitioAnalytics} />
+      <div className="layout-pdf-panel flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50 lg:border-r lg:border-border">
+        <div className="shrink-0 border-b border-border bg-card px-2 py-1.5">
           <LeccionControls semana={semana} setSemana={cambiarSemana} compact />
         </div>
         {BibliaPasaje && (
@@ -391,119 +389,89 @@ export default function Home() {
         </div>
       </div>
 
-      <aside
-        className={`layout-sidebar-panel flex min-h-0 min-w-0 flex-col gap-3 overflow-y-auto custom-scroll bg-surface p-3 md:p-4 ${
-          mobileTab === "estudio" ? "flex flex-1" : "hidden lg:flex"
-        }`}
-      >
-        <div className="hidden lg:block">
-          <LeccionControls semana={semana} setSemana={cambiarSemana} />
-        </div>
-
-        <NotasPanel
-          semana={semana}
-          comentariosPorFecha={comentariosPorFecha}
-          selectedDate={selectedDate}
-          diaLeccion={diaLeccion}
-          fechaHoy={fechaLocalHoy()}
-          anotaciones={anotaciones}
-          onSeleccionarFecha={seleccionarFechaCalendario}
-          comentario={comentario}
-          setComentario={setComentario}
-          cargandoComentarios={cargandoComentarios}
-          syncError={syncError}
-          guardando={guardando}
-          editFecha={editFecha}
-          editTexto={editTexto}
-          setEditFecha={setEditFecha}
-          setEditTexto={setEditTexto}
-          onGuardar={handleGuardar}
-          onEliminar={handleEliminar}
-          onQuitarMarcas={handleQuitarMarcasAnotacion}
-          onEliminarComentarioCita={handleEliminarComentarioCita}
-          onVerTodos={() => setShowModal(true)}
-        />
-
-        <section className="flex min-h-[min(50vh,360px)] max-h-[min(55vh,480px)] flex-col custom-scroll overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-sm lg:min-h-[320px] lg:max-h-[420px]">
-          <Biblia
-            onSeleccionarPasaje={seleccionarPasaje}
-            activo={mobileTab === "estudio" || isLg}
-          />
-        </section>
-
-        {chatNombre && (
-          <ChatPanel
-            nombre={chatNombre}
-            activo={isLg}
-            onCambiarNombre={handleCambiarNombreChat}
-            className="hidden lg:flex lg:min-h-[min(70vh,560px)]"
-          />
-        )}
-      </aside>
-
-      {chatNombre && (
+      {panel && (
         <div
-          className={`flex h-full min-h-0 flex-1 flex-col bg-surface p-2 md:p-3 lg:hidden ${
-            mobileTab === "chat" ? "flex" : "hidden"
-          }`}
+          className="absolute inset-0 z-50 flex flex-col bg-surface"
+          role="dialog"
+          aria-modal="true"
+          aria-label={tituloPanel}
         >
-          <ChatPanel
-            nombre={chatNombre}
-            activo={!isLg && mobileTab === "chat"}
-            onCambiarNombre={handleCambiarNombreChat}
-            className="h-full min-h-0 flex-1"
-          />
+          <div className="flex min-h-12 shrink-0 items-center gap-2 border-b border-border bg-card px-2 py-1.5 sm:px-3">
+            <button
+              type="button"
+              onClick={cerrarPanel}
+              className="flex min-h-11 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-primary transition hover:bg-primary/8 active:bg-primary/12"
+            >
+              ← Lección
+            </button>
+            <h2 className="font-display flex-1 truncate text-base font-semibold text-slate-800">
+              {tituloPanel}
+            </h2>
+          </div>
+
+          <div
+            className={`custom-scroll min-h-0 flex-1 overscroll-contain [-webkit-overflow-scrolling:touch] ${
+              panel === "chat" ? "flex flex-col overflow-hidden p-2 sm:p-3" : "overflow-y-auto p-3 md:p-4"
+            }`}
+          >
+            {panel === "notas" && (
+              <div className="mx-auto w-full max-w-3xl">
+                <NotasPanel
+                  semana={semana}
+                  comentariosPorFecha={comentariosPorFecha}
+                  selectedDate={selectedDate}
+                  diaLeccion={diaLeccion}
+                  fechaHoy={fechaLocalHoy()}
+                  anotaciones={anotaciones}
+                  onSeleccionarFecha={seleccionarFechaCalendario}
+                  comentario={comentario}
+                  setComentario={setComentario}
+                  cargandoComentarios={cargandoComentarios}
+                  syncError={syncError}
+                  guardando={guardando}
+                  editFecha={editFecha}
+                  editTexto={editTexto}
+                  setEditFecha={setEditFecha}
+                  setEditTexto={setEditTexto}
+                  onGuardar={handleGuardar}
+                  onEliminar={handleEliminar}
+                  onQuitarMarcas={handleQuitarMarcasAnotacion}
+                  onEliminarComentarioCita={handleEliminarComentarioCita}
+                  onVerTodos={() => setShowModal(true)}
+                />
+              </div>
+            )}
+
+            {panel === "biblia" && (
+              <section className="mx-auto flex min-h-[min(70dvh,560px)] w-full max-w-2xl flex-col rounded-xl border border-border bg-card p-3 shadow-sm md:min-h-[min(75dvh,640px)]">
+                <Biblia onSeleccionarPasaje={seleccionarPasaje} activo={panel === "biblia"} />
+              </section>
+            )}
+
+            {panel === "chat" && chatNombre && (
+              <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col">
+                <ChatPanel
+                  nombre={chatNombre}
+                  activo={panel === "chat"}
+                  onCambiarNombre={handleCambiarNombreChat}
+                  className="h-full min-h-0 flex-1"
+                />
+              </div>
+            )}
+
+            {panel === "chat" && !chatNombre && (
+              <p className="p-4 text-center text-sm text-muted">
+                Escribe tu nombre para usar el chat.
+              </p>
+            )}
+          </div>
         </div>
       )}
-
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-card shadow-[0_-2px_12px_rgba(0,0,0,0.06)] lg:hidden"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        aria-label="Navegación principal"
-      >
-        <button
-          type="button"
-          onClick={() => cambiarTab("leccion")}
-          className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition active:bg-slate-100 ${
-            mobileTab === "leccion" ? "text-primary bg-primary/5" : "text-slate-600"
-          }`}
-        >
-          <span className="text-lg" aria-hidden>📖</span>
-          Lección
-        </button>
-        <button
-          type="button"
-          onClick={() => cambiarTab("estudio")}
-          className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition active:bg-slate-100 ${
-            mobileTab === "estudio" ? "text-primary bg-primary/5" : "text-slate-600"
-          }`}
-        >
-          <span className="text-lg" aria-hidden>📖</span>
-          Biblia y notas
-        </button>
-        <button
-          type="button"
-          onClick={() => cambiarTab("chat")}
-          className={`relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition active:bg-slate-100 ${
-            mobileTab === "chat" ? "text-primary bg-primary/5" : "text-slate-600"
-          }`}
-        >
-          <span className="relative text-lg" aria-hidden>
-            💬
-            {chatNoLeidos > 0 && (
-              <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.625rem] font-bold text-white">
-                {chatNoLeidos > 9 ? "9+" : chatNoLeidos}
-              </span>
-            )}
-          </span>
-          Chat
-        </button>
-      </nav>
 
       {/* Modal */}
       {showModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
           onClick={() => setShowModal(false)}
         >
           <div
