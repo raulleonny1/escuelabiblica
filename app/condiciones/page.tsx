@@ -5,10 +5,9 @@ import CondicionesServicioPanel from "@/components/CondicionesServicioPanel"
 export const metadata: Metadata = {
   title: "Condiciones del servicio | Estudio diario",
   description:
-    "Condiciones del servicio de la aplicación Estudio diario y del bot de la Iglesia El Buen Pastor (IERE).",
+    "Condiciones del servicio de la aplicación Estudio diario — Iglesia El Buen Pastor (IERE).",
 }
 
-/** Página pública con URL estable para registrar bots u otros servicios. */
 export default function CondicionesPage() {
   return (
     <div className="custom-scroll h-full min-h-0 w-full flex-1 overflow-y-auto bg-surface p-4 md:p-6">

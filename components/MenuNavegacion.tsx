@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react"
-import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
 import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import { useEstudio } from "@/components/EstudioContext"
@@ -23,6 +23,7 @@ type MenuNavegacionContextValue = {
   panel: PanelMenu | null
   abrirPanel: (panel: PanelMenu) => void
   cerrarPanel: () => void
+  irAInicio: () => void
   chatNoLeidos: number
   setChatNoLeidos: (n: number) => void
   pedidoSinLeer: number
@@ -34,6 +35,8 @@ type MenuNavegacionContextValue = {
 const MenuNavegacionContext = createContext<MenuNavegacionContextValue | null>(null)
 
 export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
+  const router = useRouter()
+  const pathname = usePathname()
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [panel, setPanel] = useState<PanelMenu | null>(null)
   const [chatNoLeidos, setChatNoLeidos] = useState(0)
@@ -43,11 +46,26 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
 
   const abrirMenu = useCallback(() => setMenuAbierto(true), [])
   const cerrarMenu = useCallback(() => setMenuAbierto(false), [])
-  const abrirPanel = useCallback((p: PanelMenu) => {
-    setPanel(p)
-    setMenuAbierto(false)
-  }, [])
   const cerrarPanel = useCallback(() => setPanel(null), [])
+
+  const abrirPanel = useCallback(
+    (p: PanelMenu) => {
+      setPanel(p)
+      setMenuAbierto(false)
+      if (pathname !== "/") {
+        router.push("/")
+      }
+    },
+    [pathname, router]
+  )
+
+  const irAInicio = useCallback(() => {
+    setPanel(null)
+    setMenuAbierto(false)
+    if (pathname !== "/") {
+      router.push("/")
+    }
+  }, [pathname, router])
 
   const abrirHojaDominical = useCallback(() => {
     setMenuAbierto(false)
@@ -67,6 +85,7 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
       panel,
       abrirPanel,
       cerrarPanel,
+      irAInicio,
       chatNoLeidos,
       setChatNoLeidos,
       pedidoSinLeer,
@@ -81,6 +100,7 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
       panel,
       abrirPanel,
       cerrarPanel,
+      irAInicio,
       chatNoLeidos,
       pedidoSinLeer,
       abrirHojaDominical,
@@ -183,7 +203,7 @@ export function DrawerMenuLateral() {
     menuAbierto,
     cerrarMenu,
     abrirPanel,
-    cerrarPanel,
+    irAInicio,
     chatNoLeidos,
     pedidoSinLeer,
     abrirHojaDominical,
@@ -235,10 +255,7 @@ export function DrawerMenuLateral() {
         >
           <button
             type="button"
-            onClick={() => {
-              cerrarPanel()
-              cerrarMenu()
-            }}
+            onClick={irAInicio}
             className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
           >
             <span className="text-xl" aria-hidden>
@@ -316,39 +333,6 @@ export function DrawerMenuLateral() {
             </span>
             Configuración
           </button>
-
-          <Link
-            href="/privacidad"
-            onClick={cerrarMenu}
-            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
-          >
-            <span className="text-xl" aria-hidden>
-              🔒
-            </span>
-            Declaración de privacidad
-          </Link>
-
-          <Link
-            href="/condiciones"
-            onClick={cerrarMenu}
-            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
-          >
-            <span className="text-xl" aria-hidden>
-              📜
-            </span>
-            Condiciones del servicio
-          </Link>
-
-          <Link
-            href="/eliminacion-datos"
-            onClick={cerrarMenu}
-            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
-          >
-            <span className="text-xl" aria-hidden>
-              🗑️
-            </span>
-            Eliminación de datos
-          </Link>
         </nav>
 
         <p className="border-t border-border px-4 py-3 text-xs text-muted">

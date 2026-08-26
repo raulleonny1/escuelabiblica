@@ -5,13 +5,9 @@ import EliminacionDatosPanel from "@/components/EliminacionDatosPanel"
 export const metadata: Metadata = {
   title: "Eliminación de datos | Estudio diario",
   description:
-    "Cómo solicitar la eliminación de tus datos en Estudio diario y el bot — Iglesia El Buen Pastor (IERE).",
+    "Cómo solicitar la eliminación de tus datos en Estudio diario — Iglesia El Buen Pastor (IERE).",
 }
 
-/**
- * URL pública exigida por Meta/Facebook para apps y bots
- * que tratan datos de usuarios (instrucciones de eliminación).
- */
 export default function EliminacionDatosPage() {
   return (
     <div className="custom-scroll h-full min-h-0 w-full flex-1 overflow-y-auto bg-surface p-4 md:p-6">

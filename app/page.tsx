@@ -478,7 +478,9 @@ export default function Home() {
               </p>
             )}
 
-            {panel === "configuracion" && <ConfiguracionPanel />}
+            {panel === "configuracion" && (
+              <ConfiguracionPanel onNavegar={cerrarPanel} />
+            )}
           </div>
         </div>
       )}

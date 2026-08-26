@@ -8,7 +8,6 @@ export const metadata: Metadata = {
     "Declaración de privacidad de Estudio diario — Iglesia El Buen Pastor (IERE).",
 }
 
-/** Página pública con URL estable (útil junto a /condiciones al registrar bots). */
 export default function PrivacidadPage() {
   return (
     <div className="custom-scroll h-full min-h-0 w-full flex-1 overflow-y-auto bg-surface p-4 md:p-6">
