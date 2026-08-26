@@ -11,6 +11,7 @@ import {
 } from "react"
 import ChatNombreModal from "@/components/ChatNombreModal"
 import AvisosOracionListener from "@/components/AvisosOracionListener"
+import BienvenidaFlotante from "@/components/BienvenidaFlotante"
 import PwaInstallPrompt from "@/components/PwaInstallPrompt"
 import { ensureUsuarioAuth } from "@/lib/auth"
 import { guardarNombreChat, leerNombreChat } from "@/lib/chat"
@@ -92,6 +93,7 @@ export function SesionProvider({ children }: { children: ReactNode }) {
       {!nombre && <ChatNombreModal onConfirm={confirmarNombre} />}
       {nombre ? (
         <>
+          <BienvenidaFlotante nombre={nombre} />
           <AvisosOracionListener />
           <PwaInstallPrompt />
         </>
