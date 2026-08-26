@@ -7,14 +7,51 @@ import {
   yaInstaladaPwa,
 } from "@/lib/pwa"
 
-export default function PwaInstallButton({ variant = "header" }: { variant?: "header" | "menu" }) {
+export default function PwaInstallButton({
+  variant = "header",
+}: {
+  variant?: "header" | "menu" | "hub"
+}) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     setVisible(!yaInstaladaPwa() && esDispositivoInstalable())
   }, [])
 
-  if (!visible) return null
+  if (!visible) {
+    if (variant === "hub") {
+      return (
+        <div className="flex min-h-[5.5rem] flex-col items-center justify-center gap-1.5 px-2 py-3 text-center text-primary/45">
+          <span className="text-sm font-semibold leading-tight">App instalada</span>
+        </div>
+      )
+    }
+    return null
+  }
+
+  if (variant === "hub") {
+    return (
+      <button
+        type="button"
+        onClick={solicitarBannerInstalacion}
+        className="flex min-h-[5.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl px-2 py-3 text-center text-primary transition active:scale-[0.98] active:bg-primary/5"
+        aria-label="Instalar aplicación en este dispositivo"
+      >
+        <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden>
+          <path d="M12 4v10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+          <path
+            d="M8 11l4 4 4-4"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M5 19h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+        <span className="text-sm font-semibold leading-tight">Instalar app</span>
+      </button>
+    )
+  }
 
   if (variant === "menu") {
     return (

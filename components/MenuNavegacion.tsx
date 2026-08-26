@@ -10,11 +10,14 @@ import {
   type ReactNode,
 } from "react"
 import { usePathname, useRouter } from "next/navigation"
+import AdminAcceso from "@/components/AdminAcceso"
 import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import { useEstudio } from "@/components/EstudioContext"
 
 export type PanelMenu = "biblia" | "notas" | "chat" | "configuracion"
+
+export type VistaMovil = "hub" | "leccion"
 
 type MenuNavegacionContextValue = {
   menuAbierto: boolean
@@ -24,6 +27,8 @@ type MenuNavegacionContextValue = {
   abrirPanel: (panel: PanelMenu) => void
   cerrarPanel: () => void
   irAInicio: () => void
+  vistaMovil: VistaMovil
+  setVistaMovil: (v: VistaMovil) => void
   chatNoLeidos: number
   setChatNoLeidos: (n: number) => void
   pedidoSinLeer: number
@@ -39,6 +44,7 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [panel, setPanel] = useState<PanelMenu | null>(null)
+  const [vistaMovil, setVistaMovil] = useState<VistaMovil>("hub")
   const [chatNoLeidos, setChatNoLeidos] = useState(0)
   const [pedidoSinLeer, setPedidoSinLeer] = useState(0)
   const [hojaAbierta, setHojaAbierta] = useState(false)
@@ -62,6 +68,7 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
   const irAInicio = useCallback(() => {
     setPanel(null)
     setMenuAbierto(false)
+    setVistaMovil("hub")
     if (pathname !== "/") {
       router.push("/")
     }
@@ -86,6 +93,8 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
       abrirPanel,
       cerrarPanel,
       irAInicio,
+      vistaMovil,
+      setVistaMovil,
       chatNoLeidos,
       setChatNoLeidos,
       pedidoSinLeer,
@@ -101,6 +110,7 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
       abrirPanel,
       cerrarPanel,
       irAInicio,
+      vistaMovil,
       chatNoLeidos,
       pedidoSinLeer,
       abrirHojaDominical,
@@ -230,11 +240,12 @@ export function DrawerMenuLateral() {
         onClick={cerrarMenu}
       />
       <aside
-        className="absolute left-0 top-0 flex h-full w-[min(19rem,88vw)] max-w-sm flex-col bg-card shadow-2xl sm:w-80"
+        className="absolute right-0 top-0 flex h-full w-[min(19rem,88vw)] max-w-sm flex-col bg-card shadow-2xl sm:w-80 lg:left-0 lg:right-auto"
         style={{
           paddingTop: "env(safe-area-inset-top)",
           paddingBottom: "env(safe-area-inset-bottom)",
           paddingLeft: "env(safe-area-inset-left)",
+          paddingRight: "env(safe-area-inset-right)",
         }}
       >
         <div className="flex items-center justify-between border-b border-border bg-primary px-4 py-3 text-white">
@@ -253,6 +264,26 @@ export function DrawerMenuLateral() {
           className="flex flex-1 flex-col gap-1 overflow-y-auto overscroll-contain p-3 [-webkit-overflow-scrolling:touch]"
           aria-label="Secciones"
         >
+          {/* Móvil: Admin + Configuración bien visibles arriba (tres rayas) */}
+          <div className="mb-2 space-y-2 lg:hidden">
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-2">
+              <p className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-primary/80">
+                Admin
+              </p>
+              <AdminAcceso variant="menu" />
+            </div>
+            <button
+              type="button"
+              onClick={() => abrirPanel("configuracion")}
+              className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-white px-3 py-3 text-left text-base font-medium text-slate-800 shadow-sm transition hover:bg-primary/8 active:bg-primary/12"
+            >
+              <span className="text-xl" aria-hidden>
+                ⚙️
+              </span>
+              Configuración
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={irAInicio}
@@ -261,7 +292,8 @@ export function DrawerMenuLateral() {
             <span className="text-xl" aria-hidden>
               🏠
             </span>
-            Inicio / Lección
+            <span className="lg:hidden">Inicio</span>
+            <span className="hidden lg:inline">Inicio / Lección</span>
           </button>
 
           {ITEMS.map((item) => (
@@ -323,10 +355,11 @@ export function DrawerMenuLateral() {
             Facebook
           </a>
 
+          {/* Escritorio: Configuración al final como antes */}
           <button
             type="button"
             onClick={() => abrirPanel("configuracion")}
-            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+            className="hidden min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12 lg:flex"
           >
             <span className="text-xl" aria-hidden>
               ⚙️

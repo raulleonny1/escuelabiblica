@@ -13,9 +13,16 @@ import {
 type LeccionAudioPlayerProps = {
   bloques: BloqueLeccion[]
   etiquetaDia: string
+  autoIniciar?: boolean
+  onAutoIniciarConsumido?: () => void
 }
 
-export default function LeccionAudioPlayer({ bloques, etiquetaDia }: LeccionAudioPlayerProps) {
+export default function LeccionAudioPlayer({
+  bloques,
+  etiquetaDia,
+  autoIniciar = false,
+  onAutoIniciarConsumido,
+}: LeccionAudioPlayerProps) {
   const [soportado, setSoportado] = useState(false)
   const [estado, setEstado] = useState<"idle" | "playing" | "paused">("idle")
   const [progreso, setProgreso] = useState({ actual: 0, total: 0 })
@@ -40,6 +47,7 @@ export default function LeccionAudioPlayer({ bloques, etiquetaDia }: LeccionAudi
       },
       onProgreso: (actual, total) => setProgreso({ actual, total }),
     })
+    setEstado(lector.getEstado())
     return () => {
       lector.detener()
       lector.setCallbacks({})
@@ -49,6 +57,17 @@ export default function LeccionAudioPlayer({ bloques, etiquetaDia }: LeccionAudi
   useEffect(() => {
     detener()
   }, [bloques, detener])
+
+  useEffect(() => {
+    if (!autoIniciar || !soportado || !hayTexto) return
+    const lector = getLectorLeccionVoz()
+    if (lector.getEstado() === "idle") {
+      prepararSintesisEnGesto()
+      getLectorPasajeVoz().detener()
+      lector.iniciar(bloques)
+    }
+    onAutoIniciarConsumido?.()
+  }, [autoIniciar, soportado, hayTexto, bloques, onAutoIniciarConsumido])
 
   if (!soportado || !hayTexto) return null
 

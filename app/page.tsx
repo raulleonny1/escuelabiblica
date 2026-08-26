@@ -51,7 +51,13 @@ import { getChatSessionId, iniciarPresenciaEnApp } from "@/lib/chat"
 import { CHAT_ABRIR_EVENT, CHAT_NO_LEIDOS_EVENT } from "@/lib/chatNotificaciones"
 import AnalyticsTracker from "@/components/AnalyticsTracker"
 import ConfiguracionPanel from "@/components/ConfiguracionPanel"
+import InicioMovilHub from "@/components/InicioMovilHub"
 import { useMenuNavegacion } from "@/components/MenuNavegacion"
+import {
+  getLectorLeccionVoz,
+  getLectorPasajeVoz,
+  prepararSintesisEnGesto,
+} from "@/lib/leccionTts"
 
 const diaEstudioAlInicio = diaEstudioInicial()
 
@@ -77,7 +83,11 @@ export default function Home() {
     abrirPanel,
     cerrarPanel,
     setChatNoLeidos,
+    vistaMovil,
+    setVistaMovil,
+    irAInicio,
   } = useMenuNavegacion()
+  const [audioAutoIniciar, setAudioAutoIniciar] = useState(false)
 
   useEffect(() => {
     const leccion = getLeccionPorSemana(semana)
@@ -350,6 +360,23 @@ export default function Home() {
     }
   }
 
+  function abrirLeccionDesdeHub() {
+    setAudioAutoIniciar(false)
+    setVistaMovil("leccion")
+  }
+
+  function abrirAudioDesdeHub() {
+    prepararSintesisEnGesto()
+    const leccion = getLeccionPorSemana(semana)
+    if (leccion) {
+      const bloques = getBloquesDia(leccion, diaLeccion)
+      getLectorPasajeVoz().detener()
+      getLectorLeccionVoz().iniciar(bloques)
+    }
+    setAudioAutoIniciar(true)
+    setVistaMovil("leccion")
+  }
+
   const tituloPanel =
     panel === "biblia"
       ? "Biblia"
@@ -371,8 +398,31 @@ export default function Home() {
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col lg:flex-row">
       <AnalyticsTracker mobileTab={sitioAnalytics} />
-      <div className="layout-pdf-panel flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50 lg:border-r lg:border-border">
+
+      {vistaMovil === "hub" && !panel && (
+        <InicioMovilHub
+          semana={semana}
+          diaLeccion={diaLeccion}
+          onAbrirLeccion={abrirLeccionDesdeHub}
+          onAbrirAudio={abrirAudioDesdeHub}
+        />
+      )}
+
+      <div
+        className={`layout-pdf-panel min-h-0 min-w-0 flex-1 flex-col bg-slate-50 lg:flex lg:border-r lg:border-border ${
+          vistaMovil === "hub" && !panel ? "hidden" : "flex"
+        }`}
+      >
         <div className="shrink-0 border-b border-border bg-card px-2 py-1.5">
+          <div className="mb-1.5 lg:hidden">
+            <button
+              type="button"
+              onClick={irAInicio}
+              className="flex min-h-10 items-center gap-1 rounded-lg px-2 text-sm font-medium text-primary transition hover:bg-primary/8 active:bg-primary/12"
+            >
+              ← Inicio
+            </button>
+          </div>
           <LeccionControls semana={semana} setSemana={cambiarSemana} compact />
         </div>
         {BibliaPasaje && (
@@ -398,6 +448,8 @@ export default function Home() {
             onDiaActivoChange={seleccionarDiaLeccion}
             anotaciones={anotaciones}
             onGuardarAnotacion={handleGuardarAnotacionLeccion}
+            autoReproducirAudio={audioAutoIniciar}
+            onAutoReproducirConsumido={() => setAudioAutoIniciar(false)}
           />
         </div>
       </div>
@@ -415,7 +467,7 @@ export default function Home() {
               onClick={cerrarPanel}
               className="flex min-h-11 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-primary transition hover:bg-primary/8 active:bg-primary/12"
             >
-              ← Inicio / Lección
+              ← Inicio
             </button>
             <h2 className="font-display flex-1 truncate text-base font-semibold text-slate-800">
               {tituloPanel}

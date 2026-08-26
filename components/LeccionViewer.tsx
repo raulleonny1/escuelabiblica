@@ -35,6 +35,8 @@ interface LeccionViewerProps {
     comentario?: string
     anotacionId?: string
   }) => Promise<void>
+  autoReproducirAudio?: boolean
+  onAutoReproducirConsumido?: () => void
 }
 
 function formatRangoSemana(semana: number): string {
@@ -53,6 +55,8 @@ export default function LeccionViewer({
   onDiaActivoChange,
   anotaciones,
   onGuardarAnotacion,
+  autoReproducirAudio = false,
+  onAutoReproducirConsumido,
 }: LeccionViewerProps) {
   const leccion = getLeccionPorSemana(semana)
   const hoy = fechaLocalHoy()
@@ -179,6 +183,8 @@ export default function LeccionViewer({
         <LeccionAudioPlayer
           bloques={bloques}
           etiquetaDia={ETIQUETAS_DIA_LECCION[diaActivo]}
+          autoIniciar={autoReproducirAudio}
+          onAutoIniciarConsumido={onAutoReproducirConsumido}
         />
         <CompartirLeccionDia
           semana={semana}
