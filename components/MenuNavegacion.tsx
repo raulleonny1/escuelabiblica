@@ -11,9 +11,11 @@ import {
 } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import AdminAcceso from "@/components/AdminAcceso"
+import ChatNoLeidosListener from "@/components/ChatNoLeidosListener"
 import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import { useEstudio } from "@/components/EstudioContext"
+import { useSesion } from "@/components/SesionProvider"
 
 export type PanelMenu = "biblia" | "notas" | "chat" | "configuracion" | "audio"
 
@@ -121,6 +123,7 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
   return (
     <MenuNavegacionContext.Provider value={value}>
       {children}
+      <ChatNoLeidosListenerGate />
       <ModalesMenuGlobales
         hojaAbierta={hojaAbierta}
         pedidoAbierto={pedidoAbierto}
@@ -129,6 +132,12 @@ export function MenuNavegacionProvider({ children }: { children: ReactNode }) {
       />
     </MenuNavegacionContext.Provider>
   )
+}
+
+function ChatNoLeidosListenerGate() {
+  const { nombre } = useSesion()
+  if (!nombre) return null
+  return <ChatNoLeidosListener />
 }
 
 function ModalesMenuGlobales({
