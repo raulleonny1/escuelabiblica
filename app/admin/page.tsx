@@ -69,25 +69,40 @@ type CiudadUnica = {
   pais: string
   region: string
   visitas: number
+  nombres: string[]
 }
 
 function listarCiudadesUnicas(sesiones: SesionRow[]): CiudadUnica[] {
-  const map = new Map<string, CiudadUnica>()
+  const map = new Map<string, CiudadUnica & { nombresSet: Set<string> }>()
   for (const s of sesiones) {
     const ciudad = s.ciudad?.trim()
     if (!ciudad) continue
     const pais = s.pais?.trim() || "—"
     const region = s.region?.trim() || ""
     const key = `${ciudad.toLowerCase()}|${pais.toLowerCase()}`
-    const prev = map.get(key) ?? { ciudad, pais, region, visitas: 0 }
+    const prev = map.get(key) ?? {
+      ciudad,
+      pais,
+      region,
+      visitas: 0,
+      nombres: [],
+      nombresSet: new Set<string>(),
+    }
     prev.visitas += 1
     if (!prev.region && region) prev.region = region
+    const nombre = s.nombre?.trim()
+    if (nombre) prev.nombresSet.add(nombre)
     map.set(key, prev)
   }
-  return [...map.values()].sort((a, b) => {
-    if (b.visitas !== a.visitas) return b.visitas - a.visitas
-    return a.ciudad.localeCompare(b.ciudad, "es")
-  })
+  return [...map.values()]
+    .map(({ nombresSet, ...c }) => ({
+      ...c,
+      nombres: [...nombresSet].sort((a, b) => a.localeCompare(b, "es")),
+    }))
+    .sort((a, b) => {
+      if (b.visitas !== a.visitas) return b.visitas - a.visitas
+      return a.ciudad.localeCompare(b.ciudad, "es")
+    })
 }
 
 export default function AdminPage() {
@@ -560,6 +575,10 @@ export default function AdminPage() {
                     ? ""
                     : ` · ${formatearDiaCorto(diaSeleccionado)}`}
                 </p>
+                <p className="mt-1 text-[0.6875rem] leading-relaxed text-muted">
+                  Cada visita guarda la ciudad de la IP. La misma persona puede
+                  aparecer en varias ciudades si entra desde sitios distintos.
+                </p>
               </div>
               <button
                 type="button"
@@ -590,7 +609,19 @@ export default function AdminPage() {
                       </p>
                       <p className="mt-0.5 text-xs font-medium text-primary">
                         {c.visitas} ingreso{c.visitas === 1 ? "" : "s"}
+                        {c.nombres.length > 0
+                          ? ` · ${c.nombres.length} persona${c.nombres.length === 1 ? "" : "s"}`
+                          : ""}
                       </p>
+                      {c.nombres.length > 0 ? (
+                        <p className="mt-1.5 text-sm text-slate-700">
+                          {c.nombres.join(" · ")}
+                        </p>
+                      ) : (
+                        <p className="mt-1.5 text-xs text-amber-800">
+                          Sin nombre guardado en esas sesiones
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>

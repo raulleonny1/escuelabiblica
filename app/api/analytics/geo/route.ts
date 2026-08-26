@@ -29,7 +29,7 @@ export async function GET(req: Request) {
         country?: string
       }
       if (data.status === "success") {
-        ciudad = [data.city, data.regionName, data.country].filter(Boolean).join(", ")
+        ciudad = data.city?.trim() || "Desconocida"
         region = data.regionName ?? ""
         pais = data.country ?? ""
       }
