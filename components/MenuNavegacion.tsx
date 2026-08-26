@@ -264,9 +264,9 @@ export function DrawerMenuLateral() {
           className="flex flex-1 flex-col gap-1 overflow-y-auto overscroll-contain p-3 [-webkit-overflow-scrolling:touch]"
           aria-label="Secciones"
         >
-          {/* Móvil: Admin + Configuración bien visibles arriba (tres rayas) */}
-          <div className="mb-2 space-y-2 lg:hidden">
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-2">
+          {/* Móvil / tablet: solo Admin, Configuración y Facebook */}
+          <div className="flex flex-col gap-1 lg:hidden">
+            <div className="mb-1 rounded-xl border border-primary/20 bg-primary/5 p-2">
               <p className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-primary/80">
                 Admin
               </p>
@@ -275,7 +275,103 @@ export function DrawerMenuLateral() {
             <button
               type="button"
               onClick={() => abrirPanel("configuracion")}
-              className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-white px-3 py-3 text-left text-base font-medium text-slate-800 shadow-sm transition hover:bg-primary/8 active:bg-primary/12"
+              className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+            >
+              <span className="text-xl" aria-hidden>
+                ⚙️
+              </span>
+              Configuración
+            </button>
+            <a
+              href={FACEBOOK_IGLESIA}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={cerrarMenu}
+              className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+            >
+              <span className="text-xl" aria-hidden>
+                📘
+              </span>
+              Facebook
+            </a>
+          </div>
+
+          {/* Escritorio: menú completo */}
+          <div className="hidden flex-col gap-1 lg:flex">
+            <button
+              type="button"
+              onClick={irAInicio}
+              className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+            >
+              <span className="text-xl" aria-hidden>
+                🏠
+              </span>
+              Inicio / Lección
+            </button>
+
+            {ITEMS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => abrirPanel(item.id)}
+                className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+              >
+                <span className="relative text-xl" aria-hidden>
+                  {item.icon}
+                  {item.id === "chat" && chatNoLeidos > 0 && (
+                    <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.625rem] font-bold text-white">
+                      {chatNoLeidos > 9 ? "9+" : chatNoLeidos}
+                    </span>
+                  )}
+                </span>
+                {item.label}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={abrirHojaDominical}
+              className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+            >
+              <span className="text-xl" aria-hidden>
+                📄
+              </span>
+              Hoja dominical
+            </button>
+
+            <button
+              type="button"
+              onClick={abrirPedidoOracion}
+              className="relative flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+            >
+              <span className="relative text-xl" aria-hidden>
+                🙏
+                {pedidoSinLeer > 0 && (
+                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[0.625rem] font-bold text-white">
+                    {pedidoSinLeer > 9 ? "9+" : pedidoSinLeer}
+                  </span>
+                )}
+              </span>
+              Pedido de oración
+            </button>
+
+            <a
+              href={FACEBOOK_IGLESIA}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={cerrarMenu}
+              className="mt-1 flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
+            >
+              <span className="text-xl" aria-hidden>
+                📘
+              </span>
+              Facebook
+            </a>
+
+            <button
+              type="button"
+              onClick={() => abrirPanel("configuracion")}
+              className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
             >
               <span className="text-xl" aria-hidden>
                 ⚙️
@@ -283,89 +379,6 @@ export function DrawerMenuLateral() {
               Configuración
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={irAInicio}
-            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
-          >
-            <span className="text-xl" aria-hidden>
-              🏠
-            </span>
-            <span className="lg:hidden">Inicio</span>
-            <span className="hidden lg:inline">Inicio / Lección</span>
-          </button>
-
-          {ITEMS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => abrirPanel(item.id)}
-              className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
-            >
-              <span className="relative text-xl" aria-hidden>
-                {item.icon}
-                {item.id === "chat" && chatNoLeidos > 0 && (
-                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.625rem] font-bold text-white">
-                    {chatNoLeidos > 9 ? "9+" : chatNoLeidos}
-                  </span>
-                )}
-              </span>
-              {item.label}
-            </button>
-          ))}
-
-          <button
-            type="button"
-            onClick={abrirHojaDominical}
-            className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
-          >
-            <span className="text-xl" aria-hidden>
-              📄
-            </span>
-            Hoja dominical
-          </button>
-
-          <button
-            type="button"
-            onClick={abrirPedidoOracion}
-            className="relative flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
-          >
-            <span className="relative text-xl" aria-hidden>
-              🙏
-              {pedidoSinLeer > 0 && (
-                <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[0.625rem] font-bold text-white">
-                  {pedidoSinLeer > 9 ? "9+" : pedidoSinLeer}
-                </span>
-              )}
-            </span>
-            Pedido de oración
-          </button>
-
-          <a
-            href={FACEBOOK_IGLESIA}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={cerrarMenu}
-            className="mt-1 flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12"
-          >
-            <span className="text-xl" aria-hidden>
-              📘
-            </span>
-            Facebook
-          </a>
-
-          {/* Escritorio: Configuración al final como antes */}
-          <button
-            type="button"
-            onClick={() => abrirPanel("configuracion")}
-            className="hidden min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-slate-800 transition hover:bg-primary/8 active:bg-primary/12 lg:flex"
-          >
-            <span className="text-xl" aria-hidden>
-              ⚙️
-            </span>
-            Configuración
-          </button>
         </nav>
 
         <p className="border-t border-border px-4 py-3 text-xs text-muted">
