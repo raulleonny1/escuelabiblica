@@ -1,11 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { estaAdminDesbloqueado, marcarAdminDesbloqueado } from "@/components/AdminAcceso"
 import { ADMIN_PIN_DEFAULT } from "@/lib/adminPin"
 import { ensureUsuarioAuth } from "@/lib/auth"
-import type { DashboardData } from "@/lib/adminAnalyticsSummary"
+import type { DashboardData, SesionRow } from "@/lib/adminAnalyticsSummary"
 import { cargarAnalyticsDesdeCliente } from "@/lib/analyticsAdminClient"
 import { resumirSitiosVisitados, sitioDesdeEvento } from "@/lib/analyticsSitios"
 
@@ -57,12 +57,37 @@ const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const
 function celdasDelMes(anio: number, mes: number): (number | null)[] {
   const primero = new Date(anio, mes, 1)
   const diasEnMes = new Date(anio, mes + 1, 0).getDate()
-  // getDay(): 0=dom … 6=sáb → lunes primero
   const offset = (primero.getDay() + 6) % 7
   const celdas: (number | null)[] = Array.from({ length: offset }, () => null)
   for (let d = 1; d <= diasEnMes; d++) celdas.push(d)
   while (celdas.length % 7 !== 0) celdas.push(null)
   return celdas
+}
+
+type CiudadUnica = {
+  ciudad: string
+  pais: string
+  region: string
+  visitas: number
+}
+
+function listarCiudadesUnicas(sesiones: SesionRow[]): CiudadUnica[] {
+  const map = new Map<string, CiudadUnica>()
+  for (const s of sesiones) {
+    const ciudad = s.ciudad?.trim()
+    if (!ciudad) continue
+    const pais = s.pais?.trim() || "—"
+    const region = s.region?.trim() || ""
+    const key = `${ciudad.toLowerCase()}|${pais.toLowerCase()}`
+    const prev = map.get(key) ?? { ciudad, pais, region, visitas: 0 }
+    prev.visitas += 1
+    if (!prev.region && region) prev.region = region
+    map.set(key, prev)
+  }
+  return [...map.values()].sort((a, b) => {
+    if (b.visitas !== a.visitas) return b.visitas - a.visitas
+    return a.ciudad.localeCompare(b.ciudad, "es")
+  })
 }
 
 export default function AdminPage() {
@@ -72,6 +97,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<DashboardData | null>(null)
   const [usuarioAbierto, setUsuarioAbierto] = useState<string | null>(null)
+  const [ciudadesAbiertas, setCiudadesAbiertas] = useState(false)
   const [diaSeleccionado, setDiaSeleccionado] = useState<string>("general")
   const [mesCalendario, setMesCalendario] = useState(() => {
     const hoy = new Date()
@@ -133,6 +159,15 @@ export default function AdminPage() {
     cargar(codigo)
   }, [autorizado, cargar])
 
+  useEffect(() => {
+    if (!ciudadesAbiertas) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [ciudadesAbiertas])
+
   function verificarPin(e: React.FormEvent) {
     e.preventDefault()
     if (pin === ADMIN_PIN_DEFAULT) {
@@ -144,6 +179,18 @@ export default function AdminPage() {
     }
     setError("Código incorrecto")
   }
+
+  const sesionesVista = useMemo(() => {
+    if (!data) return [] as SesionRow[]
+    if (diaSeleccionado === "general") return data.sesiones
+    return data.sesiones.filter((s) => {
+      const inicio = s.inicioEn?.slice(0, 10)
+      const ultimo = s.ultimoAcceso?.slice(0, 10)
+      return inicio === diaSeleccionado || ultimo === diaSeleccionado
+    })
+  }, [data, diaSeleccionado])
+
+  const ciudades = useMemo(() => listarCiudadesUnicas(sesionesVista), [sesionesVista])
 
   if (!autorizado) {
     return (
@@ -181,23 +228,13 @@ export default function AdminPage() {
       ? {
           etiqueta: "General",
           totalUsuarios: data?.totalUsuarios ?? 0,
-          totalSesiones: data?.totalSesiones ?? 0,
-          totalEventos: data?.totalEventos ?? 0,
           tiempoTotalSeg: data?.resumen.reduce((acc, u) => acc + (u.tiempoTotalSeg || 0), 0) ?? 0,
-          ingresosConNombre: data?.sesiones.filter((s) => Boolean(s.nombre.trim())).length ?? 0,
-          ipsUnicas: new Set(data?.sesiones.map((s) => s.ip).filter(Boolean) ?? []).size,
-          ciudadesUnicas: new Set(data?.sesiones.map((s) => s.ciudad).filter(Boolean) ?? []).size,
           resumen: data?.resumen ?? [],
         }
       : {
           etiqueta: resumenDia.fecha,
           totalUsuarios: resumenDia.totalUsuarios,
-          totalSesiones: resumenDia.totalSesiones,
-          totalEventos: resumenDia.totalEventos,
           tiempoTotalSeg: resumenDia.tiempoTotalSeg,
-          ingresosConNombre: resumenDia.ingresosConNombre,
-          ipsUnicas: resumenDia.ipsUnicas,
-          ciudadesUnicas: resumenDia.ciudadesUnicas,
           resumen: resumenDia.resumen,
         }
   const usuarioDetalleVista = vistaActiva.resumen.find((u) => u.usuarioId === usuarioAbierto) ?? null
@@ -207,9 +244,9 @@ export default function AdminPage() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-semibold text-primary">Sitios visitados</h1>
+            <h1 className="font-display text-2xl font-semibold text-primary">Estadísticas</h1>
             <p className="text-sm text-muted">
-              Estadísticas generales y por día: ingresos, IP/ciudad, navegación y tiempo en app
+              Usuarios, tiempo total y ciudades — elige un día en el calendario
             </p>
           </div>
           <div className="flex gap-2">
@@ -247,40 +284,28 @@ export default function AdminPage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase text-muted">Usuarios</p>
-                <p className="font-display text-3xl font-semibold text-primary">{vistaActiva.totalUsuarios}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase text-muted">Sesiones</p>
-                <p className="font-display text-3xl font-semibold text-primary">{vistaActiva.totalSesiones}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase text-muted">Eventos de navegación</p>
-                <p className="font-display text-3xl font-semibold text-primary">{vistaActiva.totalEventos}</p>
-              </div>
-            </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-4">
-              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase text-muted">Tiempo total</p>
-                <p className="font-display text-xl font-semibold text-primary">
-                  {formatearDuracion(vistaActiva.tiempoTotalSeg)}
+                <p className="font-display text-3xl font-semibold text-primary">
+                  {vistaActiva.totalUsuarios}
                 </p>
               </div>
               <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase text-muted">Ingresos con nombre</p>
-                <p className="font-display text-xl font-semibold text-primary">{vistaActiva.ingresosConNombre}</p>
+                <p className="text-xs font-semibold uppercase text-muted">Tiempo total</p>
+                <p className="font-display text-3xl font-semibold text-primary">
+                  {formatearDuracion(vistaActiva.tiempoTotalSeg)}
+                </p>
               </div>
-              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase text-muted">IPs únicas</p>
-                <p className="font-display text-xl font-semibold text-primary">{vistaActiva.ipsUnicas}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setCiudadesAbiertas(true)}
+                className="rounded-xl border border-border bg-white p-4 text-left shadow-sm transition hover:border-primary/40 hover:bg-primary/5 active:scale-[0.99]"
+                aria-label="Ver ciudades y países"
+              >
                 <p className="text-xs font-semibold uppercase text-muted">Ciudades únicas</p>
-                <p className="font-display text-xl font-semibold text-primary">{vistaActiva.ciudadesUnicas}</p>
-              </div>
+                <p className="font-display text-3xl font-semibold text-primary">{ciudades.length}</p>
+                <p className="mt-1 text-xs font-medium text-primary">Tocar para ver detalle →</p>
+              </button>
             </div>
-            <p className="mt-2 text-xs text-muted">
-              Generado: {formatearFecha(data.generadoEn)}
-            </p>
+            <p className="mt-2 text-xs text-muted">Generado: {formatearFecha(data.generadoEn)}</p>
 
             <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,320px)_1fr]">
               <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
@@ -399,11 +424,8 @@ export default function AdminPage() {
                 <p className="font-semibold text-primary">Cómo usar</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted">
                   Elige un día en el calendario para ver quién ingresó ese día. Los días con punto
-                  tienen actividad. «General» muestra el resumen de todos los días.
-                </p>
-                <p className="mt-3 font-semibold text-primary">Secciones que se registran</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted">
-                  Lección · Estudio y notas · Biblia · Chat · Hoja dominical · Pedido de oración
+                  tienen actividad. «General» muestra el resumen de todos los días. Toca «Ciudades
+                  únicas» para ver ciudad y país.
                 </p>
               </div>
             </div>
@@ -504,13 +526,79 @@ export default function AdminPage() {
                     })}
                 </ul>
                 <p className="mt-3 text-xs text-muted">
-                  Ciudad: {usuarioDetalleVista.ultimaCiudad || "—"} · IP: {usuarioDetalleVista.ultimaIp || "—"}
+                  Ciudad: {usuarioDetalleVista.ultimaCiudad || "—"} · IP:{" "}
+                  {usuarioDetalleVista.ultimaIp || "—"}
                 </p>
               </section>
             )}
           </>
         )}
       </div>
+
+      {ciudadesAbiertas && (
+        <div
+          className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/50 p-3 backdrop-blur-[5px] sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-ciudades-titulo"
+        >
+          <button
+            type="button"
+            className="absolute inset-0"
+            aria-label="Cerrar"
+            onClick={() => setCiudadesAbiertas(false)}
+          />
+          <div className="relative z-10 flex max-h-[min(85dvh,36rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+            <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
+              <div>
+                <h2 id="admin-ciudades-titulo" className="font-display text-lg font-semibold text-primary">
+                  Ciudades y países
+                </h2>
+                <p className="text-xs text-muted">
+                  {ciudades.length} ubicación{ciudades.length === 1 ? "" : "es"}
+                  {diaSeleccionado === "general"
+                    ? ""
+                    : ` · ${formatearDiaCorto(diaSeleccionado)}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCiudadesAbiertas(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-2xl leading-none text-slate-500 hover:bg-slate-100"
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="custom-scroll min-h-0 flex-1 overflow-y-auto p-3">
+              {ciudades.length === 0 ? (
+                <p className="px-2 py-8 text-center text-sm text-muted">
+                  Todavía no hay ciudades registradas.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {ciudades.map((c) => (
+                    <li
+                      key={`${c.ciudad}-${c.pais}`}
+                      className="rounded-xl border border-border bg-[#f7f4ec] px-3 py-2.5"
+                    >
+                      <p className="font-semibold text-slate-800">{c.ciudad}</p>
+                      <p className="text-sm text-muted">
+                        {c.pais}
+                        {c.region ? ` · ${c.region}` : ""}
+                      </p>
+                      <p className="mt-0.5 text-xs font-medium text-primary">
+                        {c.visitas} ingreso{c.visitas === 1 ? "" : "s"}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
