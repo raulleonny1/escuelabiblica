@@ -132,8 +132,7 @@ function IconoHoja() {
   )
 }
 
-const BOTON_BASE =
-  "hub-card-shine relative flex min-h-[5.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-primary/15 bg-[#f7f4ec] px-2 py-3 text-center text-primary shadow-sm transition active:scale-[0.98] active:bg-primary/5"
+const LABEL = "text-sm font-semibold leading-tight"
 
 function BadgeEsquina({ n, tono = "accent" }: { n: number; tono?: "accent" | "danger" }) {
   if (n <= 0) return null
@@ -156,24 +155,32 @@ function TarjetaHub({
   children,
 }: {
   onClick?: () => void
-  badge?: React.ReactNode
+  badge?: ReactNode
   ariaLabel?: string
   children: ReactNode
 }) {
-  if (onClick) {
-    return (
-      <div className="relative">
-        {badge}
-        <button type="button" onClick={onClick} className={BOTON_BASE} aria-label={ariaLabel}>
-          {children}
-        </button>
-      </div>
-    )
-  }
+  const cuerpo = (
+    <>
+      <span className="hub-card-glow" aria-hidden />
+      <span className="hub-card-inner shadow-sm transition active:bg-primary/5">{children}</span>
+    </>
+  )
+
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       {badge}
-      <div className={BOTON_BASE}>{children}</div>
+      {onClick ? (
+        <button
+          type="button"
+          onClick={onClick}
+          className="hub-card active:scale-[0.98]"
+          aria-label={ariaLabel}
+        >
+          {cuerpo}
+        </button>
+      ) : (
+        <div className="hub-card">{cuerpo}</div>
+      )}
     </div>
   )
 }
@@ -246,22 +253,22 @@ export default function InicioMovilHub({
       >
         <TarjetaHub onClick={onAbrirLeccion}>
           <IconoLibro />
-          <span className="text-sm font-semibold leading-tight">Lección del día</span>
+          <span className={LABEL}>Lección del día</span>
         </TarjetaHub>
 
         <TarjetaHub onClick={onAbrirAudio}>
           <IconoAudio />
-          <span className="text-sm font-semibold leading-tight">Audio del estudio</span>
+          <span className={LABEL}>Audio del estudio</span>
         </TarjetaHub>
 
         <TarjetaHub onClick={() => abrirPanel("biblia")}>
           <IconoBiblia />
-          <span className="text-sm font-semibold leading-tight">Biblia</span>
+          <span className={LABEL}>Biblia</span>
         </TarjetaHub>
 
         <TarjetaHub onClick={() => abrirPanel("notas")}>
           <IconoNotas />
-          <span className="text-sm font-semibold leading-tight">Mis notas</span>
+          <span className={LABEL}>Mis notas</span>
         </TarjetaHub>
 
         <TarjetaHub
@@ -274,7 +281,7 @@ export default function InicioMovilHub({
           }
         >
           <IconoComunidad />
-          <span className="text-sm font-semibold leading-tight">Comunidad</span>
+          <span className={LABEL}>Comunidad</span>
         </TarjetaHub>
 
         <TarjetaHub
@@ -287,12 +294,12 @@ export default function InicioMovilHub({
           }
         >
           <IconoOracion />
-          <span className="text-sm font-semibold leading-tight">Pedir oración</span>
+          <span className={LABEL}>Pedir oración</span>
         </TarjetaHub>
 
         <TarjetaHub onClick={abrirHojaDominical}>
           <IconoHoja />
-          <span className="text-sm font-semibold leading-tight">Hoja dominical</span>
+          <span className={LABEL}>Hoja dominical</span>
         </TarjetaHub>
 
         <TarjetaHub>

@@ -21,9 +21,9 @@ export default function PwaInstallButton({
   if (!visible) {
     if (variant === "hub") {
       return (
-        <div className="flex min-h-[5.5rem] flex-col items-center justify-center gap-1.5 px-2 py-3 text-center text-primary/45">
+        <span className="flex flex-col items-center justify-center gap-1.5 text-primary/45">
           <span className="text-sm font-semibold leading-tight">App instalada</span>
-        </div>
+        </span>
       )
     }
     return null
@@ -34,7 +34,7 @@ export default function PwaInstallButton({
       <button
         type="button"
         onClick={solicitarBannerInstalacion}
-        className="flex min-h-[5.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl px-2 py-3 text-center text-primary transition active:scale-[0.98] active:bg-primary/5"
+        className="flex w-full flex-col items-center justify-center gap-1.5 text-primary"
         aria-label="Instalar aplicación en este dispositivo"
       >
         <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden>
