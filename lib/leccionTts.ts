@@ -97,6 +97,22 @@ type CallbacksLector = {
   onEstado?: (estado: EstadoLector) => void
   onFin?: () => void
   onProgreso?: (actual: number, total: number) => void
+  /** Segundos estimados o reales (actual, total). */
+  onTiempo?: (actualSeg: number, totalSeg: number) => void
+  onCargando?: (cargando: boolean) => void
+  onError?: (mensaje: string) => void
+}
+
+const VELOCIDADES = [0.75, 1, 1.25, 1.5, 2] as const
+export type VelocidadAudio = (typeof VELOCIDADES)[number]
+export const VELOCIDADES_AUDIO: readonly VelocidadAudio[] = VELOCIDADES
+
+/** Caracteres por segundo aprox. en español (TTS) a velocidad 1×. */
+const CPS_TTS = 13.5
+
+function estimarSegundosTexto(texto: string, rate: number): number {
+  const r = Math.max(0.5, rate)
+  return Math.max(0.4, texto.length / (CPS_TTS * r))
 }
 
 /** Lector secuencial: voz del navegador en PC; audio MP3 en móvil (segundo plano). */
@@ -112,9 +128,46 @@ export class LectorLeccionVoz {
   private usaAudioServidor = false
   private audioActual: HTMLAudioElement | null = null
   private prefetchIos: { indice: number; audio: HTMLAudioElement } | null = null
+  private velocidad: VelocidadAudio = 1
+  private volumen = 1
+  private tiempoTick: number | null = null
 
   setCallbacks(callbacks: CallbacksLector) {
     this.callbacks = callbacks
+  }
+
+  /** Fusiona callbacks sin borrar los existentes (útil para provider + UI). */
+  patchCallbacks(parcial: CallbacksLector) {
+    this.callbacks = { ...this.callbacks, ...parcial }
+  }
+
+  setVelocidad(v: number) {
+    const cercana =
+      VELOCIDADES.reduce((best, cur) =>
+        Math.abs(cur - v) < Math.abs(best - v) ? cur : best
+      ) ?? 1
+    this.velocidad = cercana
+    if (this.audioActual) {
+      try {
+        this.audioActual.playbackRate = this.velocidad
+      } catch {
+        /* ignore */
+      }
+    }
+    this.notificarTiempo()
+  }
+
+  getVelocidad(): VelocidadAudio {
+    return this.velocidad
+  }
+
+  setVolumen(v: number) {
+    this.volumen = Math.min(1, Math.max(0, v))
+    if (this.audioActual) this.audioActual.volume = this.volumen
+  }
+
+  getVolumen(): number {
+    return this.volumen
   }
 
   iniciar(bloques: BloqueLeccion[]) {
@@ -180,6 +233,7 @@ export class LectorLeccionVoz {
 
     this.indice = Math.min(this.indice + Math.max(1, saltos), this.fragmentos.length)
     this.notificarProgreso()
+    this.notificarTiempo()
 
     if (this.indice >= this.fragmentos.length) {
       this.finalizarReproduccion()
@@ -191,6 +245,98 @@ export class LectorLeccionVoz {
     this.hablarSiguiente()
   }
 
+  /** Salta ±segundos (aprox. en TTS; real dentro del fragmento en audio servidor). */
+  saltarSegundos(delta: number) {
+    if (this.estado === "idle" || this.fragmentos.length === 0) return
+
+    if (this.usaAudioServidor && this.audioActual && Number.isFinite(this.audioActual.duration)) {
+      const destino = this.audioActual.currentTime + delta
+      if (destino >= 0 && destino < this.audioActual.duration) {
+        this.audioActual.currentTime = Math.max(0, destino)
+        this.notificarTiempo()
+        return
+      }
+      if (destino < 0) {
+        // Retroceder al fragmento anterior
+        this.generacion += 1
+        this.pararAudioActual()
+        this.indice = Math.max(0, this.indice - 1)
+        this.notificarProgreso()
+        const estaba = this.estado
+        this.cambiarEstado("playing")
+        this.hablarSiguiente()
+        if (estaba === "paused") {
+          // se reanudará playing; usuario puede pausar
+        }
+        return
+      }
+      // Más allá del fragmento → siguiente
+      this.adelantar(1)
+      return
+    }
+
+    // TTS / sin duration: saltar por caracteres ≈ segundos
+    const chars = Math.abs(delta) * CPS_TTS * this.velocidad
+    if (delta >= 0) {
+      let restantes = chars
+      let i = this.indice
+      while (i < this.fragmentos.length && restantes > 0) {
+        const len = this.fragmentos[i]!.length
+        if (i === this.indice) {
+          restantes -= len * 0.5
+          i += 1
+          continue
+        }
+        restantes -= len
+        i += 1
+      }
+      const saltos = Math.max(1, i - this.indice)
+      this.adelantar(saltos)
+    } else {
+      let restantes = chars
+      let i = this.indice
+      while (i > 0 && restantes > 0) {
+        i -= 1
+        restantes -= this.fragmentos[i]!.length
+      }
+      this.irAIndice(i)
+    }
+  }
+
+  /** Fracción 0–1 sobre el estudio completo. */
+  buscarFraccion(fraccion: number) {
+    if (this.fragmentos.length === 0) return
+    const f = Math.min(1, Math.max(0, fraccion))
+    const totalChars = this.fragmentos.reduce((a, t) => a + t.length, 0) || 1
+    const objetivo = f * totalChars
+    let acumulado = 0
+    let idx = 0
+    for (let i = 0; i < this.fragmentos.length; i++) {
+      acumulado += this.fragmentos[i]!.length
+      if (acumulado >= objetivo) {
+        idx = i
+        break
+      }
+      idx = i
+    }
+    this.irAIndice(idx)
+  }
+
+  private irAIndice(idx: number) {
+    if (this.fragmentos.length === 0) return
+    this.generacion += 1
+    this.pararAudioActual()
+    if (!this.usaAudioServidor && typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel()
+    }
+    this.indice = Math.min(Math.max(0, idx), this.fragmentos.length - 1)
+    this.notificarProgreso()
+    this.notificarTiempo()
+    if (this.estado === "idle") this.cambiarEstado("playing")
+    else this.cambiarEstado("playing")
+    this.hablarSiguiente()
+  }
+
   getProgreso(): { actual: number; total: number } {
     return {
       actual: Math.min(this.indice + 1, this.fragmentos.length || 1),
@@ -198,9 +344,25 @@ export class LectorLeccionVoz {
     }
   }
 
+  getTiempo(): { actual: number; total: number } {
+    const total = this.fragmentos.reduce(
+      (a, t) => a + estimarSegundosTexto(t, this.velocidad),
+      0
+    )
+    let actual = 0
+    for (let i = 0; i < this.indice; i++) {
+      actual += estimarSegundosTexto(this.fragmentos[i]!, this.velocidad)
+    }
+    if (this.usaAudioServidor && this.audioActual && Number.isFinite(this.audioActual.duration) && this.audioActual.duration > 0) {
+      actual += this.audioActual.currentTime / Math.max(0.5, this.velocidad)
+    }
+    return { actual, total: Math.max(total, actual) }
+  }
+
   detener() {
     this.generacion += 1
     this.prefetchIos = null
+    this.pararTiempoTick()
     this.pararAudioActual()
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel()
@@ -208,7 +370,9 @@ export class LectorLeccionVoz {
     this.fragmentos = []
     this.indice = 0
     this.desactivarReproduccionFondo()
+    this.callbacks.onCargando?.(false)
     if (this.estado !== "idle") this.cambiarEstado("idle")
+    this.callbacks.onTiempo?.(0, 0)
   }
 
   getEstado(): EstadoLector {
@@ -285,14 +449,37 @@ export class LectorLeccionVoz {
     this.cambiarEstado("idle")
   }
 
-  private cambiarEstado(estado: EstadoLector) {
-    this.estado = estado
-    this.callbacks.onEstado?.(estado)
-  }
-
   private notificarProgreso() {
     if (this.fragmentos.length === 0) return
     this.callbacks.onProgreso?.(this.indice + 1, this.fragmentos.length)
+    this.notificarTiempo()
+  }
+
+  private notificarTiempo() {
+    const t = this.getTiempo()
+    this.callbacks.onTiempo?.(t.actual, t.total)
+  }
+
+  private iniciarTiempoTick() {
+    this.pararTiempoTick()
+    if (typeof window === "undefined") return
+    this.tiempoTick = window.setInterval(() => {
+      if (this.estado === "playing") this.notificarTiempo()
+    }, 400)
+  }
+
+  private pararTiempoTick() {
+    if (this.tiempoTick != null) {
+      window.clearInterval(this.tiempoTick)
+      this.tiempoTick = null
+    }
+  }
+
+  private cambiarEstado(estado: EstadoLector) {
+    this.estado = estado
+    this.callbacks.onEstado?.(estado)
+    if (estado === "playing") this.iniciarTiempoTick()
+    else this.pararTiempoTick()
   }
 
   private pararAudioActual() {
@@ -323,12 +510,21 @@ export class LectorLeccionVoz {
 
     audio.onloadedmetadata = () => {
       if (gen !== this.generacion) return
+      try {
+        audio.playbackRate = this.velocidad
+        audio.volume = this.volumen
+      } catch {
+        /* ignore */
+      }
       actualizarPosicionMedia(audio)
+      this.notificarTiempo()
+      this.callbacks.onCargando?.(false)
     }
 
     audio.ontimeupdate = () => {
       if (gen !== this.generacion) return
       actualizarPosicionMedia(audio)
+      this.notificarTiempo()
     }
 
     audio.onended = () => {
@@ -359,8 +555,9 @@ export class LectorLeccionVoz {
     const utterance = new SpeechSynthesisUtterance(normalizarTextoParaTts(texto))
     utterance.lang = this.voz?.lang ?? "es-ES"
     if (this.voz) utterance.voice = this.voz
-    utterance.rate = 1
+    utterance.rate = this.velocidad
     utterance.pitch = 1
+    utterance.volume = this.volumen
     return utterance
   }
 
@@ -407,6 +604,7 @@ export class LectorLeccionVoz {
     }
 
     this.audioActual = audio
+    this.callbacks.onCargando?.(true)
     this.enlazarEventosAudio(audio, gen, () => {
       this.pararAudioActual()
       this.indice += 1
@@ -416,12 +614,16 @@ export class LectorLeccionVoz {
     this.prefetchProximoFragmentoIos(indiceActual)
 
     try {
+      audio.playbackRate = this.velocidad
+      audio.volume = this.volumen
       await audio.play()
+      this.callbacks.onCargando?.(false)
       actualizarSesionMedia("playing")
     } catch {
       if (gen !== this.generacion) return
       this.pararAudioActual()
       this.usaAudioServidor = false
+      this.callbacks.onCargando?.(false)
       this.hablarSiguienteVoz(0)
     }
   }
@@ -434,12 +636,15 @@ export class LectorLeccionVoz {
     const gen = (this.generacion += 1)
     const texto = this.fragmentos[this.indice]!
     this.notificarProgreso()
+    this.callbacks.onCargando?.(true)
 
     this.pararAudioActual()
 
     const audio = new Audio(urlAudioTts(texto))
     audio.setAttribute("playsinline", "true")
     audio.preload = "auto"
+    audio.playbackRate = this.velocidad
+    audio.volume = this.volumen
     this.audioActual = audio
 
     this.enlazarEventosAudio(audio, gen, () => {
@@ -450,11 +655,13 @@ export class LectorLeccionVoz {
 
     try {
       await audio.play()
+      this.callbacks.onCargando?.(false)
       actualizarSesionMedia("playing")
     } catch {
       if (gen !== this.generacion) return
       this.pararAudioActual()
       this.usaAudioServidor = false
+      this.callbacks.onCargando?.(false)
       this.hablarSiguienteVoz(0)
     }
   }

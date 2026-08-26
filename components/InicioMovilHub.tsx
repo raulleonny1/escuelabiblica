@@ -31,18 +31,34 @@ function IconoLibro() {
 
 function IconoAudio() {
   return (
-    <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden>
+    <svg viewBox="0 0 24 24" className="h-9 w-9" fill="none" aria-hidden>
       <path
-        d="M4 13a4 4 0 0 1 4-4h1v8H8a4 4 0 0 1-4-4Z"
+        d="M3 12a5.5 5.5 0 0 1 5.5-5.5H10v11H8.5A5.5 5.5 0 0 1 3 12Z"
         stroke="currentColor"
-        strokeWidth="1.75"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
       />
       <path
-        d="M20 13a4 4 0 0 0-4-4h-1v8h1a4 4 0 0 0 4-4Z"
+        d="M21 12a5.5 5.5 0 0 0-5.5-5.5H14v11h1.5A5.5 5.5 0 0 0 21 12Z"
         stroke="currentColor"
-        strokeWidth="1.75"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
       />
-      <path d="M9 9V7a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="M10 6.5V5.25a2.75 2.75 0 0 1 5.5 0V6.5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <circle cx="7.25" cy="16.75" r="1.35" fill="currentColor" />
+      <circle cx="16.75" cy="16.75" r="1.35" fill="currentColor" />
+      <path
+        d="M6.2 9.2c.55-.9 1.15-1.35 1.8-1.55M17.8 9.2c-.55-.9-1.15-1.35-1.8-1.55"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        opacity="0.55"
+      />
     </svg>
   )
 }

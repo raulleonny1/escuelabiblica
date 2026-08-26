@@ -15,7 +15,7 @@ import HojaDominicalBoton from "@/components/HojaDominicalBoton"
 import PedidoOracionBoton from "@/components/PedidoOracionBoton"
 import { useEstudio } from "@/components/EstudioContext"
 
-export type PanelMenu = "biblia" | "notas" | "chat" | "configuracion"
+export type PanelMenu = "biblia" | "notas" | "chat" | "configuracion" | "audio"
 
 export type VistaMovil = "hub" | "leccion"
 

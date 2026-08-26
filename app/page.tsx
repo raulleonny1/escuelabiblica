@@ -51,13 +51,11 @@ import { getChatSessionId, iniciarPresenciaEnApp } from "@/lib/chat"
 import { CHAT_ABRIR_EVENT, CHAT_NO_LEIDOS_EVENT } from "@/lib/chatNotificaciones"
 import AnalyticsTracker from "@/components/AnalyticsTracker"
 import ConfiguracionPanel from "@/components/ConfiguracionPanel"
+import AudioEstudioPanel from "@/components/AudioEstudioPanel"
 import InicioMovilHub from "@/components/InicioMovilHub"
 import { useMenuNavegacion } from "@/components/MenuNavegacion"
-import {
-  getLectorLeccionVoz,
-  getLectorPasajeVoz,
-  prepararSintesisEnGesto,
-} from "@/lib/leccionTts"
+import { useAudioEstudio } from "@/components/AudioEstudioProvider"
+import { prepararSintesisEnGesto } from "@/lib/leccionTts"
 
 const diaEstudioAlInicio = diaEstudioInicial()
 
@@ -87,7 +85,7 @@ export default function Home() {
     setVistaMovil,
     irAInicio,
   } = useMenuNavegacion()
-  const [audioAutoIniciar, setAudioAutoIniciar] = useState(false)
+  const { cargarSesion, abrirPanelAudio, reproducir } = useAudioEstudio()
 
   useEffect(() => {
     const leccion = getLeccionPorSemana(semana)
@@ -361,20 +359,15 @@ export default function Home() {
   }
 
   function abrirLeccionDesdeHub() {
-    setAudioAutoIniciar(false)
     setVistaMovil("leccion")
   }
 
   function abrirAudioDesdeHub() {
     prepararSintesisEnGesto()
-    const leccion = getLeccionPorSemana(semana)
-    if (leccion) {
-      const bloques = getBloquesDia(leccion, diaLeccion)
-      getLectorPasajeVoz().detener()
-      getLectorLeccionVoz().iniciar(bloques)
-    }
-    setAudioAutoIniciar(true)
-    setVistaMovil("leccion")
+    cargarSesion(semana, diaLeccion)
+    abrirPanelAudio()
+    // Inicia tras abrir el panel (gesto del usuario)
+    window.setTimeout(() => reproducir(), 50)
   }
 
   const tituloPanel =
@@ -386,12 +379,14 @@ export default function Home() {
           ? "Chat"
           : panel === "configuracion"
             ? "Configuración"
-            : ""
+            : panel === "audio"
+              ? "Audio del estudio"
+              : ""
 
   const sitioAnalytics =
     panel === "chat"
       ? "chat"
-      : panel === "biblia" || panel === "notas"
+      : panel === "biblia" || panel === "notas" || panel === "audio"
         ? "estudio"
         : "leccion"
 
@@ -448,8 +443,11 @@ export default function Home() {
             onDiaActivoChange={seleccionarDiaLeccion}
             anotaciones={anotaciones}
             onGuardarAnotacion={handleGuardarAnotacionLeccion}
-            autoReproducirAudio={audioAutoIniciar}
-            onAutoReproducirConsumido={() => setAudioAutoIniciar(false)}
+            onAbrirAudioEstudio={() => {
+              prepararSintesisEnGesto()
+              cargarSesion(semana, diaLeccion)
+              abrirPanelAudio()
+            }}
           />
         </div>
       </div>
@@ -467,7 +465,7 @@ export default function Home() {
               onClick={cerrarPanel}
               className="flex min-h-11 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-primary transition hover:bg-primary/8 active:bg-primary/12"
             >
-              ← Inicio
+              {panel === "audio" ? "← Volver" : "← Inicio"}
             </button>
             <h2 className="font-display flex-1 truncate text-base font-semibold text-slate-800">
               {tituloPanel}
@@ -476,7 +474,11 @@ export default function Home() {
 
           <div
             className={`custom-scroll min-h-0 flex-1 overscroll-contain [-webkit-overflow-scrolling:touch] ${
-              panel === "chat" ? "flex flex-col overflow-hidden p-2 sm:p-3" : "overflow-y-auto p-3 md:p-4"
+              panel === "chat"
+                ? "flex flex-col overflow-hidden p-2 sm:p-3"
+                : panel === "audio"
+                  ? "overflow-y-auto bg-[#f3f0e8] p-3 sm:p-5"
+                  : "overflow-y-auto p-3 md:p-4"
             }`}
           >
             {panel === "notas" && (
@@ -532,6 +534,18 @@ export default function Home() {
 
             {panel === "configuracion" && (
               <ConfiguracionPanel onNavegar={cerrarPanel} />
+            )}
+
+            {panel === "audio" && (
+              <AudioEstudioPanel
+                semana={semana}
+                diaLeccion={diaLeccion}
+                onCerrar={cerrarPanel}
+                onVerLeccion={() => {
+                  cerrarPanel()
+                  setVistaMovil("leccion")
+                }}
+              />
             )}
           </div>
         </div>
