@@ -8,7 +8,11 @@ type Props = {
   nombre: string
 }
 
+type TipoMensaje = "bienvenida" | "diario" | "exhortacion"
+
 type MensajeUi = {
+  tipo: TipoMensaje
+  emoji: string
   titulo: string
   texto: string
 }
@@ -18,41 +22,64 @@ const KEY_ULTIMO_DIA_MOSTRADO = "bienvenidaUltimoDiaMostrado"
 const KEY_PRIMER_SALUDO = "bienvenidaPrimerSaludoHecho"
 const DIAS_EXHORTACION = 3
 
-const MENSAJES_DIARIOS: MensajeUi[] = [
+const MENSAJES_DIARIOS: Omit<MensajeUi, "tipo">[] = [
   {
+    emoji: "😊",
     titulo: "Qué alegría verte hoy",
     texto: "Aparta unos minutos para escuchar al Señor y caminar de nuevo en su Palabra.",
   },
   {
+    emoji: "🙏",
     titulo: "Un día más con la Palabra",
     texto: "La constancia pequeña de cada día también forma una fe fuerte y serena.",
   },
   {
+    emoji: "✨",
     titulo: "Sigue adelante",
     texto: "Dios honra el corazón que vuelve a su estudio con humildad y deseo de aprender.",
   },
   {
+    emoji: "☀️",
     titulo: "Hoy también te espera el Señor",
     texto: "Lee, escucha y ora con calma; una sola verdad bien recibida puede sostener todo el día.",
   },
   {
+    emoji: "📖",
     titulo: "Tu estudio de hoy importa",
     texto: "No subestimes lo que Dios puede hacer cuando le das unos minutos con atención.",
   },
-]
-
-const MENSAJES_EXHORTACION: MensajeUi[] = [
   {
-    titulo: "Qué bueno que has vuelto",
-    texto: "El Señor sigue llamándote con amor. Retoma hoy el estudio y vuelve a encender el hábito.",
+    emoji: "💛",
+    titulo: "Bienvenido otra vez",
+    texto: "Cada día es una nueva oportunidad para crecer en Cristo. ¡Qué bueno que estás aquí!",
   },
   {
+    emoji: "🌿",
+    titulo: "Paz para tu día",
+    texto: "Que este momento de estudio te renueve por dentro y te acompañe en lo que viene.",
+  },
+]
+
+const MENSAJES_EXHORTACION: Omit<MensajeUi, "tipo">[] = [
+  {
+    emoji: "😢",
     titulo: "Te echábamos de menos",
     texto: "Aunque hayas estado lejos algunos días, siempre es buen momento para volver a la Palabra.",
   },
   {
-    titulo: "Vuelve con ánimo",
+    emoji: "🥺",
+    titulo: "Qué bueno que has vuelto",
+    texto: "El Señor sigue llamándote con amor. Retoma hoy el estudio y vuelve a encender el hábito.",
+  },
+  {
+    emoji: "😔",
+    titulo: "Te esperábamos",
     texto: "No empieces por la culpa sino por la gracia. Da hoy un paso sencillo y el Señor hará el resto.",
+  },
+  {
+    emoji: "💔",
+    titulo: "Volviste… ¡gracias!",
+    texto: "La fe se cuida un día a la vez. Hoy puedes empezar de nuevo, con ánimo y confianza.",
   },
 ]
 
@@ -85,7 +112,9 @@ function resolverMensaje(nombre: string): MensajeUi | null {
 
   if (primeraVez) {
     return {
-      titulo: `Bienvenido, ${nombre}`,
+      tipo: "bienvenida",
+      emoji: "🎉",
+      titulo: `¡Bienvenido, ${nombre}!`,
       texto: "Nos alegra tenerte aquí. Que este espacio te acerque cada día más a Cristo y a su Palabra.",
     }
   }
@@ -93,66 +122,119 @@ function resolverMensaje(nombre: string): MensajeUi | null {
   if (ultimaVisita) {
     const dias = diasEntre(ultimaVisita, hoy)
     if (dias >= DIAS_EXHORTACION) {
-      return MENSAJES_EXHORTACION[dias % MENSAJES_EXHORTACION.length] ?? MENSAJES_EXHORTACION[0]
+      const base =
+        MENSAJES_EXHORTACION[dias % MENSAJES_EXHORTACION.length] ?? MENSAJES_EXHORTACION[0]!
+      return { tipo: "exhortacion", ...base }
     }
   }
 
-  return MENSAJES_DIARIOS[hoy.getDay() % MENSAJES_DIARIOS.length] ?? MENSAJES_DIARIOS[0]
+  const base = MENSAJES_DIARIOS[hoy.getDay() % MENSAJES_DIARIOS.length] ?? MENSAJES_DIARIOS[0]!
+  return { tipo: "diario", ...base }
+}
+
+function etiquetaTipo(tipo: TipoMensaje): string {
+  if (tipo === "bienvenida") return "Primera visita"
+  if (tipo === "exhortacion") return "Te extrañábamos"
+  return "Estudio diario"
 }
 
 export default function BienvenidaFlotante({ nombre }: Props) {
   const [cerrado, setCerrado] = useState(false)
   const [listo, setListo] = useState(false)
+  const [saliendo, setSaliendo] = useState(false)
   const mensaje = useMemo(() => resolverMensaje(nombre), [nombre])
 
   useEffect(() => {
     if (!mensaje) return
-    const timer = window.setTimeout(() => setListo(true), 450)
+    const timer = window.setTimeout(() => setListo(true), 350)
     return () => window.clearTimeout(timer)
   }, [mensaje])
 
   useEffect(() => {
-    if (!nombre) return
-    safeLocalSet(KEY_ULTIMA_VISITA, new Date().toISOString())
-  }, [nombre])
+    if (!listo || cerrado) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [listo, cerrado])
 
-  function cerrar() {
-    setCerrado(true)
+  function marcarCerrado() {
     safeLocalSet(KEY_PRIMER_SALUDO, "1")
     safeLocalSet(KEY_ULTIMO_DIA_MOSTRADO, claveDiaLocal())
     safeLocalSet(KEY_ULTIMA_VISITA, new Date().toISOString())
+  }
+
+  function cerrar() {
+    setSaliendo(true)
+    marcarCerrado()
+    window.setTimeout(() => setCerrado(true), 180)
   }
 
   if (!mensaje || cerrado || !listo) return null
 
   return (
     <div
-      className="fixed right-3 top-[calc(env(safe-area-inset-top)+4.5rem)] z-[58] w-[min(24rem,calc(100vw-1.5rem))] sm:right-4 sm:top-[calc(env(safe-area-inset-top)+5rem)]"
+      className={`fixed inset-0 z-[58] flex items-center justify-center p-4 transition-opacity duration-200 ${
+        saliendo ? "opacity-0" : "opacity-100"
+      }`}
       role="dialog"
+      aria-modal="true"
       aria-labelledby="bienvenida-flotante-titulo"
-      aria-live="polite"
     >
-      <div className="rounded-2xl border border-primary/20 bg-[#f7f4ec]/97 p-3 shadow-2xl shadow-slate-900/15 backdrop-blur-sm">
-        <div className="flex items-start gap-3">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-primary/15 bg-white">
-            <Image src="/loges.jpg" alt="" fill sizes="64px" className="object-cover" priority />
+      <button
+        type="button"
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-[6px]"
+        aria-label="Cerrar bienvenida"
+        onClick={cerrar}
+      />
+
+      <div
+        className={`relative w-full max-w-sm overflow-hidden rounded-3xl border border-primary/15 bg-[#f7f4ec] shadow-2xl shadow-slate-900/25 transition-all duration-200 ${
+          saliendo ? "translate-y-2 scale-[0.98]" : "translate-y-0 scale-100"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={cerrar}
+          className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-2xl leading-none text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800 active:scale-95"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+
+        <div className="bg-gradient-to-br from-primary via-primary to-primary-dark px-5 pb-8 pt-6 text-center text-white">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-white/15 text-4xl shadow-inner ring-2 ring-white/25">
+            <span aria-hidden>{mensaje.emoji}</span>
           </div>
-          <div className="min-w-0 flex-1">
-            <p
-              id="bienvenida-flotante-titulo"
-              className="font-display text-base font-semibold leading-snug text-primary"
-            >
-              {mensaje.titulo}
-            </p>
-            <p className="mt-1 text-sm leading-relaxed text-slate-700">{mensaje.texto}</p>
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-amber-100/90">
+            {etiquetaTipo(mensaje.tipo)}
+          </p>
+          <h2
+            id="bienvenida-flotante-titulo"
+            className="font-display mt-2 text-xl font-semibold leading-snug sm:text-2xl"
+          >
+            {mensaje.titulo}
+          </h2>
+        </div>
+
+        <div className="relative -mt-4 rounded-t-3xl bg-[#f7f4ec] px-5 pb-5 pt-5">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-primary/15 bg-white shadow-md">
+            <div className="relative h-12 w-12">
+              <Image src="/loges.jpg" alt="" fill sizes="48px" className="object-cover" priority />
+            </div>
           </div>
+
+          <p className="text-center text-sm leading-relaxed text-slate-700 sm:text-[0.9375rem]">
+            {mensaje.texto}
+          </p>
+
           <button
             type="button"
             onClick={cerrar}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-primary/8 active:bg-primary/12"
-            aria-label="Cerrar bienvenida"
+            className="mt-5 min-h-12 w-full rounded-xl bg-primary px-4 text-base font-semibold text-white shadow-md shadow-primary/25 transition active:opacity-90"
           >
-            ×
+            Continuar
           </button>
         </div>
       </div>
