@@ -173,3 +173,54 @@ body[data-audio-mini="1"] main {
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
   }
 }
+
+/* Tarjetas del home: luz que recorre el borde (estilo Google Fotos) */
+.hub-card-shine {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: transparent !important;
+}
+
+.hub-card-shine::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  z-index: -2;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 70deg,
+    rgba(20, 184, 166, 0.2) 100deg,
+    #14b8a6 135deg,
+    #fbbf24 160deg,
+    #0f766e 190deg,
+    transparent 230deg,
+    transparent 360deg
+  );
+  animation: hub-shine-spin 3.2s linear infinite;
+}
+
+.hub-card-shine::after {
+  content: "";
+  position: absolute;
+  inset: 1.5px;
+  z-index: -1;
+  border-radius: inherit;
+  background: #f7f4ec;
+}
+
+@keyframes hub-shine-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-card-shine::before {
+    animation: none;
+    inset: -1.5px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #14b8a6, #0f766e, #fbbf24);
+  }
+}

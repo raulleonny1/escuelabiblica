@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import type { ReactNode } from "react"
 import { useMenuNavegacion } from "@/components/MenuNavegacion"
 import { useEstudio } from "@/components/EstudioContext"
 import PwaInstallButton from "@/components/PwaInstallButton"
@@ -132,7 +133,50 @@ function IconoHoja() {
 }
 
 const BOTON_BASE =
-  "flex min-h-[5.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-primary/15 bg-[#f7f4ec] px-2 py-3 text-center text-primary shadow-sm transition active:scale-[0.98] active:bg-primary/5"
+  "hub-card-shine relative flex min-h-[5.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-primary/15 bg-[#f7f4ec] px-2 py-3 text-center text-primary shadow-sm transition active:scale-[0.98] active:bg-primary/5"
+
+function BadgeEsquina({ n, tono = "accent" }: { n: number; tono?: "accent" | "danger" }) {
+  if (n <= 0) return null
+  return (
+    <span
+      className={`pointer-events-none absolute -right-1.5 -top-1.5 z-20 flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[0.7rem] font-bold leading-none text-white shadow-md ring-2 ring-[#f3f0e8] ${
+        tono === "danger" ? "bg-red-500" : "bg-accent"
+      }`}
+      aria-hidden
+    >
+      {n > 99 ? "99+" : n}
+    </span>
+  )
+}
+
+function TarjetaHub({
+  onClick,
+  badge,
+  ariaLabel,
+  children,
+}: {
+  onClick?: () => void
+  badge?: React.ReactNode
+  ariaLabel?: string
+  children: ReactNode
+}) {
+  if (onClick) {
+    return (
+      <div className="relative">
+        {badge}
+        <button type="button" onClick={onClick} className={BOTON_BASE} aria-label={ariaLabel}>
+          {children}
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div className="relative">
+      {badge}
+      <div className={BOTON_BASE}>{children}</div>
+    </div>
+  )
+}
 
 export default function InicioMovilHub({
   semana,
@@ -200,62 +244,60 @@ export default function InicioMovilHub({
         className="grid flex-1 grid-cols-2 content-start gap-3 p-4 pb-8 sm:gap-4 sm:p-5"
         aria-label="Inicio"
       >
-        <button type="button" onClick={onAbrirLeccion} className={BOTON_BASE}>
+        <TarjetaHub onClick={onAbrirLeccion}>
           <IconoLibro />
           <span className="text-sm font-semibold leading-tight">Lección del día</span>
-        </button>
+        </TarjetaHub>
 
-        <button type="button" onClick={onAbrirAudio} className={BOTON_BASE}>
+        <TarjetaHub onClick={onAbrirAudio}>
           <IconoAudio />
           <span className="text-sm font-semibold leading-tight">Audio del estudio</span>
-        </button>
+        </TarjetaHub>
 
-        <button type="button" onClick={() => abrirPanel("biblia")} className={BOTON_BASE}>
+        <TarjetaHub onClick={() => abrirPanel("biblia")}>
           <IconoBiblia />
           <span className="text-sm font-semibold leading-tight">Biblia</span>
-        </button>
+        </TarjetaHub>
 
-        <button type="button" onClick={() => abrirPanel("notas")} className={BOTON_BASE}>
+        <TarjetaHub onClick={() => abrirPanel("notas")}>
           <IconoNotas />
           <span className="text-sm font-semibold leading-tight">Mis notas</span>
-        </button>
+        </TarjetaHub>
 
-        <button type="button" onClick={() => abrirPanel("chat")} className={`relative ${BOTON_BASE}`}>
-          <span className="relative">
-            <IconoComunidad />
-            {chatNoLeidos > 0 && (
-              <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[0.625rem] font-bold text-white">
-                {chatNoLeidos > 9 ? "9+" : chatNoLeidos}
-              </span>
-            )}
-          </span>
-          <span className="text-sm font-semibold leading-tight">Comunidad</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={abrirPedidoOracion}
-          className={`relative ${BOTON_BASE}`}
+        <TarjetaHub
+          onClick={() => abrirPanel("chat")}
+          badge={<BadgeEsquina n={chatNoLeidos} tono="danger" />}
+          ariaLabel={
+            chatNoLeidos > 0
+              ? `Comunidad, ${chatNoLeidos} mensaje${chatNoLeidos === 1 ? "" : "s"} sin leer`
+              : "Comunidad"
+          }
         >
-          <span className="relative">
-            <IconoOracion />
-            {pedidoSinLeer > 0 && (
-              <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[0.625rem] font-bold text-white">
-                {pedidoSinLeer > 9 ? "9+" : pedidoSinLeer}
-              </span>
-            )}
-          </span>
-          <span className="text-sm font-semibold leading-tight">Pedir oración</span>
-        </button>
+          <IconoComunidad />
+          <span className="text-sm font-semibold leading-tight">Comunidad</span>
+        </TarjetaHub>
 
-        <button type="button" onClick={abrirHojaDominical} className={BOTON_BASE}>
+        <TarjetaHub
+          onClick={abrirPedidoOracion}
+          badge={<BadgeEsquina n={pedidoSinLeer} tono="accent" />}
+          ariaLabel={
+            pedidoSinLeer > 0
+              ? `Pedir oración, ${pedidoSinLeer} pedido${pedidoSinLeer === 1 ? "" : "s"} nuevos`
+              : "Pedir oración"
+          }
+        >
+          <IconoOracion />
+          <span className="text-sm font-semibold leading-tight">Pedir oración</span>
+        </TarjetaHub>
+
+        <TarjetaHub onClick={abrirHojaDominical}>
           <IconoHoja />
           <span className="text-sm font-semibold leading-tight">Hoja dominical</span>
-        </button>
+        </TarjetaHub>
 
-        <div className={BOTON_BASE}>
+        <TarjetaHub>
           <PwaInstallButton variant="hub" />
-        </div>
+        </TarjetaHub>
       </nav>
     </div>
   )
