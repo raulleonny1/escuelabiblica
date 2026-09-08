@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 import { useMenuNavegacion } from "@/components/MenuNavegacion"
 import { useEstudio } from "@/components/EstudioContext"
 import PwaInstallButton from "@/components/PwaInstallButton"
+import { abrirWhatsApp } from "@/lib/compartirRedes"
 import { getVersiculoDelDia } from "@/lib/versiculosDia"
 import type { DiaLeccionId } from "@/lib/lecciones"
 import { ETIQUETAS_DIA_LECCION } from "@/lib/lecciones"
@@ -130,6 +131,32 @@ function IconoHoja() {
       <path d="M9 8h6M9 11.5h6M9 15h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
+}
+
+function IconoCompartir() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden>
+      <path
+        d="M8.5 12a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Zm12 0a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Zm0-7.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path
+        d="M8.2 10.7 13.3 7.8M8.2 13.3l5.1 2.9"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function mensajeCompartirApp(): string {
+  const url =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://www.elbuenpastor.online"
+  return `Te invito a estudiar la Biblia conmigo en Estudio diario:\n${url}`
 }
 
 const LABEL = "text-sm font-semibold leading-tight"
@@ -304,6 +331,14 @@ export default function InicioMovilHub({
 
         <TarjetaHub>
           <PwaInstallButton variant="hub" />
+        </TarjetaHub>
+
+        <TarjetaHub
+          onClick={() => abrirWhatsApp(mensajeCompartirApp())}
+          ariaLabel="Comparte esta aplicación por WhatsApp"
+        >
+          <IconoCompartir />
+          <span className={LABEL}>Comparte esta aplicación</span>
         </TarjetaHub>
       </nav>
     </div>
