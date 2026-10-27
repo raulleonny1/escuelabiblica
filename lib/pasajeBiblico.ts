@@ -226,8 +226,10 @@ export function segmentarPasajesEnTexto(texto: string): SegmentoTextoPasaje[] {
 
 export function extraerTextoPasaje(
   biblia: BibliaData,
-  ref: ReferenciaPasaje
+  ref: ReferenciaPasaje,
+  opciones?: { limiteVersos?: number }
 ): TextoPasajeResultado {
+  const limite = opciones?.limiteVersos ?? MAX_VERSOS
   const titulo = formatearTituloPasaje(ref)
   const libroData = biblia[ref.libro]
   if (!libroData) {
@@ -240,7 +242,7 @@ export function extraerTextoPasaje(
     const capData = libroData[String(cap)]
     if (!capData) return
     for (const num of ordenarClavesNumericas(Object.keys(capData))) {
-      if (versos.length >= MAX_VERSOS) return
+      if (versos.length >= limite) return
       versos.push({ capitulo: cap, numero: num, texto: capData[num]! })
     }
   }
@@ -248,12 +250,12 @@ export function extraerTextoPasaje(
   if (ref.versiculoInicio !== undefined) {
     const capData = libroData[String(ref.capitulo)]
     const fin = ref.versiculoFin ?? ref.versiculoInicio
-    for (let v = ref.versiculoInicio; v <= fin && versos.length < MAX_VERSOS; v++) {
+    for (let v = ref.versiculoInicio; v <= fin && versos.length < limite; v++) {
       const t = capData?.[String(v)]
       if (t) versos.push({ capitulo: ref.capitulo, numero: String(v), texto: t })
     }
   } else if (ref.capituloFin !== undefined) {
-    for (let c = ref.capitulo; c <= ref.capituloFin && versos.length < MAX_VERSOS; c++) {
+    for (let c = ref.capitulo; c <= ref.capituloFin && versos.length < limite; c++) {
       agregarCapitulo(c)
     }
   } else {
@@ -265,7 +267,7 @@ export function extraerTextoPasaje(
   }
 
   let aviso: string | undefined
-  if (versos.length >= MAX_VERSOS) {
+  if (limite < Number.POSITIVE_INFINITY && versos.length >= limite) {
     aviso = "Pasaje muy largo; se muestra el inicio. Abre la pestaña Biblia para leerlo completo."
   }
 

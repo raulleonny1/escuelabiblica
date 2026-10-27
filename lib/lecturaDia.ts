@@ -93,13 +93,31 @@ const LIBROS_AT_DESDE_EZEQUIEL = [
 
 type CapRef = { libro: string; capitulo: number }
 
+export type CapituloLectura = {
+  libro: string
+  capitulo: number
+  /** Título visible (p. ej. «Daniel 1», «Salmo 92»). */
+  etiqueta: string
+  /** Referencia para cargar el texto (p. ej. «Salmo 92», «Apocalipsis 15»). */
+  referencia: string
+}
+
 export type LecturaDelDia = {
   fecha: string
   indiceDia: number
-  at: { libro: string; desde: number; hasta: number; etiqueta: string }
-  salmo: { capitulo: number; etiqueta: string }
-  apocalipsis: { capitulo: number; etiqueta: string }
+  at: {
+    libro: string
+    desde: number
+    hasta: number
+    etiqueta: string
+    referencias: string[]
+  }
+  salmo: { capitulo: number; etiqueta: string; referencia: string }
+  apocalipsis: { capitulo: number; etiqueta: string; referencia: string }
   resumen: string
+  /** Capítulos del día en orden, uno por pantalla de lectura. */
+  capitulos: CapituloLectura[]
+  referencias: string[]
 }
 
 function parseFechaLocal(iso: string): Date {
@@ -164,21 +182,52 @@ function formatoRangoAt(caps: CapRef[]): LecturaDelDia["at"] {
   if (mismoLibro) {
     etiqueta = desde === hasta ? `${primero.libro} ${desde}` : `${primero.libro} ${desde}-${hasta}`
   } else {
-    etiqueta = `${primero.libro} ${desde}, ${ultimo.libro} ${hasta}`
+    etiqueta = caps.map((c) => `${c.libro} ${c.capitulo}`).join(", ")
   }
-  return { libro: primero.libro, desde, hasta, etiqueta }
+  const referencias = caps.map((c) => `${c.libro} ${c.capitulo}`)
+  return { libro: primero.libro, desde, hasta, etiqueta, referencias }
 }
 
 function salmoDelDia(indice: number): LecturaDelDia["salmo"] {
   // Día 0 → Salmo 91
   const n = ((90 + indice) % 150) + 1
-  return { capitulo: n, etiqueta: `Salmo ${n}` }
+  return { capitulo: n, etiqueta: `Salmo ${n}`, referencia: `Salmo ${n}` }
 }
 
 function apocalipsisDelDia(indice: number): LecturaDelDia["apocalipsis"] {
   // Día 0 → Apocalipsis 15; cicla 1–22
   const n = ((14 + indice) % 22) + 1
-  return { capitulo: n, etiqueta: `Apocalipsis ${n}` }
+  return {
+    capitulo: n,
+    etiqueta: `Apocalipsis ${n}`,
+    referencia: `Apocalipsis ${n}`,
+  }
+}
+
+function capitulosDelDia(
+  capsAt: CapRef[],
+  salmo: LecturaDelDia["salmo"],
+  apocalipsis: LecturaDelDia["apocalipsis"]
+): CapituloLectura[] {
+  const lista: CapituloLectura[] = capsAt.map((c) => ({
+    libro: c.libro,
+    capitulo: c.capitulo,
+    etiqueta: `${c.libro} ${c.capitulo}`,
+    referencia: `${c.libro} ${c.capitulo}`,
+  }))
+  lista.push({
+    libro: "Salmos",
+    capitulo: salmo.capitulo,
+    etiqueta: salmo.etiqueta,
+    referencia: salmo.referencia,
+  })
+  lista.push({
+    libro: "Apocalipsis",
+    capitulo: apocalipsis.capitulo,
+    etiqueta: apocalipsis.etiqueta,
+    referencia: apocalipsis.referencia,
+  })
+  return lista
 }
 
 export function getLecturaDelDia(fechaIso?: string): LecturaDelDia | null {
@@ -193,9 +242,20 @@ export function getLecturaDelDia(fechaIso?: string): LecturaDelDia | null {
   const at = formatoRangoAt(caps)
   const salmo = salmoDelDia(indice)
   const apocalipsis = apocalipsisDelDia(indice)
+  const capitulos = capitulosDelDia(caps, salmo, apocalipsis)
+  const referencias = capitulos.map((c) => c.referencia)
   const resumen = `${at.etiqueta} · ${salmo.etiqueta} · ${apocalipsis.etiqueta}`
 
-  return { fecha, indiceDia: indice, at, salmo, apocalipsis, resumen }
+  return {
+    fecha,
+    indiceDia: indice,
+    at,
+    salmo,
+    apocalipsis,
+    resumen,
+    capitulos,
+    referencias,
+  }
 }
 
 export function etiquetaFechaLectura(fechaIso: string): string {
