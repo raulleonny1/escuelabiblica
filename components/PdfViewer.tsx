@@ -1,10 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Viewer, Worker, SpecialZoomLevel } from "@react-pdf-viewer/core"
+import { zoomPlugin } from "@react-pdf-viewer/zoom"
 import { findPageIndexForDay, getFechaLecturaParaSemana } from "@/lib/leccionPdf"
 import { getPdfWorkerUrl } from "@/lib/pdfWorker"
 import "@react-pdf-viewer/core/lib/styles/index.css"
+import "@react-pdf-viewer/zoom/lib/styles/index.css"
 
 interface PdfViewerProps {
   url: string
@@ -22,11 +24,17 @@ function detectarModoTactil(): boolean {
   )
 }
 
+const botonZoom =
+  "flex h-10 min-w-10 items-center justify-center rounded-lg border border-border bg-white px-3 text-base font-semibold text-slate-800 shadow-sm transition hover:bg-primary/8 active:bg-primary/12 disabled:opacity-40"
+
 export default function PdfViewer({ url, irAlDiaLectura, semana, fechaLectura }: PdfViewerProps) {
   const [touchMode] = useState(detectarModoTactil)
   const [montado, setMontado] = useState(false)
   const [paginaInicial, setPaginaInicial] = useState(0)
   const [paginaLista, setPaginaLista] = useState(false)
+
+  const zoomPluginInstance = useMemo(() => zoomPlugin({ enableShortcuts: true }), [])
+  const { ZoomIn, ZoomOut, CurrentScale, zoomTo } = zoomPluginInstance
 
   useEffect(() => {
     setMontado(true)
@@ -77,30 +85,76 @@ export default function PdfViewer({ url, irAlDiaLectura, semana, fechaLectura }:
     )
   }
 
+  const escalaInicial = touchMode ? SpecialZoomLevel.PageWidth : SpecialZoomLevel.PageFit
+
   return (
-    <div className="pdf-viewer-shell h-full w-full min-h-[200px] lg:min-h-[480px]">
-      <Worker workerUrl={getPdfWorkerUrl()}>
-        <Viewer
-          key={`${url}-${paginaInicial}`}
-          fileUrl={url}
-          initialPage={paginaInicial}
-          defaultScale={touchMode ? SpecialZoomLevel.PageWidth : SpecialZoomLevel.PageFit}
-          renderLoader={(percent) => (
-            <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-slate-500">
-              Cargando PDF… {Math.round(percent)}%
-            </div>
+    <div className="pdf-viewer-shell flex h-full w-full min-h-[200px] flex-col lg:min-h-[480px]">
+      <div className="flex shrink-0 items-center justify-center gap-2 border-b border-border bg-card px-3 py-2">
+        <ZoomOut>
+          {(props) => (
+            <button
+              type="button"
+              className={botonZoom}
+              onClick={props.onClick}
+              aria-label="Alejar"
+            >
+              −
+            </button>
           )}
-          renderError={(loadError) => (
-            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 p-4 text-center">
-              <p className="font-semibold text-red-700">No se pudo abrir el PDF</p>
-              <p className="text-sm text-slate-600">
-                {loadError.message || "Archivo no encontrado"}
-              </p>
-              <p className="text-xs text-slate-400 break-all">{url}</p>
-            </div>
+        </ZoomOut>
+        <CurrentScale>
+          {(props) => (
+            <span className="min-w-[4.5rem] text-center text-sm font-semibold tabular-nums text-slate-700">
+              {Math.round(props.scale * 100)}%
+            </span>
           )}
-        />
-      </Worker>
+        </CurrentScale>
+        <ZoomIn>
+          {(props) => (
+            <button
+              type="button"
+              className={botonZoom}
+              onClick={props.onClick}
+              aria-label="Acercar"
+            >
+              +
+            </button>
+          )}
+        </ZoomIn>
+        <button
+          type="button"
+          className={`${botonZoom} text-sm font-medium`}
+          onClick={() => zoomTo(escalaInicial)}
+          aria-label="Ajustar a la página"
+        >
+          Ajustar
+        </button>
+      </div>
+      <div className="min-h-0 flex-1">
+        <Worker workerUrl={getPdfWorkerUrl()}>
+          <Viewer
+            key={`${url}-${paginaInicial}`}
+            fileUrl={url}
+            initialPage={paginaInicial}
+            defaultScale={escalaInicial}
+            plugins={[zoomPluginInstance]}
+            renderLoader={(percent) => (
+              <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-slate-500">
+                Cargando PDF… {Math.round(percent)}%
+              </div>
+            )}
+            renderError={(loadError) => (
+              <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 p-4 text-center">
+                <p className="font-semibold text-red-700">No se pudo abrir el PDF</p>
+                <p className="text-sm text-slate-600">
+                  {loadError.message || "Archivo no encontrado"}
+                </p>
+                <p className="text-xs text-slate-400 break-all">{url}</p>
+              </div>
+            )}
+          />
+        </Worker>
+      </div>
     </div>
   )
 }

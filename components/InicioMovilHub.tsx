@@ -1,9 +1,10 @@
 "use client"
 
 import Image from "next/image"
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { useMenuNavegacion } from "@/components/MenuNavegacion"
 import { useEstudio } from "@/components/EstudioContext"
+import LecturaDiaModal from "@/components/LecturaDiaModal"
 import PwaInstallButton from "@/components/PwaInstallButton"
 import { abrirWhatsApp } from "@/lib/compartirRedes"
 import { getVersiculoDelDia } from "@/lib/versiculosDia"
@@ -133,6 +134,22 @@ function IconoHoja() {
   )
 }
 
+function IconoLecturaDia() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden>
+      <path
+        d="M5 4.5h10.5L19 8v11.5H5A1.5 1.5 0 0 1 3.5 18V6A1.5 1.5 0 0 1 5 4.5Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path d="M15 4.5V8h3.5" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M7 11h8M7 14.5h8M7 18h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="18.5" cy="18.5" r="3.2" fill="var(--color-surface)" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M18.5 16.8v1.7l1.1.7" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function IconoCompartir() {
   return (
     <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden>
@@ -226,6 +243,7 @@ export default function InicioMovilHub({
     pedidoSinLeer,
   } = useMenuNavegacion()
   const { estudio } = useEstudio()
+  const [lecturaAbierta, setLecturaAbierta] = useState(false)
   const versiculo = getVersiculoDelDia(semana, diaLeccion)
   const diaCorto = ETIQUETAS_DIA_LECCION[diaLeccion].split(" —")[0]
   const tituloLeccion = estudio
@@ -281,6 +299,11 @@ export default function InicioMovilHub({
         <TarjetaHub onClick={onAbrirLeccion}>
           <IconoLibro />
           <span className={LABEL}>Lección del día</span>
+        </TarjetaHub>
+
+        <TarjetaHub onClick={() => setLecturaAbierta(true)}>
+          <IconoLecturaDia />
+          <span className={LABEL}>Lectura del día</span>
         </TarjetaHub>
 
         <TarjetaHub onClick={onAbrirAudio}>
@@ -341,6 +364,8 @@ export default function InicioMovilHub({
           <span className={LABEL}>Comparte esta aplicación</span>
         </TarjetaHub>
       </nav>
+
+      <LecturaDiaModal abierto={lecturaAbierta} onCerrar={() => setLecturaAbierta(false)} />
     </div>
   )
 }

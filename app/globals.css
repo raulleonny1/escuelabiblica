@@ -90,6 +90,8 @@ body {
 .pdf-viewer-shell {
   height: 100%;
   min-height: 0;
+  /* Permite pan/scroll del PDF; el zoom va por los botones del visor */
+  touch-action: pan-x pan-y;
 }
 
 .pdf-viewer-shell .rpv-default-layout__container {
