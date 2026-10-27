@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import PasajeAudioPlayer from "@/components/PasajeAudioPlayer"
 import { useSesion } from "@/components/SesionProvider"
 import { cargarBiblia } from "@/lib/bibliaLoader"
 import {
@@ -11,15 +10,18 @@ import {
   subscribeComentariosLectura,
 } from "@/lib/comentariosLectura"
 import {
+  alternarPausaLecturaAudio,
+  detenerLecturaAudio,
+  getLecturaAudioSnapshot,
+  reproducirLecturaAudio,
+  subscribeLecturaAudio,
+  type LecturaAudioSnapshot,
+} from "@/lib/lecturaAudio"
+import {
   etiquetaFechaLectura,
   fechaHoyLocal,
   getLecturaDelDia,
 } from "@/lib/lecturaDia"
-import {
-  alAbrirPasajeBiblico,
-  alCerrarPasajeBiblico,
-  getLectorPasajeVoz,
-} from "@/lib/leccionTts"
 import {
   extraerTextoPasaje,
   parseReferenciaPasaje,
@@ -49,6 +51,9 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
   const [resultado, setResultado] = useState<TextoPasajeResultado | null>(null)
   const [errorTexto, setErrorTexto] = useState("")
   const [vistaComentario, setVistaComentario] = useState(false)
+  const [audioSnap, setAudioSnap] = useState<LecturaAudioSnapshot>(() =>
+    getLecturaAudioSnapshot()
+  )
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const total = capitulos.length
@@ -58,14 +63,17 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
   const esUltimo = total > 0 && indice >= total - 1
   const audioTexto =
     resultado && resultado.versos.length > 0 ? textoPasajeParaAudio(resultado) : ""
+  const audioDeEsteCapitulo =
+    audioSnap.estado !== "idle" && audioSnap.referencia === referenciaActual
 
   useEffect(() => {
     setMontado(true)
   }, [])
 
+  useEffect(() => subscribeLecturaAudio(() => setAudioSnap(getLecturaAudioSnapshot())), [])
+
+  /** Cerrar la ventana NO detiene el audio (igual que Audio del estudio). */
   function cerrar() {
-    getLectorPasajeVoz().detener()
-    alCerrarPasajeBiblico()
     onCerrar()
   }
 
@@ -74,11 +82,6 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
     setIndice(0)
     setVistaComentario(false)
     setAviso("")
-    alAbrirPasajeBiblico()
-    return () => {
-      getLectorPasajeVoz().detener()
-      alCerrarPasajeBiblico()
-    }
   }, [abierto, fecha])
 
   useEffect(() => {
@@ -87,8 +90,6 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
     document.body.style.overflow = "hidden"
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        getLectorPasajeVoz().detener()
-        alCerrarPasajeBiblico()
         onCerrar()
         return
       }
@@ -125,15 +126,11 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
 
   useEffect(() => {
     if (!abierto || !referenciaActual || vistaComentario) {
-      if (vistaComentario) {
-        getLectorPasajeVoz().detener()
-        setResultado(null)
-      }
+      if (vistaComentario) setResultado(null)
       return
     }
 
     let cancelado = false
-    getLectorPasajeVoz().detener()
     setCargandoTexto(true)
     setErrorTexto("")
     setResultado(null)
@@ -194,12 +191,16 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
   function irSiguiente() {
     if (vistaComentario) return
     if (esUltimo) {
-      getLectorPasajeVoz().detener()
       setVistaComentario(true)
       requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
       return
     }
     setIndice((i) => Math.min(i + 1, total - 1))
+  }
+
+  function playCapitulo() {
+    if (!audioTexto || !actual) return
+    reproducirLecturaAudio(audioTexto, actual.etiqueta, actual.referencia)
   }
 
   if (!abierto || !montado) return null
@@ -246,7 +247,7 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
               e.stopPropagation()
               cerrar()
             }}
-            aria-label="Cerrar"
+            aria-label="Cerrar (el audio sigue si está reproduciendo)"
           >
             ×
           </button>
@@ -274,7 +275,6 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
             <button
               type="button"
               onClick={() => {
-                getLectorPasajeVoz().detener()
                 setVistaComentario(true)
                 requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
               }}
@@ -289,10 +289,45 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
           </div>
         )}
 
-        {/* Audio fuera del scroll: el gesto de play no compite con pan-y */}
         {!vistaComentario && audioTexto ? (
-          <div className="shrink-0">
-            <PasajeAudioPlayer texto={audioTexto} />
+          <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-primary/5 px-4 py-2.5">
+            <span className="text-xs font-medium text-primary">Escuchar pasaje</span>
+            <div className="ml-auto flex flex-wrap gap-1.5">
+              {!audioDeEsteCapitulo && (
+                <button
+                  type="button"
+                  onClick={playCapitulo}
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-white active:opacity-90"
+                >
+                  <span aria-hidden>▶</span>
+                  Play
+                </button>
+              )}
+              {audioDeEsteCapitulo && (
+                <>
+                  <button
+                    type="button"
+                    onClick={alternarPausaLecturaAudio}
+                    className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold active:opacity-90 ${
+                      audioSnap.estado === "playing"
+                        ? "bg-primary text-white"
+                        : "border border-primary bg-white text-primary"
+                    }`}
+                  >
+                    <span aria-hidden>{audioSnap.estado === "playing" ? "⏸" : "▶"}</span>
+                    {audioSnap.estado === "playing" ? "Pausa" : "Seguir"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={detenerLecturaAudio}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border bg-white px-3 text-xs font-semibold text-slate-600 active:bg-slate-50"
+                  >
+                    <span aria-hidden>⏹</span>
+                    Cerrar audio
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ) : null}
 

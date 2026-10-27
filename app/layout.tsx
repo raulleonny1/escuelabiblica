@@ -4,6 +4,7 @@ import AppHeader from "@/components/AppHeader"
 import { EstudioProvider } from "@/components/EstudioContext"
 import { MenuNavegacionProvider, DrawerMenuLateral } from "@/components/MenuNavegacion"
 import { AudioEstudioProvider } from "@/components/AudioEstudioProvider"
+import LecturaAudioMiniBar from "@/components/LecturaAudioMiniBar"
 import { SesionProvider } from "@/components/SesionProvider"
 import FirebaseInit from "@/components/FirebaseInit"
 import FontScaleInit from "@/components/FontScaleInit"
@@ -86,6 +87,7 @@ export default function RootLayout({
                     </div>
                   </main>
                 </div>
+                <LecturaAudioMiniBar />
               </AudioEstudioProvider>
             </MenuNavegacionProvider>
           </SesionProvider>

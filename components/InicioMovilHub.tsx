@@ -1,12 +1,13 @@
 "use client"
 
 import Image from "next/image"
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useMenuNavegacion } from "@/components/MenuNavegacion"
 import { useEstudio } from "@/components/EstudioContext"
 import LecturaDiaModal from "@/components/LecturaDiaModal"
 import PwaInstallButton from "@/components/PwaInstallButton"
 import { abrirWhatsApp } from "@/lib/compartirRedes"
+import { LECTURA_DIA_ABRIR_EVENT } from "@/lib/lecturaAudio"
 import { getVersiculoDelDia } from "@/lib/versiculosDia"
 import type { DiaLeccionId } from "@/lib/lecciones"
 import { ETIQUETAS_DIA_LECCION } from "@/lib/lecciones"
@@ -244,6 +245,15 @@ export default function InicioMovilHub({
   } = useMenuNavegacion()
   const { estudio } = useEstudio()
   const [lecturaAbierta, setLecturaAbierta] = useState(false)
+
+  useEffect(() => {
+    function abrirDesdeMini() {
+      setLecturaAbierta(true)
+    }
+    window.addEventListener(LECTURA_DIA_ABRIR_EVENT, abrirDesdeMini)
+    return () => window.removeEventListener(LECTURA_DIA_ABRIR_EVENT, abrirDesdeMini)
+  }, [])
+
   const versiculo = getVersiculoDelDia(semana, diaLeccion)
   const diaCorto = ETIQUETAS_DIA_LECCION[diaLeccion].split(" —")[0]
   const tituloLeccion = estudio
