@@ -143,6 +143,13 @@ input[type="date"] {
   touch-action: manipulation;
 }
 
+/* Lectura del día: scroll táctil estable (evita que el gesto “salte” arriba) */
+.lectura-dia-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
 /* Anotaciones en lección — resaltado solo con esta clase (no usar <mark> sin ella) */
 .anot-resaltado {
   background-color: #fef08a;

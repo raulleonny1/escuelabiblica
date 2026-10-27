@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import PasajeAudioPlayer from "@/components/PasajeAudioPlayer"
 import { useSesion } from "@/components/SesionProvider"
 import { cargarBiblia } from "@/lib/bibliaLoader"
@@ -13,8 +14,12 @@ import {
   etiquetaFechaLectura,
   fechaHoyLocal,
   getLecturaDelDia,
-  type CapituloLectura,
 } from "@/lib/lecturaDia"
+import {
+  alAbrirPasajeBiblico,
+  alCerrarPasajeBiblico,
+  getLectorPasajeVoz,
+} from "@/lib/leccionTts"
 import {
   extraerTextoPasaje,
   parseReferenciaPasaje,
@@ -32,9 +37,10 @@ const LIMITE_COMPLETO = Number.POSITIVE_INFINITY
 export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
   const { usuarioId } = useSesion()
   const fecha = fechaHoyLocal()
-  const lectura = getLecturaDelDia(fecha)
+  const lectura = useMemo(() => getLecturaDelDia(fecha), [fecha])
   const capitulos = lectura?.capitulos ?? []
 
+  const [montado, setMontado] = useState(false)
   const [indice, setIndice] = useState(0)
   const [comentario, setComentario] = useState("")
   const [guardando, setGuardando] = useState(false)
@@ -46,36 +52,59 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const total = capitulos.length
-  const actual: CapituloLectura | null = capitulos[indice] ?? null
+  const actual = capitulos[indice] ?? null
+  const referenciaActual = actual?.referencia ?? ""
   const esPrimero = indice <= 0
   const esUltimo = total > 0 && indice >= total - 1
+  const audioTexto =
+    resultado && resultado.versos.length > 0 ? textoPasajeParaAudio(resultado) : ""
+
+  useEffect(() => {
+    setMontado(true)
+  }, [])
+
+  function cerrar() {
+    getLectorPasajeVoz().detener()
+    alCerrarPasajeBiblico()
+    onCerrar()
+  }
 
   useEffect(() => {
     if (!abierto) return
     setIndice(0)
     setVistaComentario(false)
     setAviso("")
+    alAbrirPasajeBiblico()
+    return () => {
+      getLectorPasajeVoz().detener()
+      alCerrarPasajeBiblico()
+    }
   }, [abierto, fecha])
 
   useEffect(() => {
     if (!abierto) return
-    const prev = document.body.style.overflow
+    const prevOverflow = document.body.style.overflow
     document.body.style.overflow = "hidden"
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onCerrar()
+      if (e.key === "Escape") {
+        getLectorPasajeVoz().detener()
+        alCerrarPasajeBiblico()
+        onCerrar()
+        return
+      }
       if (vistaComentario) return
-      if (e.key === "ArrowRight" || e.key === "PageDown") {
+      if (e.key === "ArrowRight") {
         e.preventDefault()
         setIndice((i) => Math.min(i + 1, Math.max(total - 1, 0)))
       }
-      if (e.key === "ArrowLeft" || e.key === "PageUp") {
+      if (e.key === "ArrowLeft") {
         e.preventDefault()
         setIndice((i) => Math.max(i - 1, 0))
       }
     }
     window.addEventListener("keydown", onKey)
     return () => {
-      document.body.style.overflow = prev
+      document.body.style.overflow = prevOverflow
       window.removeEventListener("keydown", onKey)
     }
   }, [abierto, onCerrar, vistaComentario, total])
@@ -95,23 +124,30 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
   }, [abierto, usuarioId, fecha])
 
   useEffect(() => {
-    if (!abierto || !actual || vistaComentario) {
-      if (vistaComentario) setResultado(null)
+    if (!abierto || !referenciaActual || vistaComentario) {
+      if (vistaComentario) {
+        getLectorPasajeVoz().detener()
+        setResultado(null)
+      }
       return
     }
 
     let cancelado = false
+    getLectorPasajeVoz().detener()
     setCargandoTexto(true)
     setErrorTexto("")
     setResultado(null)
-    scrollRef.current?.scrollTo({ top: 0 })
 
-    const ref = parseReferenciaPasaje(actual.referencia)
+    const ref = parseReferenciaPasaje(referenciaActual)
     if (!ref) {
       setErrorTexto("No se pudo interpretar la referencia.")
       setCargandoTexto(false)
       return
     }
+
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ top: 0 })
+    })
 
     cargarBiblia()
       .then((biblia) => {
@@ -128,7 +164,7 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
     return () => {
       cancelado = true
     }
-  }, [abierto, actual, vistaComentario])
+  }, [abierto, referenciaActual, vistaComentario])
 
   async function guardar() {
     if (!usuarioId) {
@@ -158,29 +194,33 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
   function irSiguiente() {
     if (vistaComentario) return
     if (esUltimo) {
+      getLectorPasajeVoz().detener()
       setVistaComentario(true)
-      scrollRef.current?.scrollTo({ top: 0 })
+      requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
       return
     }
     setIndice((i) => Math.min(i + 1, total - 1))
   }
 
-  if (!abierto) return null
+  if (!abierto || !montado) return null
 
-  return (
+  const modal = (
     <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-900/60 sm:items-center sm:p-3"
+      className="fixed inset-0 z-[90] flex items-stretch justify-center bg-slate-900/65 sm:items-center sm:p-3"
       role="dialog"
       aria-modal="true"
       aria-labelledby="lectura-dia-titulo"
-      onClick={onCerrar}
+      onClick={cerrar}
     >
       <div
         className="relative flex h-[100dvh] w-full max-w-2xl flex-col overflow-hidden bg-card shadow-2xl sm:h-[min(94dvh,900px)] sm:rounded-2xl sm:border sm:border-border"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex shrink-0 items-start justify-between gap-2 border-b border-border bg-primary px-4 py-3 text-white">
-          <div className="min-w-0">
+        <header
+          className="relative z-10 flex shrink-0 items-start justify-between gap-2 border-b border-border bg-primary px-4 py-3 text-white"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+        >
+          <div className="min-w-0 pr-2">
             <p className="text-[0.625rem] font-semibold uppercase tracking-wider text-amber-100/90">
               Lectura del día · RVR 1909
             </p>
@@ -200,8 +240,12 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
           </div>
           <button
             type="button"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-xl leading-none hover:bg-white/30"
-            onClick={onCerrar}
+            className="relative z-20 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/25 text-2xl leading-none text-white active:bg-white/40"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              cerrar()
+            }}
             aria-label="Cerrar"
           >
             ×
@@ -209,7 +253,7 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
         </header>
 
         {lectura && total > 0 && (
-          <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-border bg-slate-50 px-3 py-2">
+          <div className="flex shrink-0 gap-1.5 overflow-x-auto overscroll-x-contain border-b border-border bg-slate-50 px-3 py-2 [-webkit-overflow-scrolling:touch]">
             {capitulos.map((cap, i) => (
               <button
                 key={cap.referencia}
@@ -230,8 +274,9 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
             <button
               type="button"
               onClick={() => {
+                getLectorPasajeVoz().detener()
                 setVistaComentario(true)
-                scrollRef.current?.scrollTo({ top: 0 })
+                requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }))
               }}
               className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                 vistaComentario
@@ -244,7 +289,17 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
           </div>
         )}
 
-        <div ref={scrollRef} className="custom-scroll min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+        {/* Audio fuera del scroll: el gesto de play no compite con pan-y */}
+        {!vistaComentario && audioTexto ? (
+          <div className="shrink-0">
+            <PasajeAudioPlayer texto={audioTexto} />
+          </div>
+        ) : null}
+
+        <div
+          ref={scrollRef}
+          className="lectura-dia-scroll min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-5"
+        >
           {!lectura ? (
             <div className="rounded-xl border border-border bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
               <p className="font-semibold text-slate-800">Hoy no hay lectura programada.</p>
@@ -304,22 +359,17 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
                 </p>
               )}
 
-              {!cargandoTexto && resultado && resultado.versos.length > 0 && (
-                <>
-                  <div className="mb-3">
-                    <PasajeAudioPlayer texto={textoPasajeParaAudio(resultado)} />
-                  </div>
-                  {resultado.versos.map((v, i) => (
-                    <p
-                      key={`${actual?.referencia}-${v.capitulo}-${v.numero}-${i}`}
-                      className="mb-2.5 text-[1.05rem] leading-relaxed text-slate-800"
-                    >
-                      <sup className="mr-1.5 font-bold text-primary">{v.numero}</sup>
-                      {v.texto}
-                    </p>
-                  ))}
-                </>
-              )}
+              {!cargandoTexto &&
+                resultado?.versos.map((v, i) => (
+                  <p
+                    key={`${referenciaActual}-${v.capitulo}-${v.numero}-${i}`}
+                    className="mb-2.5 text-[1.05rem] leading-relaxed text-slate-800"
+                  >
+                    <sup className="mr-1.5 font-bold text-primary">{v.numero}</sup>
+                    {v.texto}
+                  </p>
+                ))}
+              <div className="h-6" aria-hidden />
             </>
           )}
         </div>
@@ -351,4 +401,6 @@ export default function LecturaDiaModal({ abierto, onCerrar }: Props) {
       </div>
     </div>
   )
+
+  return createPortal(modal, document.body)
 }
