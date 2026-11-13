@@ -296,7 +296,7 @@ export default function InicioMovilHub({
             )}
           </div>
         </div>
-        <p className="border-b border-primary/10 bg-[#f7f4ec] px-4 py-2 text-center text-xs text-primary/80">
+        <p className="border-b border-primary/10 bg-[var(--color-hub-inner)] px-4 py-2 text-center text-xs text-primary/80">
           {tituloLeccion}
           {estudio?.temaDelDia ? ` · ${estudio.temaDelDia}` : ` · ${diaCorto}`}
         </p>

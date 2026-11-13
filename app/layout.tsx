@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import type { Viewport } from "next"
 import { Lora, Source_Sans_3 } from "next/font/google"
 import AppHeader from "@/components/AppHeader"
@@ -8,8 +9,10 @@ import LecturaAudioMiniBar from "@/components/LecturaAudioMiniBar"
 import { SesionProvider } from "@/components/SesionProvider"
 import FirebaseInit from "@/components/FirebaseInit"
 import FontScaleInit from "@/components/FontScaleInit"
+import TemaVisualInit from "@/components/TemaVisualInit"
 import SintesisVozInit from "@/components/SintesisVozInit"
 import { readFirebaseConfigFromEnv } from "@/lib/firebaseEnv"
+import { getPaletaTema } from "@/lib/temaVisual"
 import "./globals.css"
 
 const lora = Lora({
@@ -49,12 +52,15 @@ export const metadata = {
 /** Lee variables de entorno en cada visita (no cachear layout sin Firebase). */
 export const dynamic = "force-dynamic"
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  viewportFit: "cover",
-  themeColor: "#0f766e",
+export function generateViewport(): Viewport {
+  const paleta = getPaletaTema()
+  return {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
+    themeColor: paleta.primary,
+  }
 }
 
 export default function RootLayout({
@@ -63,12 +69,34 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const firebaseConfig = readFirebaseConfigFromEnv()
+  const paleta = getPaletaTema()
 
   return (
-    <html lang="es" data-font-scale="0" className={`${lora.variable} ${sourceSans.variable}`}>
+    <html
+      lang="es"
+      data-font-scale="0"
+      data-tema={paleta.id}
+      className={`${lora.variable} ${sourceSans.variable}`}
+      style={
+        {
+          ["--color-primary" as string]: paleta.primary,
+          ["--color-primary-dark" as string]: paleta.primaryDark,
+          ["--color-primary-light" as string]: paleta.primaryLight,
+          ["--color-accent" as string]: paleta.accent,
+          ["--color-accent-soft" as string]: paleta.accentSoft,
+          ["--color-surface" as string]: paleta.surface,
+          ["--color-muted" as string]: paleta.muted,
+          ["--color-border" as string]: paleta.border,
+          ["--color-ink" as string]: paleta.ink,
+          ["--color-hub-card" as string]: paleta.hubCard,
+          ["--color-hub-inner" as string]: paleta.hubInner,
+        } as CSSProperties
+      }
+    >
       <body className="m-0 p-0 antialiased">
         <FirebaseInit config={firebaseConfig} />
         <FontScaleInit />
+        <TemaVisualInit />
         <SintesisVozInit />
         <EstudioProvider>
           <SesionProvider>
