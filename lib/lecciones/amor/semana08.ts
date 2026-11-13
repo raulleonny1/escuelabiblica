@@ -1,5 +1,5 @@
-import type { LeccionContenido } from "../types"
-import { repasoSemana } from "../types"
+import type { LeccionContenido } from "../types";
+import { repasoSemana } from "../types";
 
 export const semana08: LeccionContenido = {
   numero: 8,
@@ -15,32 +15,32 @@ export const semana08: LeccionContenido = {
       {
         titulo: "Introducción",
         texto:
-          "Cierramos el trimestre del amor con una piedra de memorial. En Lamentaciones, Jeremías describe ruina de Jerusalén, hambre y desolación; aun en medio del lamento surge un himno: las misericordias de Jehová son nuevas cada mañana. Samuel erigió Eben-ezer —«hasta aquí nos ayudó Jehová» (1 Samuel 7:12). Esta semana final, que culmina el 31 de diciembre, recordaremos la fidelidad del Señor en 2026 y entraremos al nuevo año confiando en el mismo amor que no decae.",
+          "Cerramos el trimestre del amor con una piedra de recuerdo. En Lamentaciones, Jeremías describe ruina de Jerusalén, hambre y desolación; aun en medio del lamento surge un himno: las misericordias de Jehová son nuevas cada mañana. Samuel erigió Eben-ezer —«hasta aquí nos ayudó Jehová» (1 Samuel 7:12). Esta semana final, que culmina el 31 de diciembre, recordaremos la fidelidad del Señor en 2026 y entraremos al nuevo año confiando en el mismo amor que no se acaba.",
       },
       {
         titulo: "Desarrollo",
         texto:
-          "Lamentaciones 3 alterna angustia personal con esperanza teológica. El profeta dice «mi esperanza perdió» (3:18), pero luego afirma «grande es tu fidelidad» (3:23). La fidelidad de Dios no depende de circunstancias favorables. «Por la misericordia de Jehová no somos consumidos» (3:22) —el juicio fue real, pero el pacto persistente. Cada mañana es nueva oportunidad de misericordia. Esa verdad transforma el cierre de año en adoración, no solo en nostalgia o ansiedad.",
+          "Lamentaciones 3 mezcla angustia personal con esperanza en Dios. El profeta dice «mi esperanza perdió» (3:18), pero luego afirma «grande es tu fidelidad» (3:23). La fidelidad de Dios no depende de que todo vaya bien. «Por la misericordia de Jehová no somos consumidos» (3:22) —el juicio fue real, pero el pacto siguió en pie. Cada mañana es nueva oportunidad de misericordia. Esa verdad convierte el cierre de año en adoración, no solo en recuerdos o ansiedad.",
       },
       {
         titulo: "Historia bíblica",
         texto:
-          "Tras la victoria en Mizpa, Samuel levantó la piedra Eben-ezer (1 Samuel 7:12). Jacob también levantó memoriales en Betel (Génesis 28:18-22). Josué 4 ordenó doce piedras del Jordán. Israel aprendió a no olvidar la ayuda divina. Al final de cada temporada, el pueblo de Dios debía contar la fidelidad del Señor. Así alimentaban fe para el futuro. Nuestro trimestre sobre el amor —eterno, sacrificial, buscador, disciplinador, encarnado, seguro— encuentra su cierre en este memorial.",
+          "Tras la victoria en Mizpa, Samuel levantó la piedra Eben-ezer (1 Samuel 7:12). Jacob también levantó memoriales en Betel (Génesis 28:18-22). Josué 4 ordenó doce piedras del Jordán. Israel aprendió a no olvidar la ayuda de Dios. Al final de cada temporada, el pueblo de Dios debía contar la fidelidad del Señor. Así alimentaban la fe para el futuro. Nuestro trimestre sobre el amor —eterno, sacrificial, buscador, disciplinador, encarnado, seguro— encuentra su cierre en este recuerdo.",
       },
       {
         titulo: "Aplicación espiritual",
         texto:
-          "Mira el año que termina con ojos de fe: hubo pérdidas y bendiciones, pero «hasta aquí nos ayudó el Señor». No ignores el dolor; colócalo bajo la fidelidad que no decae. Entra al nuevo año sin cargar rencores innecesarios, pero tampoco con ingenuidad. La misericordia nueva cada mañana invita a despertar temprano con gratitud, a confesar lo pendiente y a servir con esperanza renovada.",
+          "Mira el año que termina con ojos de fe: hubo pérdidas y bendiciones, pero «hasta aquí nos ayudó el Señor». No ignores el dolor; ponlo bajo la fidelidad que no se acaba. Entra al nuevo año sin cargar rencores innecesarios, pero tampoco con ingenuidad. La misericordia nueva cada mañana invita a despertar con gratitud, a confesar lo pendiente y a servir con esperanza renovada.",
       },
       {
         titulo: "Objetivo de la semana",
         texto:
-          "Recordar con 1 Samuel 7:12 y Lamentaciones 3:22-23 la fidelidad de Dios hasta hoy, agradecer su amor constante y entrar al nuevo tiempo confiando en Él.",
+          "Recordar con 1 Samuel 7:12 y Lamentaciones 3:22-23 la fidelidad de Dios hasta hoy, agradecer su amor constante y entrar al tiempo nuevo confiando en Él.",
       },
       {
         titulo: "Para reflexionar",
         texto:
-          "• ¿Qué tres momentos del año evidencian la fidelidad de Dios en tu vida?\n• ¿Qué lamentación necesitas entregar al «grande es tu fidelidad»?\n• ¿Cómo quieres vivir el año venidero anclado en el amor de Cristo?",
+          "• ¿Qué tres momentos del año evidencian la fidelidad de Dios en tu vida?\n• ¿Qué lamentación necesitas entregar al «grande es tu fidelidad»?\n• ¿Cómo quieres vivir el año que viene afirmado en el amor de Cristo?",
       },
     ],
     lun: [
@@ -52,22 +52,22 @@ export const semana08: LeccionContenido = {
       {
         titulo: "No somos consumidos",
         texto:
-          "Lamentaciones 3:22 reconoce juicio justo, pero misericordia que preserva un remanente. No merecíamos continuar; aun así Dios sostuvo. El amor fiel no es ceguera ante el mal, sino decisión de no destruir a quienes esperan en Él.",
+          "Lamentaciones 3:22 reconoce un juicio justo, pero también una misericordia que preserva a un resto. No merecíamos continuar; aun así Dios sostuvo. El amor fiel no es ceguera ante el mal; es decisión de no destruir a quienes esperan en Él.",
       },
       {
         titulo: "Misericordias que no decaen",
         texto:
-          "A diferencia de recursos humanos que se agotan, «nunca decayeron sus misericordias» (3:22). Isaías 40:8: «la palabra de nuestro Dios permanece.» El amor de Dios no sufre inflación ni caducidad.",
+          "A diferencia de los recursos humanos, que se agotan, «nunca decayeron sus misericordias» (3:22). Isaías 40:8: «la palabra de nuestro Dios permanece.» El amor de Dios no se devalúa ni se vence.",
       },
       {
         titulo: "Nuevas cada mañana",
         texto:
-          "3:23 enseña ritmo diario de gracia. Cada amanecer es invitación a empezar de nuevo. Las fallas de ayer no agotan las misericordias de hoy. Eso alimenta disciplinas matutinas de oración y gratitud.",
+          "3:23 enseña un ritmo diario de gracia. Cada amanecer es invitación a empezar de nuevo. Las fallas de ayer no agotan las misericordias de hoy. Eso anima a orar y dar gracias por la mañana.",
       },
       {
         titulo: "Mi porción es Jehová",
         texto:
-          "3:24: «Jehová es mi porción, ha dicho mi alma; por tanto, en él esperaré.» En año nuevo, elige tu herencia: no solo metas, sino Dios mismo como bien supremo.",
+          "3:24: «Jehová es mi porción, ha dicho mi alma; por tanto, en él esperaré.» En el año nuevo, elige tu herencia: no solo metas, sino a Dios mismo como lo más valioso.",
       },
       {
         titulo: "Ejercicio matutino",
@@ -89,7 +89,7 @@ export const semana08: LeccionContenido = {
       {
         titulo: "Eben-ezer personal",
         texto:
-          "1 Samuel 7:12: «Hasta aquí nos ayudó Jehová.» Escribe doce «piedras» —eventos del trimestre o del año— donde viste el amor de Dios. Léelas en familia.",
+          "1 Samuel 7:12: «Hasta aquí nos ayudó Jehová.» Escribe doce «piedras»: eventos del trimestre o del año donde viste el amor de Dios. Léelas en familia.",
       },
       {
         titulo: "Recuerda el trimestre",
@@ -99,12 +99,12 @@ export const semana08: LeccionContenido = {
       {
         titulo: "Confiesa y suelta",
         texto:
-          "Lista faltas del año sin obsesionarte. 1 Juan 1:9 promete perdón. La fidelidad de Dios limpia para avanzar, no para atarte al pasado.",
+          "Haz una lista de faltas del año, sin obsesionarte. 1 Juan 1:9 promete perdón. La fidelidad de Dios limpia para avanzar, no para atarte al pasado.",
       },
       {
         titulo: "Propósito con gracia",
         texto:
-          "Formula un propósito espiritual para el año en positivo: «Quiero…», no «dejaré de…» solo. Apóyalo en Romanos 8:32: Dios dará lo necesario.",
+          "Escribe un propósito espiritual para el año en positivo: «Quiero…», no «dejaré de…» solo. Apóyalo en Romanos 8:32: Dios dará lo necesario.",
       },
     ],
     mie: [
@@ -121,17 +121,17 @@ export const semana08: LeccionContenido = {
       {
         titulo: "Fidelidad en la iglesia",
         texto:
-          "Haz memoria de cómo Dios sostuvo tu congregación: conversiones, restauraciones, provisiones. 1 Crónicas 16:12: «Acordaos de sus maravillas.» El cuerpo celebra junto.",
+          "Recuerda cómo Dios sostuvo tu iglesia: conversiones, restauraciones, provisiones. 1 Crónicas 16:12: «Acordaos de sus maravillas.» La iglesia celebra junta.",
       },
       {
         titulo: "Perdonar el año",
         texto:
-          "Suelta ofensas viejas antes de medianoche simbólica. Mateo 6:14-15 conecta perdón y oración. Entra ligero.",
+          "Suelta ofensas viejas antes de la medianoche. Mateo 6:14-15 conecta perdón y oración. Entra ligero de carga.",
       },
       {
         titulo: "Sirve al cerrar",
         texto:
-          "Visita a alguien solo en fiestas. El amor fiel se vuelve presencia humana. Lucas 2 y el nacimiento reciente de semana 6 unen Navidad y año nuevo en servicio.",
+          "Visita a alguien solo en fiestas. El amor fiel se vuelve presencia real junto a otros. Lucas 2 y el nacimiento reciente de semana 6 unen Navidad y año nuevo en servicio.",
       },
       {
         titulo: "Carta al Señor",
@@ -148,12 +148,12 @@ export const semana08: LeccionContenido = {
       {
         titulo: "El Señor es mi heredad",
         texto:
-          "Lamentaciones 3:24 enlaza con Números 18:20: levitas sin tierra porque Jehová era su porción. En año nuevo de incertidumbre económica, el tesoro es Dios mismo.",
+          "Lamentaciones 3:24 enlaza con Números 18:20: levitas sin tierra porque Jehová era su porción. En un año nuevo con preocupaciones económicas, el tesoro es Dios mismo.",
       },
       {
         titulo: "Vigilar el corazón",
         texto:
-          "Proverbios 4:23: «Sobre toda cosa guardada, guarda tu corazón.» Repasa qué alimentó tu alma este año: ¿contenidos que edifican o que entristecen? Planifica cambios realistas.",
+          "Proverbios 4:23: «Sobre toda cosa guardada, guarda tu corazón.» Repasa qué alimentó tu alma este año: ¿cosas que edifican o que entristecen? Planifica cambios realistas.",
       },
       {
         titulo: "Comunión y Cena",
@@ -163,7 +163,7 @@ export const semana08: LeccionContenido = {
       {
         titulo: "Bendice a la generación siguiente",
         texto:
-          "Ora sobre hijos, nietos o jóvenes de la iglesia. Salmo 78:4: «No encubriremos a la posteridad.» Transmite memorial de fidelidad.",
+          "Ora sobre hijos, nietos o jóvenes de la iglesia. Salmo 78:4: «No encubriremos a la posteridad.» Transmite el recuerdo de su fidelidad.",
       },
       {
         titulo: "Prepara la víspera",
@@ -178,34 +178,34 @@ export const semana08: LeccionContenido = {
           "Repasar 1 Samuel 7:12 y Lamentaciones 3:22-23, dando gracias por la fidelidad de Dios hasta hoy.",
       },
       ...repasoSemana(
-      8,
-      "Hasta aquí nos ayudó el Señor: vivir bajo la fidelidad de su amor",
-      "«Por la misericordia de Jehová no somos consumidos, porque nunca decayeron sus misericordias. Nuevas son cada mañana; grande es tu fidelidad.» — Lamentaciones 3:22-23",
-      "En el cierre del trimestre meditamos Lamentaciones 3:22-23 y el memorial Eben-ezer. Aprendimos que la misericordia de Jehová no nos consume, que sus misericordias son nuevas cada mañana y que su fidelidad es grande aun en lágrimas. Recordamos todo el recorrido del amor de Dios —eterno, crucificado, buscador, corrector, perfecto en enemigos, encarnado, inseparable— y lo sellamos con gratitud por el año. Entramos al futuro esperando en Jehová, confesando, perdonando y sirviendo.",
-      [
-        "Misericordia que preserva y no consume (Lamentaciones 3:22)",
-        "Fidelidad diaria: misericordias nuevas cada mañana (Lamentaciones 3:23)",
-        "Memorial Eben-ezer: hasta aquí nos ayudó Jehová (1 Samuel 7:12)",
-        "Síntesis del trimestre: el amor de Dios revelado en Cristo",
-      ],
-      [
-        "¿Qué memorial levantaré para no olvidar la ayuda del Señor en 2026?",
-        "¿Qué lamentación debo entregar a su fidelidad al cerrar el año?",
-        "¿Cuál es mi principal compromiso de amor y obediencia para el año venidero?",
-      ],
-      "El 31 de diciembre comparte con alguien la frase «Hasta aquí nos ayudó Jehová» y menciona un ejemplo concreto del trimestre del amor."
-    ),
+        8,
+        "Hasta aquí nos ayudó el Señor: vivir bajo la fidelidad de su amor",
+        "«Por la misericordia de Jehová no somos consumidos, porque nunca decayeron sus misericordias. Nuevas son cada mañana; grande es tu fidelidad.» — Lamentaciones 3:22-23",
+        "En el cierre del trimestre meditamos Lamentaciones 3:22-23 y el memorial Eben-ezer. Aprendimos que la misericordia de Jehová no nos consume, que sus misericordias son nuevas cada mañana y que su fidelidad es grande aun en lágrimas. Recordamos todo el recorrido del amor de Dios —eterno, crucificado, buscador, corrector, perfecto en enemigos, encarnado, inseparable— y lo cerramos con gratitud por el año. Entramos al futuro esperando en Jehová, confesando, perdonando y sirviendo.",
+        [
+          "Misericordia que preserva y no consume (Lamentaciones 3:22)",
+          "Fidelidad diaria: misericordias nuevas cada mañana (Lamentaciones 3:23)",
+          "Memorial Eben-ezer: hasta aquí nos ayudó Jehová (1 Samuel 7:12)",
+          "Síntesis del trimestre: el amor de Dios revelado en Cristo",
+        ],
+        [
+          "¿Qué memorial levantaré para no olvidar la ayuda del Señor en 2026?",
+          "¿Qué lamentación debo entregar a su fidelidad al cerrar el año?",
+          "¿Cuál es mi principal compromiso de amor y obediencia para el año venidero?",
+        ],
+        "El 31 de diciembre comparte con alguien la frase «Hasta aquí nos ayudó Jehová» y menciona un ejemplo concreto del trimestre del amor.",
+      ),
     ],
     sab: [
       {
         titulo: "Objetivo del día",
         texto:
-          "Levantar un memorial de gratitud y entrar al nuevo tiempo anclado en el amor fiel de Dios.",
+          "Levantar un recuerdo de gratitud y entrar al tiempo nuevo afirmados en el amor fiel de Dios.",
       },
       {
         titulo: "Desafío: memorial y nuevo amanecer",
         texto:
-          "Este sábado (y la víspera de año nuevo) levantarás un memorial de gratitud y entrarás con esperanza renovada. Cierra el trimestre adorando al Dios cuyo amor te sostuvo.",
+          "Este sábado (y la víspera de año nuevo) levantarás un recuerdo de gratitud y entrarás con esperanza renovada. Cierra el trimestre adorando al Dios cuyo amor te sostuvo.",
       },
       {
         titulo: "Paso 1: piedra de memoria",
@@ -215,7 +215,7 @@ export const semana08: LeccionContenido = {
       {
         titulo: "Paso 2: confesión y perdón",
         texto:
-          "Confiesa a Dios lo que pesa del año. Perdona a quien debas. Rompe cadenas antes de la medianoche.",
+          "Confiesa a Dios lo que pesa del año. Perdona a quien debas. Suelta cargas que te atan antes de la medianoche.",
       },
       {
         titulo: "Paso 3: bendición a otro",
@@ -229,4 +229,4 @@ export const semana08: LeccionContenido = {
       },
     ],
   },
-}
+};
