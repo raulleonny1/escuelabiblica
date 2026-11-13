@@ -3,6 +3,16 @@ const withPWA = require("next-pwa")({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
+  // La hoja dominical debe pedirse siempre a la red (no caché vieja del SW)
+  runtimeCaching: [
+    {
+      urlPattern: /\/pdf\/.*\.pdf.*/i,
+      handler: "NetworkOnly",
+      options: {
+        cacheName: "hoja-dominical-pdf",
+      },
+    },
+  ],
 });
 
 /** @type {import('next').NextConfig} */
