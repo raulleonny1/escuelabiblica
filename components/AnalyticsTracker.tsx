@@ -49,27 +49,41 @@ export default function AnalyticsTracker({ mobileTab }: Props) {
     inicioRef.current = Date.now()
     sitioInicioRef.current = Date.now()
 
-    obtenerGeoCliente().then((geo) => {
-      iniciarSesionAnalytics(usuarioId, nombre, geo)
-      irASitio(sitioDesdeTab(mobileTab))
+    // No esperar geo: si /api/analytics/geo se cuelga, antes no se registraba nadie.
+    void iniciarSesionAnalytics(usuarioId, nombre, {
+      ip: "—",
+      ciudad: "Desconocida",
+      region: "",
+      pais: "",
     })
+      .then(() => irASitio(sitioDesdeTab(mobileTab)))
+      .catch((err) => console.warn("[analytics] inicio sesión", err))
+
+    void obtenerGeoCliente()
+      .then((geo) => iniciarSesionAnalytics(usuarioId, nombre, geo))
+      .catch((err) => console.warn("[analytics] geo", err))
 
     const heartbeat = window.setInterval(() => {
       const seg = Math.floor((Date.now() - inicioRef.current) / 1000)
-      actualizarTiempoSesion(seg)
+      void actualizarTiempoSesion(seg)
     }, 30_000)
 
     const onHide = () => {
       cerrarSitioActual()
-      cerrarSesionAnalytics()
+      void cerrarSesionAnalytics()
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") onHide()
     }
     window.addEventListener("pagehide", onHide)
+    document.addEventListener("visibilitychange", onVisibility)
 
     return () => {
       window.clearInterval(heartbeat)
       window.removeEventListener("pagehide", onHide)
+      document.removeEventListener("visibilitychange", onVisibility)
       cerrarSitioActual()
-      cerrarSesionAnalytics()
+      void cerrarSesionAnalytics()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usuarioId, nombre])

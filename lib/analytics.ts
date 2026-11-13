@@ -31,7 +31,10 @@ export type GeoInfo = {
 
 export async function obtenerGeoCliente(): Promise<GeoInfo> {
   try {
-    const res = await fetch("/api/analytics/geo", { cache: "no-store" })
+    const res = await fetch("/api/analytics/geo", {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    })
     if (!res.ok) throw new Error("geo")
     return (await res.json()) as GeoInfo
   } catch {
