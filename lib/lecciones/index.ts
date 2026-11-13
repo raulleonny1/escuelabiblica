@@ -1,12 +1,12 @@
-/** Trimestre activo según la fecha (fe hasta 22/08; corintios desde 23/08). */
-export const TOTAL_LECCIONES = 13
-
+/** Trimestre activo según la fecha (amor: 15/11/2026 – 31/12/2026). */
 export type { BloqueLeccion, DiaLeccionId, LeccionContenido } from "./types"
 export { repasoSemana } from "./types"
 export {
   TRIMESTRES,
   getTrimestreActivo,
   getTrimestreParaFecha,
+  getTotalSemanas,
+  getSemanasInicio,
   type TrimestreConfig,
   type TrimestreId,
 } from "./trimestres"
@@ -35,9 +35,16 @@ export const ETIQUETAS_DIA_LECCION: Record<
 }
 
 import type { LeccionContenido } from "./types"
-import { getTrimestreActivo } from "./trimestres"
-import { getVersiculoDelDia as getVersiculoFe } from "@/lib/versiculosDia.fe"
-import { getVersiculoDelDia as getVersiculoCorintios } from "@/lib/versiculosDia.corintios"
+import { getTotalSemanas, getTrimestreActivo } from "./trimestres"
+import { getVersiculoDelDia as getVersiculoAmor } from "@/lib/versiculosDia.amor"
+
+/** Número de lecciones del trimestre vigente */
+export function getTotalLecciones(): number {
+  return getTotalSemanas()
+}
+
+/** @deprecated Preferir getTotalLecciones() */
+export const TOTAL_LECCIONES = 8
 
 /** Tema del trimestre vigente hoy */
 export function getTrimestreTema(): string {
@@ -52,7 +59,8 @@ export function getLeccionesActivas(): LeccionContenido[] {
 }
 
 export function getLeccionPorSemana(semana: number): LeccionContenido | null {
-  const n = Math.min(Math.max(Math.floor(semana), 1), TOTAL_LECCIONES)
+  const max = getTotalLecciones()
+  const n = Math.min(Math.max(Math.floor(semana), 1), max)
   return getLeccionesActivas().find((l) => l.numero === n) ?? null
 }
 
@@ -74,10 +82,7 @@ export function getBloquesDia(
   const yaTieneClave = bloques.some((b) => /^texto\s*clave/i.test(b.titulo))
   if (yaTieneClave) return bloques
 
-  const v =
-    getTrimestreActivo().id === "corintios"
-      ? getVersiculoCorintios(leccion.numero, dia)
-      : getVersiculoFe(leccion.numero, dia)
+  const v = getVersiculoAmor(leccion.numero, dia)
   if (!v) return bloques
 
   return [

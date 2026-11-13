@@ -1,70 +1,60 @@
 import type { LeccionContenido } from "./types"
 
-export type TrimestreId = "fe" | "corintios"
+export type TrimestreId = "amor"
 
 export type TrimestreConfig = {
   id: TrimestreId
   tema: string
   /** Domingo de la semana 1 (YYYY-MM-DD) */
   inicio: string
-  /** Sábado de la semana 13 (YYYY-MM-DD) */
+  /** Último día del trimestre (YYYY-MM-DD) */
   fin: string
+  /**
+   * Domingo (o inicio) real de cada semana.
+   * Si falta, se asume un domingo cada 7 días desde `inicio`.
+   */
+  semanasInicio?: string[]
   portada: string
   portadaVersion: string
   lecciones: LeccionContenido[]
 }
 
-import { semana01 as fe01 } from "./fe/semana01"
-import { semana02 as fe02 } from "./fe/semana02"
-import { semana03 as fe03 } from "./fe/semana03"
-import { semana04 as fe04 } from "./fe/semana04"
-import { semana05 as fe05 } from "./fe/semana05"
-import { semana06 as fe06 } from "./fe/semana06"
-import { semana07 as fe07 } from "./fe/semana07"
-import { semana08 as fe08 } from "./fe/semana08"
-import { semana09 as fe09 } from "./fe/semana09"
-import { semana10 as fe10 } from "./fe/semana10"
-import { semana11 as fe11 } from "./fe/semana11"
-import { semana12 as fe12 } from "./fe/semana12"
-import { semana13 as fe13 } from "./fe/semana13"
-
-import { semana01 as co01 } from "./corintios/semana01"
-import { semana02 as co02 } from "./corintios/semana02"
-import { semana03 as co03 } from "./corintios/semana03"
-import { semana04 as co04 } from "./corintios/semana04"
-import { semana05 as co05 } from "./corintios/semana05"
-import { semana06 as co06 } from "./corintios/semana06"
-import { semana07 as co07 } from "./corintios/semana07"
-import { semana08 as co08 } from "./corintios/semana08"
-import { semana09 as co09 } from "./corintios/semana09"
-import { semana10 as co10 } from "./corintios/semana10"
-import { semana11 as co11 } from "./corintios/semana11"
-import { semana12 as co12 } from "./corintios/semana12"
-import { semana13 as co13 } from "./corintios/semana13"
+import { semana01 } from "./amor/semana01"
+import { semana02 } from "./amor/semana02"
+import { semana03 } from "./amor/semana03"
+import { semana04 } from "./amor/semana04"
+import { semana05 } from "./amor/semana05"
+import { semana06 } from "./amor/semana06"
+import { semana07 } from "./amor/semana07"
+import { semana08 } from "./amor/semana08"
 
 export const TRIMESTRES: TrimestreConfig[] = [
   {
-    id: "fe",
-    tema: "fe",
-    inicio: "2026-05-24",
-    fin: "2026-08-22",
-    portada: "/portada-fe.png",
-    portadaVersion: "20260524",
-    lecciones: [
-      fe01, fe02, fe03, fe04, fe05, fe06, fe07,
-      fe08, fe09, fe10, fe11, fe12, fe13,
+    id: "amor",
+    tema: "amor",
+    inicio: "2026-11-15",
+    fin: "2026-12-31",
+    semanasInicio: [
+      "2026-11-15",
+      "2026-11-22",
+      "2026-11-29",
+      "2026-12-06",
+      "2026-12-13",
+      "2026-12-20",
+      "2026-12-27",
+      "2026-12-31",
     ],
-  },
-  {
-    id: "corintios",
-    tema: "corintios",
-    inicio: "2026-08-23",
-    fin: "2026-11-21",
     portada: "/portada.png",
-    portadaVersion: "20260823b",
+    portadaVersion: "20261115",
     lecciones: [
-      co01, co02, co03, co04, co05, co06, co07,
-      co08, co09, co10, co11, co12, co13,
+      semana01,
+      semana02,
+      semana03,
+      semana04,
+      semana05,
+      semana06,
+      semana07,
+      semana08,
     ],
   },
 ]
@@ -79,7 +69,6 @@ export function getTrimestreParaFecha(fecha: string): TrimestreConfig {
   for (const tri of TRIMESTRES) {
     if (t >= fechaNum(tri.inicio) && t <= fechaNum(tri.fin)) return tri
   }
-  // Antes del primero → primer trimestre; después del último → último
   if (t < fechaNum(TRIMESTRES[0]!.inicio)) return TRIMESTRES[0]!
   return TRIMESTRES[TRIMESTRES.length - 1]!
 }
@@ -90,4 +79,27 @@ export function getTrimestreActivo(): TrimestreConfig {
   const m = String(d.getMonth() + 1).padStart(2, "0")
   const day = String(d.getDate()).padStart(2, "0")
   return getTrimestreParaFecha(`${y}-${m}-${day}`)
+}
+
+export function getSemanasInicio(tri: TrimestreConfig): string[] {
+  if (tri.semanasInicio && tri.semanasInicio.length > 0) {
+    return tri.semanasInicio
+  }
+  const total = tri.lecciones.length
+  const inicio = new Date(tri.inicio + "T12:00:00")
+  return Array.from({ length: total }, (_, i) => {
+    const d = new Date(inicio)
+    d.setDate(inicio.getDate() + i * 7)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, "0")
+    const day = String(d.getDate()).padStart(2, "0")
+    return `${y}-${m}-${day}`
+  })
+}
+
+export function getTotalSemanas(fechaReferencia?: string): number {
+  const tri = fechaReferencia
+    ? getTrimestreParaFecha(fechaReferencia)
+    : getTrimestreActivo()
+  return tri.lecciones.length
 }

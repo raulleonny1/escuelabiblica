@@ -38,8 +38,8 @@ export async function POST(req: Request) {
   }
 
   const [sesSnap, evSnap] = await Promise.all([
-    db.collection("analyticsSesiones").orderBy("ultimoAcceso", "desc").limit(500).get(),
-    db.collection("analyticsEventos").orderBy("createdAt", "desc").limit(3000).get(),
+    db.collection("analyticsSesiones").orderBy("ultimoAcceso", "desc").limit(1500).get(),
+    db.collection("analyticsEventos").orderBy("createdAt", "desc").limit(8000).get(),
   ])
 
   const sesiones: SesionRow[] = sesSnap.docs.map((d) => {

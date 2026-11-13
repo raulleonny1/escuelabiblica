@@ -15,8 +15,8 @@ export async function cargarAnalyticsDesdeCliente() {
 
   const db = getDb()
   const [sesSnap, evSnap] = await Promise.all([
-    getDocs(query(collection(db, "analyticsSesiones"), orderBy("ultimoAcceso", "desc"), limit(500))),
-    getDocs(query(collection(db, "analyticsEventos"), orderBy("createdAt", "desc"), limit(3000))),
+    getDocs(query(collection(db, "analyticsSesiones"), orderBy("ultimoAcceso", "desc"), limit(1500))),
+    getDocs(query(collection(db, "analyticsEventos"), orderBy("createdAt", "desc"), limit(8000))),
   ])
 
   const sesiones = sesSnap.docs.map((d) => {

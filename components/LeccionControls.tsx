@@ -1,7 +1,7 @@
 "use client"
 
 import { getLeccionPorSemana } from "@/lib/lecciones"
-import { TOTAL_SEMANAS } from "@/lib/semana"
+import { getTotalSemanas } from "@/lib/semana"
 
 const inputClass =
   "w-full rounded-lg border border-border bg-white px-3 py-3 text-base text-slate-700 shadow-sm focus:border-primary-light focus:outline-none focus:ring-2 focus:ring-primary/20 transition md:py-2 md:text-sm"
@@ -17,6 +17,7 @@ interface LeccionControlsProps {
 
 export default function LeccionControls({ semana, setSemana, compact }: LeccionControlsProps) {
   const leccion = getLeccionPorSemana(semana)
+  const totalSemanas = getTotalSemanas()
 
   if (compact) {
     return (
@@ -26,7 +27,7 @@ export default function LeccionControls({ semana, setSemana, compact }: LeccionC
         className={inputCompact}
         aria-label="Semana de la lección"
       >
-        {Array.from({ length: TOTAL_SEMANAS }, (_, i) => {
+        {Array.from({ length: totalSemanas }, (_, i) => {
           const n = i + 1
           const l = getLeccionPorSemana(n)
           return (
@@ -51,7 +52,7 @@ export default function LeccionControls({ semana, setSemana, compact }: LeccionC
         onChange={(e) => setSemana(Number(e.target.value))}
         className={inputClass}
       >
-        {Array.from({ length: TOTAL_SEMANAS }, (_, i) => {
+        {Array.from({ length: totalSemanas }, (_, i) => {
           const n = i + 1
           const l = getLeccionPorSemana(n)
           return (

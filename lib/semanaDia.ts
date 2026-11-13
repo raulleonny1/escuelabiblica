@@ -4,15 +4,15 @@ import { getFechasSemana } from "@/lib/semana"
 
 export function fechaDeDiaLeccion(semana: number, dia: DiaLeccionId): string {
   const dias = getFechasSemana(semana)
-  const i = ORDEN_DIAS_LECCION.indexOf(dia)
-  return dias[i]?.fecha ?? dias[0]?.fecha ?? ""
+  const target = ORDEN_DIAS_LECCION.indexOf(dia)
+  const found = dias.find((d) => new Date(d.fecha + "T12:00:00").getDay() === target)
+  return found?.fecha ?? dias[0]?.fecha ?? ""
 }
 
 export function diaLeccionDeFecha(semana: number, fecha: string): DiaLeccionId | null {
   const dias = getFechasSemana(semana)
-  const i = dias.findIndex((d) => d.fecha === fecha)
-  if (i < 0) return null
-  return diaLeccionIdDesdeIndice(i)
+  if (!dias.some((d) => d.fecha === fecha)) return null
+  return diaLeccionIdDesdeIndice(new Date(fecha + "T12:00:00").getDay())
 }
 
 export function indiceDeDiaLeccion(dia: DiaLeccionId): number {

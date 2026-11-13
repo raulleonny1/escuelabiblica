@@ -1,8 +1,6 @@
 import type { DiaLeccionId } from "@/lib/lecciones"
 import { getBloquesDia, getLeccionPorSemana } from "@/lib/lecciones"
-import { getTrimestreActivo } from "@/lib/lecciones/trimestres"
-import { getVersiculoDelDia as getVersiculoFe } from "@/lib/versiculosDia.fe"
-import { getVersiculoDelDia as getVersiculoCorintios } from "@/lib/versiculosDia.corintios"
+import { getVersiculoDelDia as getVersiculoAmor } from "@/lib/versiculosDia.amor"
 
 export type VersiculoDia = {
   cita: string
@@ -41,7 +39,5 @@ export function getVersiculoDelDia(
     }
   }
 
-  const id = getTrimestreActivo().id
-  if (id === "corintios") return getVersiculoCorintios(semana, dia)
-  return getVersiculoFe(semana, dia)
+  return getVersiculoAmor(semana, dia)
 }

@@ -59,10 +59,29 @@ export type DashboardData = {
   porDia: ResumenDia[]
 }
 
-function diaDesdeIso(iso: string | null): string | null {
+/**
+ * Día civil en España (Europe/Madrid), no UTC.
+ * Evita que visitas de tarde/noche salgan en el día anterior del calendario.
+ */
+export function diaDesdeIso(iso: string | null): string | null {
   if (!iso) return null
-  const m = /^(\d{4}-\d{2}-\d{2})/.exec(iso)
-  return m ? m[1] : null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) {
+    const m = /^(\d{4}-\d{2}-\d{2})/.exec(iso)
+    return m?.[1] ?? null
+  }
+  try {
+    // en-CA → YYYY-MM-DD
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Madrid",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(d)
+  } catch {
+    const m = /^(\d{4}-\d{2}-\d{2})/.exec(iso)
+    return m?.[1] ?? null
+  }
 }
 
 function construirResumenUsuarios(sesiones: SesionRow[], eventos: EventoRow[]): ResumenUsuario[] {

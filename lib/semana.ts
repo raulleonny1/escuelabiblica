@@ -1,6 +1,15 @@
-import { getTrimestreActivo, getTrimestreParaFecha } from "@/lib/lecciones/trimestres"
+import {
+  getSemanasInicio,
+  getTotalSemanas,
+  getTrimestreActivo,
+  getTrimestreParaFecha,
+  type TrimestreConfig,
+} from "@/lib/lecciones/trimestres"
 
-export const TOTAL_SEMANAS = 13
+/** @deprecated Preferir getTotalSemanas() — el trimestre amor tiene 8 semanas. */
+export const TOTAL_SEMANAS = 8
+
+export { getTotalSemanas }
 
 /** Domingo de inicio del trimestre activo hoy */
 export function getTrimestreInicio(): string {
@@ -18,19 +27,43 @@ export function fechaLocalHoy(): string {
   return `${y}-${m}-${day}`
 }
 
-/** Semana de lección según la fecha de hoy (1–13) dentro del trimestre activo */
-export function getSemanaActual(totalSemanas = TOTAL_SEMANAS): number {
+function diaAnterior(fechaIso: string): string {
+  const d = new Date(fechaIso + "T12:00:00")
+  d.setDate(d.getDate() - 1)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
+function rangoSemana(
+  tri: TrimestreConfig,
+  semana: number
+): { inicio: string; fin: string } {
+  const inicios = getSemanasInicio(tri)
+  const idx = Math.min(Math.max(semana, 1), inicios.length) - 1
+  const inicio = inicios[idx] ?? tri.inicio
+  const siguiente = inicios[idx + 1]
+  const fin = siguiente ? diaAnterior(siguiente) : tri.fin
+  return { inicio, fin: fin < inicio ? inicio : fin }
+}
+
+/** Semana de lección según la fecha de hoy dentro del trimestre activo */
+export function getSemanaActual(totalSemanas = getTotalSemanas()): number {
   const hoy = fechaLocalHoy()
   const tri = getTrimestreParaFecha(hoy)
-  const inicio = new Date(tri.inicio + "T12:00:00")
-  const f = new Date(hoy + "T12:00:00")
-  const diffDias = Math.floor((f.getTime() - inicio.getTime()) / (24 * 60 * 60 * 1000))
-  if (diffDias < 0) return 1
-  const semana = Math.floor(diffDias / 7) + 1
+  const inicios = getSemanasInicio(tri)
+  if (hoy < tri.inicio) return 1
+  if (hoy > tri.fin) return Math.min(inicios.length, totalSemanas)
+
+  let semana = 1
+  for (let i = 0; i < inicios.length; i++) {
+    if (hoy >= inicios[i]!) semana = i + 1
+  }
   return Math.min(Math.max(semana, 1), totalSemanas)
 }
 
-/** Hoy si cae en la semana; si no, el domingo de esa semana */
+/** Hoy si cae en la semana; si no, el primer día de esa semana */
 export function getFechaDestacadaEnSemana(semana: number): string {
   const hoy = fechaLocalHoy()
   const dias = getFechasSemana(semana)
@@ -49,26 +82,29 @@ export function getFechasSemana(semana: number, fechaReferencia?: string): DiaSe
   const tri = fechaReferencia
     ? getTrimestreParaFecha(fechaReferencia)
     : getTrimestreActivo()
-  const inicio = new Date(tri.inicio + "T12:00:00")
-  inicio.setDate(inicio.getDate() + (semana - 1) * 7)
+  const { inicio: inicioStr, fin: finStr } = rangoSemana(tri, semana)
+  const inicio = new Date(inicioStr + "T12:00:00")
+  const fin = new Date(finStr + "T12:00:00")
 
   const nombres = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
   const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
 
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(inicio)
-    d.setDate(inicio.getDate() + i)
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, "0")
-    const day = String(d.getDate()).padStart(2, "0")
+  const dias: DiaSemana[] = []
+  const cursor = new Date(inicio)
+  while (cursor <= fin) {
+    const y = cursor.getFullYear()
+    const m = String(cursor.getMonth() + 1).padStart(2, "0")
+    const day = String(cursor.getDate()).padStart(2, "0")
     const fecha = `${y}-${m}-${day}`
-    return {
+    dias.push({
       fecha,
-      diaCorto: nombres[d.getDay()],
-      diaNum: d.getDate(),
-      mesCorto: meses[d.getMonth()],
-    }
-  })
+      diaCorto: nombres[cursor.getDay()]!,
+      diaNum: cursor.getDate(),
+      mesCorto: meses[cursor.getMonth()]!,
+    })
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return dias
 }
 
 export function fechaEnSemana(fecha: string, semana: number): boolean {

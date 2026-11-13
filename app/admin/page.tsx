@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { estaAdminDesbloqueado, marcarAdminDesbloqueado } from "@/components/AdminAcceso"
 import { ADMIN_PIN_DEFAULT } from "@/lib/adminPin"
 import { ensureUsuarioAuth } from "@/lib/auth"
-import type { DashboardData, SesionRow } from "@/lib/adminAnalyticsSummary"
+import { diaDesdeIso, type DashboardData, type SesionRow } from "@/lib/adminAnalyticsSummary"
 import { cargarAnalyticsDesdeCliente } from "@/lib/analyticsAdminClient"
 import { resumirSitiosVisitados, sitioDesdeEvento } from "@/lib/analyticsSitios"
 
@@ -199,8 +199,8 @@ export default function AdminPage() {
     if (!data) return [] as SesionRow[]
     if (diaSeleccionado === "general") return data.sesiones
     return data.sesiones.filter((s) => {
-      const inicio = s.inicioEn?.slice(0, 10)
-      const ultimo = s.ultimoAcceso?.slice(0, 10)
+      const inicio = diaDesdeIso(s.inicioEn)
+      const ultimo = diaDesdeIso(s.ultimoAcceso)
       return inicio === diaSeleccionado || ultimo === diaSeleccionado
     })
   }, [data, diaSeleccionado])
