@@ -18,19 +18,19 @@
   --color-hub-inner: #f7f4ec;
 }
 
-/* Trimestre «El amor de Dios» — activo desde 15/11/2026 (también vía data-tema en html) */
+/* Adviento / trimestre amor — desde 15/11/2026 (morado de la hoja dominical) */
 html[data-tema="amor"] {
-  --color-primary: #9f2d55;
-  --color-primary-dark: #7a2041;
-  --color-primary-light: #c45d7a;
+  --color-primary: #5b1a6b;
+  --color-primary-dark: #3f114c;
+  --color-primary-light: #8b3a9e;
   --color-accent: #d4a017;
   --color-accent-soft: #fef6e0;
-  --color-surface: #fdf5f7;
-  --color-muted: #6b5560;
-  --color-border: #efd0d9;
-  --color-ink: #4a2436;
-  --color-hub-card: #f0d4dc;
-  --color-hub-inner: #fff8f9;
+  --color-surface: #f8f4fa;
+  --color-muted: #5c4d63;
+  --color-border: #e0d0e8;
+  --color-ink: #2e1538;
+  --color-hub-card: #e6d4ef;
+  --color-hub-inner: #faf6fc;
 }
 
 /* Escala global: Tailwind usa rem → todo el UI crece o vuelve a la normalidad */

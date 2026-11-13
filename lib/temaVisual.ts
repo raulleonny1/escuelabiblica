@@ -34,22 +34,22 @@ export const PALETA_DEFAULT: PaletaTema = {
 }
 
 /**
- * Trimestre «El amor de Dios» — desde el domingo 15 nov 2026.
- * Rosa profundo / blush suave (sin morado ni crema+terracota).
+ * Desde el domingo 15 nov 2026 (I Domingo de Adviento).
+ * Morado litúrgico de la hoja dominical (~#5b1a6b).
  */
 export const PALETA_AMOR: PaletaTema = {
   id: "amor",
-  primary: "#9f2d55",
-  primaryDark: "#7a2041",
-  primaryLight: "#c45d7a",
+  primary: "#5b1a6b",
+  primaryDark: "#3f114c",
+  primaryLight: "#8b3a9e",
   accent: "#d4a017",
   accentSoft: "#fef6e0",
-  surface: "#fdf5f7",
-  muted: "#6b5560",
-  border: "#efd0d9",
-  ink: "#4a2436",
-  hubCard: "#f0d4dc",
-  hubInner: "#fff8f9",
+  surface: "#f8f4fa",
+  muted: "#5c4d63",
+  border: "#e0d0e8",
+  ink: "#2e1538",
+  hubCard: "#e6d4ef",
+  hubInner: "#faf6fc",
 }
 
 /** Fecha local YYYY-MM-DD */
