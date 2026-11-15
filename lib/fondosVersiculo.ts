@@ -1,4 +1,5 @@
 import type { DiaLeccionId } from "@/lib/lecciones"
+import { getTemaVisualId } from "@/lib/temaVisual"
 
 /** Paleta legible (texto blanco) — un color distinto por slot semana×día */
 const COLORES_FONDO = [
@@ -18,6 +19,17 @@ const COLORES_FONDO = [
   "#2a5c5c", // verde azulado
 ] as const
 
+/** Adviento / amor: tonos morados de la hoja (texto blanco). */
+const COLORES_FONDO_AMOR = [
+  "#5b1a6b",
+  "#3f114c",
+  "#6b2a7a",
+  "#4a1560",
+  "#7a3a8a",
+  "#521860",
+  "#48205a",
+] as const
+
 const INDICE_DIA: Record<DiaLeccionId, number> = {
   dom: 0,
   lun: 1,
@@ -31,5 +43,6 @@ const INDICE_DIA: Record<DiaLeccionId, number> = {
 /** Color sólido de fondo del versículo del día (cambia con semana + día). */
 export function getColorFondoVersiculo(semana: number, dia: DiaLeccionId): string {
   const slot = (Math.max(1, semana) - 1) * 7 + INDICE_DIA[dia]
-  return COLORES_FONDO[slot % COLORES_FONDO.length]!
+  const paleta = getTemaVisualId() === "amor" ? COLORES_FONDO_AMOR : COLORES_FONDO
+  return paleta[slot % paleta.length]!
 }
