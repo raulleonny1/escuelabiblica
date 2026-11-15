@@ -78,6 +78,18 @@ export function applyTemaVisual(paleta: PaletaTema) {
   if (typeof document === "undefined") return
   const root = document.documentElement
   root.dataset.tema = paleta.id
+  // --tema-* alimenta las clases Tailwind (bg-primary, text-primary, …)
+  root.style.setProperty("--tema-primary", paleta.primary)
+  root.style.setProperty("--tema-primary-dark", paleta.primaryDark)
+  root.style.setProperty("--tema-primary-light", paleta.primaryLight)
+  root.style.setProperty("--tema-accent", paleta.accent)
+  root.style.setProperty("--tema-accent-soft", paleta.accentSoft)
+  root.style.setProperty("--tema-surface", paleta.surface)
+  root.style.setProperty("--tema-muted", paleta.muted)
+  root.style.setProperty("--tema-border", paleta.border)
+  root.style.setProperty("--tema-ink", paleta.ink)
+  root.style.setProperty("--tema-hub-card", paleta.hubCard)
+  root.style.setProperty("--tema-hub-inner", paleta.hubInner)
   root.style.setProperty("--color-primary", paleta.primary)
   root.style.setProperty("--color-primary-dark", paleta.primaryDark)
   root.style.setProperty("--color-primary-light", paleta.primaryLight)

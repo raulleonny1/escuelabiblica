@@ -1,36 +1,69 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-body);
-  --font-display: var(--font-display);
-
-  --color-primary: #0f766e;
-  --color-primary-dark: #0b5a54;
-  --color-primary-light: #14b8a6;
-  --color-accent: #f59e0b;
-  --color-accent-soft: #fef3c7;
-  --color-surface: #f0fdfa;
-  --color-card: #ffffff;
-  --color-muted: #5b6b68;
-  --color-border: #cce8e4;
-  --color-ink: #134e4a;
-  --color-hub-card: #d8ebe7;
-  --color-hub-inner: #f7f4ec;
+/*
+ * Tokens runtime (--tema-*).
+ * Antes @theme inline metía el hex verde en .bg-primary / .text-primary,
+ * así que data-tema="amor" y el JS no podían pasar a morado.
+ */
+:root {
+  --tema-primary: #0f766e;
+  --tema-primary-dark: #0b5a54;
+  --tema-primary-light: #14b8a6;
+  --tema-accent: #f59e0b;
+  --tema-accent-soft: #fef3c7;
+  --tema-surface: #f0fdfa;
+  --tema-card: #ffffff;
+  --tema-muted: #5b6b68;
+  --tema-border: #cce8e4;
+  --tema-ink: #134e4a;
+  --tema-hub-card: #d8ebe7;
+  --tema-hub-inner: #f7f4ec;
+  /* Alias usados por layout / TemaVisualInit / CSS suelto */
+  --color-primary: var(--tema-primary);
+  --color-primary-dark: var(--tema-primary-dark);
+  --color-primary-light: var(--tema-primary-light);
+  --color-accent: var(--tema-accent);
+  --color-accent-soft: var(--tema-accent-soft);
+  --color-surface: var(--tema-surface);
+  --color-card: var(--tema-card);
+  --color-muted: var(--tema-muted);
+  --color-border: var(--tema-border);
+  --color-ink: var(--tema-ink);
+  --color-hub-card: var(--tema-hub-card);
+  --color-hub-inner: var(--tema-hub-inner);
 }
 
 /* Adviento / trimestre amor — desde 15/11/2026 (morado de la hoja dominical) */
 html[data-tema="amor"] {
-  --color-primary: #5b1a6b;
-  --color-primary-dark: #3f114c;
-  --color-primary-light: #8b3a9e;
-  --color-accent: #d4a017;
-  --color-accent-soft: #fef6e0;
-  --color-surface: #f8f4fa;
-  --color-muted: #5c4d63;
-  --color-border: #e0d0e8;
-  --color-ink: #2e1538;
-  --color-hub-card: #e6d4ef;
-  --color-hub-inner: #faf6fc;
+  --tema-primary: #5b1a6b;
+  --tema-primary-dark: #3f114c;
+  --tema-primary-light: #8b3a9e;
+  --tema-accent: #d4a017;
+  --tema-accent-soft: #fef6e0;
+  --tema-surface: #f8f4fa;
+  --tema-muted: #5c4d63;
+  --tema-border: #e0d0e8;
+  --tema-ink: #2e1538;
+  --tema-hub-card: #e6d4ef;
+  --tema-hub-inner: #faf6fc;
+}
+
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+
+  --color-primary: var(--tema-primary);
+  --color-primary-dark: var(--tema-primary-dark);
+  --color-primary-light: var(--tema-primary-light);
+  --color-accent: var(--tema-accent);
+  --color-accent-soft: var(--tema-accent-soft);
+  --color-surface: var(--tema-surface);
+  --color-card: var(--tema-card);
+  --color-muted: var(--tema-muted);
+  --color-border: var(--tema-border);
+  --color-ink: var(--tema-ink);
+  --color-hub-card: var(--tema-hub-card);
+  --color-hub-inner: var(--tema-hub-inner);
 }
 
 /* Escala global: Tailwind usa rem → todo el UI crece o vuelve a la normalidad */

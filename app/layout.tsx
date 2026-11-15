@@ -79,6 +79,17 @@ export default function RootLayout({
       className={`${lora.variable} ${sourceSans.variable}`}
       style={
         {
+          ["--tema-primary" as string]: paleta.primary,
+          ["--tema-primary-dark" as string]: paleta.primaryDark,
+          ["--tema-primary-light" as string]: paleta.primaryLight,
+          ["--tema-accent" as string]: paleta.accent,
+          ["--tema-accent-soft" as string]: paleta.accentSoft,
+          ["--tema-surface" as string]: paleta.surface,
+          ["--tema-muted" as string]: paleta.muted,
+          ["--tema-border" as string]: paleta.border,
+          ["--tema-ink" as string]: paleta.ink,
+          ["--tema-hub-card" as string]: paleta.hubCard,
+          ["--tema-hub-inner" as string]: paleta.hubInner,
           ["--color-primary" as string]: paleta.primary,
           ["--color-primary-dark" as string]: paleta.primaryDark,
           ["--color-primary-light" as string]: paleta.primaryLight,
