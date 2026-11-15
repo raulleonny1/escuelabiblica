@@ -68,7 +68,16 @@ export function diaEstudioInicial(): DiaEstudio {
     return resolverDiaEstudio(hoy, semanaHoy)
   }
   const tri = getTrimestreParaFecha(hoy)
-  return resolverDiaEstudio(tri.inicio, 1)
+  // No adelantar al domingo de inicio mientras aún es el sábado anterior.
+  if (hoy < tri.inicio) {
+    return {
+      semana: 1,
+      fecha: hoy,
+      diaLeccion: diaLeccionIdDesdeIndice(new Date(hoy + "T12:00:00").getDay()),
+    }
+  }
+  // Tras el fin del trimestre: último día
+  return resolverDiaEstudio(tri.fin, getTotalSemanas(hoy))
 }
 
 export function mismoDiaEstudio(a: DiaEstudio, b: DiaEstudio) {

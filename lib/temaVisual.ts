@@ -1,5 +1,7 @@
 /** Temas visuales de la app según el calendario del trimestre. */
 
+import { fechaHoyMadrid } from "@/lib/fechaMadrid"
+
 export type TemaVisualId = "default" | "amor"
 
 export type PaletaTema = {
@@ -52,12 +54,9 @@ export const PALETA_AMOR: PaletaTema = {
   hubInner: "#faf6fc",
 }
 
-/** Fecha local YYYY-MM-DD */
+/** Fecha civil YYYY-MM-DD en Europe/Madrid */
 export function fechaLocalISO(d = new Date()): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  return `${y}-${m}-${day}`
+  return fechaHoyMadrid(d)
 }
 
 /**

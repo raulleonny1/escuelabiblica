@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
+import { fechaHoyMadrid, indiceDiaSemanaMadrid } from "@/lib/fechaMadrid"
 import { safeLocalGet, safeLocalSet } from "@/lib/storage"
 
 type Props = {
@@ -88,10 +89,7 @@ function inicioDiaLocal(fecha = new Date()): Date {
 }
 
 function claveDiaLocal(fecha = new Date()): string {
-  const y = fecha.getFullYear()
-  const m = `${fecha.getMonth() + 1}`.padStart(2, "0")
-  const d = `${fecha.getDate()}`.padStart(2, "0")
-  return `${y}-${m}-${d}`
+  return fechaHoyMadrid(fecha)
 }
 
 function diasEntre(aIso: string, b: Date): number {
@@ -128,7 +126,8 @@ function resolverMensaje(nombre: string): MensajeUi | null {
     }
   }
 
-  const base = MENSAJES_DIARIOS[hoy.getDay() % MENSAJES_DIARIOS.length] ?? MENSAJES_DIARIOS[0]!
+  const base =
+    MENSAJES_DIARIOS[indiceDiaSemanaMadrid(hoy) % MENSAJES_DIARIOS.length] ?? MENSAJES_DIARIOS[0]!
   return { tipo: "diario", ...base }
 }
 

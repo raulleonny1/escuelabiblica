@@ -1,5 +1,7 @@
 /** Plan «Dios nos habla cada día»: 3 pistas sincronizadas, lun–sáb, 1 mes. */
 
+import { fechaHoyMadrid } from "@/lib/fechaMadrid"
+
 export const PLAN_LECTURA_INICIO = "2026-10-26"
 export const PLAN_LECTURA_FIN = "2026-11-25"
 
@@ -133,7 +135,7 @@ function fechaAIso(d: Date): string {
 }
 
 export function fechaHoyLocal(): string {
-  return fechaAIso(new Date())
+  return fechaHoyMadrid()
 }
 
 function esDomingo(d: Date): boolean {

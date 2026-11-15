@@ -57,19 +57,19 @@ import { useMenuNavegacion } from "@/components/MenuNavegacion"
 import { useAudioEstudio } from "@/components/AudioEstudioProvider"
 import { prepararSintesisEnGesto } from "@/lib/leccionTts"
 
-const diaEstudioAlInicio = diaEstudioInicial()
-
 export default function Home() {
   const [showModal, setShowModal] = useState(false)
   const [editFecha, setEditFecha] = useState<string | null>(null)
   const [editTexto, setEditTexto] = useState("")
   const [BibliaPasaje, setBibliaPasaje] = useState("")
-  const [semana, setSemana] = useState(diaEstudioAlInicio.semana)
+  // Lazy: no fijar el día al cargar el módulo (SSR en UTC adelantaba el domingo).
+  const [boot] = useState(() => diaEstudioInicial())
+  const [semana, setSemana] = useState(boot.semana)
   const [comentariosPorFecha, setComentariosPorFecha] = useState<Record<string, string>>({})
   const [comentario, setComentario] = useState("")
-  const [selectedDate, setSelectedDate] = useState(diaEstudioAlInicio.fecha)
-  const [diaLeccion, setDiaLeccion] = useState<DiaLeccionId>(diaEstudioAlInicio.diaLeccion)
-  const diaEstudioRef = useRef<DiaEstudio>(diaEstudioAlInicio)
+  const [selectedDate, setSelectedDate] = useState(boot.fecha)
+  const [diaLeccion, setDiaLeccion] = useState<DiaLeccionId>(boot.diaLeccion)
+  const diaEstudioRef = useRef<DiaEstudio>(boot)
   const [anotaciones, setAnotaciones] = useState<AnotacionLeccion[]>([])
   const [cargandoComentarios, setCargandoComentarios] = useState(true)
   const [syncError, setSyncError] = useState<string | null>(null)

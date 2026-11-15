@@ -1,3 +1,4 @@
+import { fechaHoyMadrid } from "@/lib/fechaMadrid"
 import {
   getSemanasInicio,
   getTotalSemanas,
@@ -19,12 +20,9 @@ export function getTrimestreInicio(): string {
 /** @deprecated preferir getTrimestreInicio() */
 export const TRIMESTRE_INICIO = getTrimestreInicio()
 
+/** Hoy YYYY-MM-DD en Europe/Madrid (no UTC del servidor Vercel). */
 export function fechaLocalHoy(): string {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  return `${y}-${m}-${day}`
+  return fechaHoyMadrid()
 }
 
 function diaAnterior(fechaIso: string): string {

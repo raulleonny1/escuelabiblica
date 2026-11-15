@@ -1,3 +1,4 @@
+import { fechaHoyMadrid } from "@/lib/fechaMadrid"
 import type { LeccionContenido } from "./types"
 
 export type TrimestreId = "amor"
@@ -74,11 +75,7 @@ export function getTrimestreParaFecha(fecha: string): TrimestreConfig {
 }
 
 export function getTrimestreActivo(): TrimestreConfig {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  return getTrimestreParaFecha(`${y}-${m}-${day}`)
+  return getTrimestreParaFecha(fechaHoyMadrid())
 }
 
 export function getSemanasInicio(tri: TrimestreConfig): string[] {
