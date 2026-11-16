@@ -7,6 +7,7 @@ import {
   updateDoc,
 } from "firebase/firestore"
 import { etiquetaSitio, type SitioAppId } from "@/lib/analyticsSitios"
+import { getFirebaseAuthUid } from "@/lib/auth"
 import { getDb, isFirebaseConfigured } from "@/lib/firebase"
 import { safeSessionGet, safeSessionSet } from "@/lib/storage"
 
@@ -58,31 +59,42 @@ export async function iniciarSesionAnalytics(
   geo: GeoInfo
 ) {
   if (!isFirebaseConfigured() || !usuarioId) return
+  // Las reglas exigen request.auth.uid === usuarioId
+  const uidAuth = getFirebaseAuthUid()
+  if (!uidAuth) {
+    console.warn("[analytics] sin Firebase Auth; no se registra la sesión")
+    return
+  }
+  const uid = uidAuth
   const sessionId = getAnalyticsSessionId()
   const dispositivo =
     typeof navigator !== "undefined"
       ? `${navigator.platform} · ${navigator.userAgent.slice(0, 120)}`
       : ""
 
-  await setDoc(
-    doc(getDb(), "analyticsSesiones", sessionId),
-    {
-      sessionId,
-      usuarioId,
-      nombre: nombre.trim().slice(0, 32),
-      ip: geo.ip,
-      ciudad: geo.ciudad,
-      region: geo.region,
-      pais: geo.pais,
-      dispositivo,
-      inicioEn: serverTimestamp(),
-      ultimoAcceso: serverTimestamp(),
-      tiempoTotalSeg: 0,
-      activo: true,
-    },
-    { merge: true }
-  )
-
+  try {
+    await setDoc(
+      doc(getDb(), "analyticsSesiones", sessionId),
+      {
+        sessionId,
+        usuarioId: uid,
+        nombre: nombre.trim().slice(0, 32),
+        ip: geo.ip,
+        ciudad: geo.ciudad,
+        region: geo.region,
+        pais: geo.pais,
+        dispositivo,
+        inicioEn: serverTimestamp(),
+        ultimoAcceso: serverTimestamp(),
+        tiempoTotalSeg: 0,
+        activo: true,
+      },
+      { merge: true }
+    )
+  } catch (err) {
+    console.warn("[analytics] setDoc sesión falló", err)
+    throw err
+  }
 }
 
 /** Registra qué sección de la app visitó el estudiante. */
@@ -107,21 +119,28 @@ export async function registrarEvento(
   duracionSeg?: number
 ) {
   if (!isFirebaseConfigured() || !usuarioId) return
+  const uidAuth = getFirebaseAuthUid()
+  if (!uidAuth) return
   const sessionId = getAnalyticsSessionId()
 
-  await addDoc(collection(getDb(), "analyticsEventos"), {
-    sessionId,
-    usuarioId,
-    nombre: nombre.trim().slice(0, 32),
-    tipo,
-    destino: destino.slice(0, 200),
-    duracionSeg: duracionSeg ?? 0,
-    createdAt: serverTimestamp(),
-  })
+  try {
+    await addDoc(collection(getDb(), "analyticsEventos"), {
+      sessionId,
+      usuarioId: uidAuth,
+      nombre: nombre.trim().slice(0, 32),
+      tipo,
+      destino: destino.slice(0, 200),
+      duracionSeg: duracionSeg ?? 0,
+      createdAt: serverTimestamp(),
+    })
+  } catch (err) {
+    console.warn("[analytics] addDoc evento falló", err)
+  }
 
   await updateDoc(doc(getDb(), "analyticsSesiones", sessionId), {
     ultimoAcceso: serverTimestamp(),
     ultimaRuta: destino.slice(0, 200),
+    usuarioId: uidAuth,
   }).catch(() => {})
 }
 

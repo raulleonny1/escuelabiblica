@@ -127,6 +127,7 @@ export default function AdminPage() {
     const hoy = new Date()
     return { anio: hoy.getFullYear(), mes: hoy.getMonth() }
   })
+  const [mesInicializado, setMesInicializado] = useState(false)
 
   useEffect(() => {
     if (estaAdminDesbloqueado()) setAutorizado(true)
@@ -143,8 +144,10 @@ export default function AdminPage() {
       })
       const json = await res.json()
       if (res.ok) {
-        setData(json as DashboardData)
+        const dash = json as DashboardData
+        setData(dash)
         setDiaSeleccionado("general")
+        setMesInicializado(false)
         return
       }
       if (res.status === 503 && json.usarCliente) {
@@ -152,6 +155,7 @@ export default function AdminPage() {
         const local = await cargarAnalyticsDesdeCliente()
         setData(local as DashboardData)
         setDiaSeleccionado("general")
+        setMesInicializado(false)
         setError(
           "Modo respaldo (sin cuenta de servicio en el servidor). Los datos pueden estar incompletos si faltan permisos en Firestore."
         )
@@ -176,6 +180,17 @@ export default function AdminPage() {
       setCargando(false)
     }
   }, [])
+
+  // Al cargar datos, abrir el mes del último día con actividad (si noviembre está vacío no parece “roto”).
+  useEffect(() => {
+    if (!data?.porDia.length || mesInicializado) return
+    const ultima = data.porDia[0]?.fecha
+    if (!ultima) return
+    const [y, m] = ultima.split("-").map(Number)
+    if (!y || !m) return
+    setMesCalendario({ anio: y, mes: m - 1 })
+    setMesInicializado(true)
+  }, [data, mesInicializado])
 
   useEffect(() => {
     if (!autorizado) return
@@ -388,32 +403,37 @@ export default function AdminPage() {
                       const tieneDatos = diasConDatos.has(fecha)
                       const seleccionado = diaSeleccionado === fecha
                       const esHoy = fecha === hoyIso
+                      const resumenCelda = data.porDia.find((d) => d.fecha === fecha)
                       return (
                         <button
                           key={fecha}
                           type="button"
-                          disabled={!tieneDatos}
                           title={
                             tieneDatos
                               ? `Ver ingresos del ${fecha}`
-                              : "Sin ingresos este día"
+                              : `Sin ingresos el ${fecha}`
                           }
                           onClick={() => {
-                            if (!tieneDatos) return
                             setUsuarioAbierto(null)
                             setDiaSeleccionado(fecha)
                           }}
-                          className={`relative flex aspect-square items-center justify-center rounded-lg text-sm font-medium transition ${
+                          className={`relative flex aspect-square flex-col items-center justify-center rounded-lg text-sm font-medium transition ${
                             seleccionado
                               ? "bg-primary text-white shadow-sm"
                               : tieneDatos
                                 ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                : "text-slate-300"
-                          } ${esHoy && !seleccionado ? "ring-1 ring-primary/40" : ""} disabled:cursor-default`}
+                                : "text-slate-400 hover:bg-slate-50"
+                          } ${esHoy && !seleccionado ? "ring-1 ring-primary/40" : ""}`}
                         >
                           {dia}
-                          {tieneDatos && !seleccionado && (
-                            <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
+                          {tieneDatos && (
+                            <span
+                              className={`mt-0.5 text-[0.55rem] font-semibold tabular-nums ${
+                                seleccionado ? "text-white/90" : "text-primary/80"
+                              }`}
+                            >
+                              {resumenCelda?.totalUsuarios ?? "·"}
+                            </span>
                           )}
                         </button>
                       )

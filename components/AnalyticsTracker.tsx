@@ -10,6 +10,7 @@ import {
   registrarVisitaSitio,
 } from "@/lib/analytics"
 import type { SitioAppId } from "@/lib/analyticsSitios"
+import { ensureUsuarioAuth, getFirebaseAuthUid } from "@/lib/auth"
 
 type Props = {
   mobileTab: string
@@ -49,18 +50,27 @@ export default function AnalyticsTracker({ mobileTab }: Props) {
     inicioRef.current = Date.now()
     sitioInicioRef.current = Date.now()
 
-    // No esperar geo: si /api/analytics/geo se cuelga, antes no se registraba nadie.
-    void iniciarSesionAnalytics(usuarioId, nombre, {
-      ip: "—",
-      ciudad: "Desconocida",
-      region: "",
-      pais: "",
-    })
-      .then(() => irASitio(sitioDesdeTab(mobileTab)))
+    // Asegura Auth real antes de escribir (sin auth Firestore rechaza y el calendario queda vacío).
+    void ensureUsuarioAuth()
+      .then(async (uid) => {
+        if (!getFirebaseAuthUid()) {
+          console.warn("[analytics] Auth no listo tras ensureUsuarioAuth")
+        }
+        await iniciarSesionAnalytics(uid, nombre, {
+          ip: "—",
+          ciudad: "Desconocida",
+          region: "",
+          pais: "",
+        })
+        irASitio(sitioDesdeTab(mobileTab))
+      })
       .catch((err) => console.warn("[analytics] inicio sesión", err))
 
     void obtenerGeoCliente()
-      .then((geo) => iniciarSesionAnalytics(usuarioId, nombre, geo))
+      .then(async (geo) => {
+        const uid = getFirebaseAuthUid() || (await ensureUsuarioAuth())
+        await iniciarSesionAnalytics(uid, nombre, geo)
+      })
       .catch((err) => console.warn("[analytics] geo", err))
 
     const heartbeat = window.setInterval(() => {

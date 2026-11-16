@@ -143,7 +143,8 @@ export function construirDashboardData(sesiones: SesionRow[], eventos: EventoRow
   >()
 
   for (const s of sesiones) {
-    const dia = diaDesdeIso(s.inicioEn) ?? diaDesdeIso(s.ultimoAcceso)
+    // Día de actividad = último acceso (quién entró ese día), no solo el alta de sesión.
+    const dia = diaDesdeIso(s.ultimoAcceso) ?? diaDesdeIso(s.inicioEn)
     if (!dia) continue
     const prev = porDiaMap.get(dia) ?? { sesiones: [], eventos: [] }
     prev.sesiones.push(s)

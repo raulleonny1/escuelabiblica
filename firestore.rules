@@ -76,11 +76,16 @@ service cloud.firestore {
     }
 
     match /analyticsSesiones/{sessionId} {
+      // create o merge inicial
       allow create: if request.auth != null
         && request.resource.data.usuarioId == request.auth.uid;
+      // heartbeat / geo / cierre: mismo dueño
       allow update: if request.auth != null
-        && resource.data.usuarioId == request.auth.uid
-        && request.resource.data.usuarioId == request.auth.uid;
+        && request.resource.data.usuarioId == request.auth.uid
+        && (
+          !("usuarioId" in resource.data)
+          || resource.data.usuarioId == request.auth.uid
+        );
       allow read: if request.auth != null;
     }
 
