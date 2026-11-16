@@ -1,83 +1,158 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { Viewer, Worker, SpecialZoomLevel } from "@react-pdf-viewer/core"
-import { zoomPlugin } from "@react-pdf-viewer/zoom"
+/**
+ * Visor PDF con pdf.js (canvas).
+ * No usa @react-pdf-viewer/zoom: en React 19 tumba la app al abrir la hoja.
+ */
+
+import { useEffect, useRef, useState } from "react"
 import { findPageIndexForDay, getFechaLecturaParaSemana } from "@/lib/leccionPdf"
 import { getPdfWorkerUrl } from "@/lib/pdfWorker"
-import "@react-pdf-viewer/core/lib/styles/index.css"
-import "@react-pdf-viewer/zoom/lib/styles/index.css"
 
 interface PdfViewerProps {
   url: string
   irAlDiaLectura?: boolean
   semana?: number
-  /** Si se indica, abre en la página de este día (YYYY-MM-DD) */
   fechaLectura?: string
 }
 
-function detectarModoTactil(): boolean {
-  if (typeof window === "undefined") return false
-  return (
-    window.matchMedia("(pointer: coarse)").matches ||
-    window.matchMedia("(max-width: 1023px)").matches
-  )
+type PdfDoc = {
+  numPages: number
+  getPage: (n: number) => Promise<{
+    getViewport: (p: { scale: number }) => { width: number; height: number }
+    render: (p: {
+      canvasContext: CanvasRenderingContext2D
+      viewport: { width: number; height: number }
+    }) => { promise: Promise<void> }
+  }>
+  destroy: () => Promise<void>
 }
 
-const botonZoom =
-  "flex h-10 min-w-10 items-center justify-center rounded-lg border border-border bg-white px-3 text-base font-semibold text-slate-800 shadow-sm transition hover:bg-primary/8 active:bg-primary/12 disabled:opacity-40"
-
 export default function PdfViewer({ url, irAlDiaLectura, semana, fechaLectura }: PdfViewerProps) {
-  const [touchMode] = useState(detectarModoTactil)
-  const [montado, setMontado] = useState(false)
-  const [paginaInicial, setPaginaInicial] = useState(0)
-  const [paginaLista, setPaginaLista] = useState(false)
-
-  const zoomPluginInstance = useMemo(() => zoomPlugin({ enableShortcuts: true }), [])
-  const { ZoomIn, ZoomOut, CurrentScale, zoomTo } = zoomPluginInstance
-
-  useEffect(() => {
-    setMontado(true)
-  }, [])
+  const contenedorRef = useRef<HTMLDivElement>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [cargando, setCargando] = useState(true)
+  const [paginas, setPaginas] = useState(0)
+  const [paginaActual, setPaginaActual] = useState(0)
+  const docRef = useRef<PdfDoc | null>(null)
+  const renderGen = useRef(0)
 
   useEffect(() => {
     let cancelado = false
-    setPaginaLista(false)
-    setPaginaInicial(0)
+    const gen = ++renderGen.current
 
-    if (!irAlDiaLectura || (!semana && !fechaLectura)) {
-      setPaginaLista(true)
-      return
-    }
+    async function cargar() {
+      setCargando(true)
+      setError(null)
+      setPaginas(0)
 
-    async function resolverPagina() {
       try {
         const pdfjs = await import("pdfjs-dist")
         pdfjs.GlobalWorkerOptions.workerSrc = getPdfWorkerUrl()
-        const doc = await pdfjs.getDocument(url).promise
-        const fecha =
-          fechaLectura ?? (semana ? getFechaLecturaParaSemana(semana) : undefined)
-        if (!fecha) {
-          if (!cancelado) setPaginaLista(true)
+        const cargado = await pdfjs.getDocument({
+          url,
+          withCredentials: false,
+        }).promise
+
+        if (cancelado || gen !== renderGen.current) {
+          await cargado.destroy()
           return
         }
-        const index = await findPageIndexForDay(doc, fecha)
-        if (!cancelado) setPaginaInicial(index)
-        await doc.destroy()
-      } catch {
-        if (!cancelado) setPaginaInicial(0)
-      } finally {
-        if (!cancelado) setPaginaLista(true)
+
+        docRef.current?.destroy().catch(() => {})
+        docRef.current = cargado as unknown as PdfDoc
+        setPaginas(cargado.numPages)
+
+        let inicial = 0
+        if (irAlDiaLectura && (semana || fechaLectura)) {
+          const fecha =
+            fechaLectura ?? (semana ? getFechaLecturaParaSemana(semana) : undefined)
+          if (fecha) {
+            try {
+              inicial = await findPageIndexForDay(cargado, fecha)
+            } catch {
+              inicial = 0
+            }
+          }
+        }
+        if (!cancelado && gen === renderGen.current) {
+          setPaginaActual(Math.min(Math.max(inicial, 0), cargado.numPages - 1))
+          setCargando(false)
+        }
+      } catch (e) {
+        if (!cancelado && gen === renderGen.current) {
+          setError(e instanceof Error ? e.message : "No se pudo cargar el PDF")
+          setCargando(false)
+        }
       }
     }
 
-    resolverPagina()
+    void cargar()
     return () => {
       cancelado = true
+      docRef.current?.destroy().catch(() => {})
+      docRef.current = null
     }
   }, [url, irAlDiaLectura, semana, fechaLectura])
 
-  if (!montado || !paginaLista) {
+  useEffect(() => {
+    const doc = docRef.current
+    const host = contenedorRef.current
+    if (!doc || !host || cargando || error || paginas < 1) return
+
+    let cancelado = false
+    const gen = ++renderGen.current
+
+    async function pintar() {
+      if (!doc || !host) return
+      host.innerHTML = ""
+
+      const ancho = Math.max(host.clientWidth || 320, 280)
+      // Escala para que quepa al ancho del modal
+      const paginaPrueba = await doc.getPage(1)
+      const base = paginaPrueba.getViewport({ scale: 1 })
+      const scale = Math.min(2.2, Math.max(0.7, (ancho - 16) / base.width))
+
+      for (let i = 1; i <= doc.numPages; i++) {
+        if (cancelado || gen !== renderGen.current) return
+        const page = await doc.getPage(i)
+        const viewport = page.getViewport({ scale })
+        const canvas = document.createElement("canvas")
+        canvas.width = Math.floor(viewport.width)
+        canvas.height = Math.floor(viewport.height)
+        canvas.className = "mx-auto mb-3 block max-w-full rounded bg-white shadow-sm"
+        canvas.style.width = "100%"
+        canvas.style.height = "auto"
+        const ctx = canvas.getContext("2d")
+        if (!ctx) continue
+        host.appendChild(canvas)
+        await page.render({ canvasContext: ctx, viewport }).promise
+      }
+
+      // Ir a la página pedida
+      const canvasPagina = host.children[paginaActual] as HTMLElement | undefined
+      canvasPagina?.scrollIntoView({ block: "start" })
+    }
+
+    void pintar().catch((e) => {
+      if (!cancelado) setError(e instanceof Error ? e.message : "Error al dibujar el PDF")
+    })
+
+    return () => {
+      cancelado = true
+    }
+  }, [cargando, error, paginas, paginaActual, url])
+
+  if (error) {
+    return (
+      <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 p-4 text-center">
+        <p className="font-semibold text-red-700">No se pudo abrir el PDF</p>
+        <p className="text-sm text-slate-600">{error}</p>
+      </div>
+    )
+  }
+
+  if (cargando) {
     return (
       <div className="pdf-viewer-shell flex h-full min-h-[200px] items-center justify-center lg:min-h-[480px]">
         <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -85,76 +160,12 @@ export default function PdfViewer({ url, irAlDiaLectura, semana, fechaLectura }:
     )
   }
 
-  const escalaInicial = touchMode ? SpecialZoomLevel.PageWidth : SpecialZoomLevel.PageFit
-
   return (
     <div className="pdf-viewer-shell flex h-full w-full min-h-[200px] flex-col lg:min-h-[480px]">
-      <div className="flex shrink-0 items-center justify-center gap-2 border-b border-border bg-card px-3 py-2">
-        <ZoomOut>
-          {(props) => (
-            <button
-              type="button"
-              className={botonZoom}
-              onClick={props.onClick}
-              aria-label="Alejar"
-            >
-              −
-            </button>
-          )}
-        </ZoomOut>
-        <CurrentScale>
-          {(props) => (
-            <span className="min-w-[4.5rem] text-center text-sm font-semibold tabular-nums text-slate-700">
-              {Math.round(props.scale * 100)}%
-            </span>
-          )}
-        </CurrentScale>
-        <ZoomIn>
-          {(props) => (
-            <button
-              type="button"
-              className={botonZoom}
-              onClick={props.onClick}
-              aria-label="Acercar"
-            >
-              +
-            </button>
-          )}
-        </ZoomIn>
-        <button
-          type="button"
-          className={`${botonZoom} text-sm font-medium`}
-          onClick={() => zoomTo(escalaInicial)}
-          aria-label="Ajustar a la página"
-        >
-          Ajustar
-        </button>
-      </div>
-      <div className="min-h-0 flex-1">
-        <Worker workerUrl={getPdfWorkerUrl()}>
-          <Viewer
-            key={`${url}-${paginaInicial}`}
-            fileUrl={url}
-            initialPage={paginaInicial}
-            defaultScale={escalaInicial}
-            plugins={[zoomPluginInstance]}
-            renderLoader={(percent) => (
-              <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-slate-500">
-                Cargando PDF… {Math.round(percent)}%
-              </div>
-            )}
-            renderError={(loadError) => (
-              <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 p-4 text-center">
-                <p className="font-semibold text-red-700">No se pudo abrir el PDF</p>
-                <p className="text-sm text-slate-600">
-                  {loadError.message || "Archivo no encontrado"}
-                </p>
-                <p className="text-xs text-slate-400 break-all">{url}</p>
-              </div>
-            )}
-          />
-        </Worker>
-      </div>
+      <div
+        ref={contenedorRef}
+        className="custom-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-slate-200/80 p-2 sm:p-3"
+      />
     </div>
   )
 }

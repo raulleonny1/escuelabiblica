@@ -1,9 +1,19 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { useSesion } from "@/components/SesionProvider"
 import { registrarVisitaSitio } from "@/lib/analytics"
 import { HOJA_DOMINICAL_PDF_URL } from "@/lib/hojaDominical"
+
+const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full min-h-[240px] items-center justify-center">
+      <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+  ),
+})
 
 type HojaDominicalBotonProps = {
   semana: number
@@ -17,11 +27,6 @@ type HojaDominicalBotonProps = {
   ocultarBoton?: boolean
 }
 
-function urlAbsolutaPdf(): string {
-  if (typeof window === "undefined") return HOJA_DOMINICAL_PDF_URL
-  return new URL(HOJA_DOMINICAL_PDF_URL, window.location.origin).toString()
-}
-
 export default function HojaDominicalBoton({
   semana,
   className = "",
@@ -31,7 +36,6 @@ export default function HojaDominicalBoton({
   ocultarBoton = false,
 }: HojaDominicalBotonProps) {
   const [abiertoInterno, setAbiertoInterno] = useState(false)
-  const [iframeFallido, setIframeFallido] = useState(false)
   const controlado = abiertoExterno !== undefined
   const abierto = controlado ? abiertoExterno : abiertoInterno
   const { usuarioId, nombre } = useSesion()
@@ -42,10 +46,7 @@ export default function HojaDominicalBoton({
   }
 
   useEffect(() => {
-    if (!abierto) {
-      setIframeFallido(false)
-      return
-    }
+    if (!abierto) return
     if (usuarioId && nombre) registrarVisitaSitio(usuarioId, nombre, "hoja_dominical", 0)
     const prev = document.body.style.overflow
     document.body.style.overflow = "hidden"
@@ -62,10 +63,6 @@ export default function HojaDominicalBoton({
 
   function abrir() {
     setAbierto(true)
-  }
-
-  function abrirEnPestana() {
-    window.open(urlAbsolutaPdf(), "_blank", "noopener,noreferrer")
   }
 
   const botonClase =
@@ -130,8 +127,8 @@ export default function HojaDominicalBoton({
             className="relative flex h-[min(92vh,880px)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-primary px-4 py-3 text-white sm:px-5">
-              <div className="min-w-0">
+            <div className="flex shrink-0 items-center justify-between border-b border-border bg-primary px-4 py-3 text-white sm:px-5">
+              <div>
                 <h2
                   id="hoja-dominical-titulo"
                   className="font-display text-base font-semibold sm:text-lg"
@@ -140,60 +137,17 @@ export default function HojaDominicalBoton({
                 </h2>
                 <p className="text-[0.6875rem] text-white/75 sm:text-xs">Semana {semana}</p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  className="rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/30"
-                  onClick={abrirEnPestana}
-                >
-                  Abrir PDF
-                </button>
-                <button
-                  type="button"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg leading-none text-white transition hover:bg-white/30"
-                  onClick={() => setAbierto(false)}
-                  aria-label="Cerrar"
-                >
-                  ×
-                </button>
-              </div>
+              <button
+                type="button"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg leading-none text-white transition hover:bg-white/30"
+                onClick={() => setAbierto(false)}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
             </div>
-            <div className="relative min-h-0 flex-1 bg-slate-100">
-              {!iframeFallido ? (
-                <iframe
-                  title="Hoja dominical PDF"
-                  src={HOJA_DOMINICAL_PDF_URL}
-                  className="h-full w-full border-0"
-                  onError={() => setIframeFallido(true)}
-                />
-              ) : (
-                <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 p-6 text-center">
-                  <p className="font-semibold text-slate-800">
-                    No se pudo mostrar el PDF aquí
-                  </p>
-                  <p className="max-w-sm text-sm text-slate-600">
-                    En algunos móviles el visor integrado no abre PDFs. Ábrelo en una
-                    pestaña nueva.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={abrirEnPestana}
-                    className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-md active:opacity-90"
-                  >
-                    Abrir hoja dominical
-                  </button>
-                </div>
-              )}
-              {/* Atajo siempre visible en móvil (iframe a menudo queda en blanco) */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-slate-900/50 to-transparent p-4 sm:hidden">
-                <button
-                  type="button"
-                  onClick={abrirEnPestana}
-                  className="pointer-events-auto rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-lg active:opacity-90"
-                >
-                  Abrir / descargar PDF
-                </button>
-              </div>
+            <div className="min-h-0 flex-1 bg-slate-100">
+              <PdfViewer url={HOJA_DOMINICAL_PDF_URL} />
             </div>
           </div>
         </div>
