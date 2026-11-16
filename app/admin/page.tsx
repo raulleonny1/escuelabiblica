@@ -8,6 +8,7 @@ import { ensureUsuarioAuth } from "@/lib/auth"
 import { diaDesdeIso, type DashboardData, type SesionRow } from "@/lib/adminAnalyticsSummary"
 import { cargarAnalyticsDesdeCliente } from "@/lib/analyticsAdminClient"
 import { resumirSitiosVisitados, sitioDesdeEvento } from "@/lib/analyticsSitios"
+import { fechaHoyMadrid } from "@/lib/fechaMadrid"
 
 function formatearDuracion(seg: number): string {
   if (seg < 60) return `${seg} s`
@@ -124,10 +125,11 @@ export default function AdminPage() {
   const [ciudadesAbiertas, setCiudadesAbiertas] = useState(false)
   const [diaSeleccionado, setDiaSeleccionado] = useState<string>("general")
   const [mesCalendario, setMesCalendario] = useState(() => {
-    const hoy = new Date()
-    return { anio: hoy.getFullYear(), mes: hoy.getMonth() }
+    // Siempre el mes civil de hoy en Madrid (no el último mes con datos viejos).
+    const hoy = fechaHoyMadrid()
+    const [y, m] = hoy.split("-").map(Number)
+    return { anio: y!, mes: m! - 1 }
   })
-  const [mesInicializado, setMesInicializado] = useState(false)
 
   useEffect(() => {
     if (estaAdminDesbloqueado()) setAutorizado(true)
@@ -147,7 +149,6 @@ export default function AdminPage() {
         const dash = json as DashboardData
         setData(dash)
         setDiaSeleccionado("general")
-        setMesInicializado(false)
         return
       }
       if (res.status === 503 && json.usarCliente) {
@@ -155,7 +156,6 @@ export default function AdminPage() {
         const local = await cargarAnalyticsDesdeCliente()
         setData(local as DashboardData)
         setDiaSeleccionado("general")
-        setMesInicializado(false)
         setError(
           "Modo respaldo (sin cuenta de servicio en el servidor). Los datos pueden estar incompletos si faltan permisos en Firestore."
         )
@@ -180,17 +180,6 @@ export default function AdminPage() {
       setCargando(false)
     }
   }, [])
-
-  // Al cargar datos, abrir el mes del último día con actividad (si noviembre está vacío no parece “roto”).
-  useEffect(() => {
-    if (!data?.porDia.length || mesInicializado) return
-    const ultima = data.porDia[0]?.fecha
-    if (!ultima) return
-    const [y, m] = ultima.split("-").map(Number)
-    if (!y || !m) return
-    setMesCalendario({ anio: y, mes: m - 1 })
-    setMesInicializado(true)
-  }, [data, mesInicializado])
 
   useEffect(() => {
     if (!autorizado) return
